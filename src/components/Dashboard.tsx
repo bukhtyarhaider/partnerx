@@ -4,10 +4,14 @@ import {
   Banknote,
   HeartHandshake,
   Scale,
+  CheckCircle2,
+  DollarSign,
 } from "lucide-react";
 import type { PartnerName } from "../types";
 
+// UPDATED: Added totalGrossProfit to the type
 type Financials = {
+  totalGrossProfit: number;
   totalNetProfit: number;
   totalExpenses: number;
   companyCapital: number;
@@ -27,10 +31,12 @@ const formatCurrency = (amount: number) =>
     style: "currency",
     currency: "PKR",
     minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 
 export const Dashboard: React.FC<DashboardProps> = ({ financials }) => {
   const {
+    totalGrossProfit,
     totalNetProfit,
     totalExpenses,
     companyCapital,
@@ -39,79 +45,107 @@ export const Dashboard: React.FC<DashboardProps> = ({ financials }) => {
   } = financials;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
       <StatCard
-        icon={<ArrowUpRight className="text-green-500" />}
-        title="Total Earnings (Net)"
-        value={formatCurrency(totalNetProfit)}
+        title="Gross Profit"
+        value={formatCurrency(totalGrossProfit)}
+        icon={<DollarSign className="text-white" />}
+        color={{
+          bg: "bg-indigo-500",
+          shadow: "shadow-indigo-200",
+        }}
       />
       <StatCard
-        icon={<ArrowDownRight className="text-red-500" />}
         title="Total Expenses"
         value={formatCurrency(totalExpenses)}
+        icon={<ArrowDownRight className="text-white" />}
+        color={{
+          bg: "bg-red-500",
+          shadow: "shadow-red-200",
+        }}
       />
       <StatCard
-        icon={<Banknote className="text-blue-500" />}
+        title="Net Earnings"
+        value={formatCurrency(totalNetProfit)}
+        icon={<ArrowUpRight className="text-white" />}
+        color={{
+          bg: "bg-wise-green",
+          shadow: "shadow-green-200",
+        }}
+      />
+      <StatCard
         title="Current Capital"
         value={formatCurrency(companyCapital)}
+        icon={<Banknote className="text-white" />}
+        color={{
+          bg: "bg-blue-500",
+          shadow: "shadow-blue-200",
+        }}
       />
-      <StatCard
-        icon={<HeartHandshake className="text-pink-500" />}
-        title="Donations Fund"
-        value={formatCurrency(availableDonationsFund)}
-      />
+      {/* The Loan/Status card has a different design and takes the last spot */}
       <LoanCard loan={loan} />
+
+      {/* Donation fund is important, placing it prominently */}
+      <div className="sm:col-span-2 lg:col-span-3 xl:col-span-5">
+        <StatCard
+          title="Available Donations Fund"
+          value={formatCurrency(availableDonationsFund)}
+          icon={<HeartHandshake className="text-white" />}
+          color={{
+            bg: "bg-pink-500",
+            shadow: "shadow-pink-200",
+          }}
+        />
+      </div>
     </div>
   );
 };
 
+// NEW: "Crazy Cool" Stat Card component with elevated icon
 const StatCard: React.FC<{
-  icon: React.ReactNode;
   title: string;
   value: string;
-}> = ({ icon, title, value }) => (
-  <div className="bg-white p-5 rounded-xl border border-slate-200">
-    <div className="flex items-center gap-3">
-      <div className="p-2.5 bg-wise-blue-light rounded-full">{icon}</div>
-      <div>
-        <p className="text-sm text-slate-500 font-medium">{title}</p>
-        <p className="text-2xl font-bold text-wise-blue">{value}</p>
-      </div>
+  icon: React.ReactNode;
+  color: { bg: string; shadow: string };
+}> = ({ title, value, icon, color }) => (
+  <div className="relative bg-white pt-8 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+    {/* The Elevated Icon */}
+    <div
+      className={`absolute -top-5 left-5 p-4 rounded-xl shadow-lg hover:shadow-2xl ${color.bg} ${color.shadow} transition-shadow duration-300`}
+    >
+      {icon}
+    </div>
+
+    <div className="text-right">
+      <p className="text-slate-500 font-medium">{title}</p>
+      <h3 className="text-3xl font-bold text-wise-blue mt-1">{value}</h3>
     </div>
   </div>
 );
 
+// NEW: Redesigned Loan Card to be a clear status indicator
 const LoanCard: React.FC<{ loan: Financials["loan"] }> = ({ loan }) => {
-  let content;
-  if (loan.owedBy && loan.amount > 0) {
-    content = (
-      <>
-        <p className="text-sm text-slate-500 font-medium">
-          To Settle:{" "}
-          <span className="font-bold text-amber-600">{loan.owedBy}</span> owes
-        </p>
-        <p className="text-2xl font-bold text-wise-blue">
-          {formatCurrency(loan.amount)}
-        </p>
-      </>
-    );
-  } else {
-    content = (
-      <>
-        <p className="text-sm text-slate-500 font-medium">Partner Expenses</p>
-        <p className="text-2xl font-bold text-wise-green">Perfectly Balanced</p>
-      </>
-    );
-  }
+  const isBalanced = !loan.owedBy || loan.amount <= 0;
 
   return (
-    <div className="bg-white p-5 rounded-xl border border-slate-200">
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 bg-wise-blue-light rounded-full">
-          <Scale className="text-amber-500" />
-        </div>
-        <div>{content}</div>
-      </div>
+    <div
+      className={`relative p-6 rounded-2xl shadow-sm text-center flex flex-col justify-center items-center h-full ${
+        isBalanced ? "bg-wise-green-light" : "bg-amber-50"
+      }`}
+    >
+      {isBalanced ? (
+        <CheckCircle2 size={32} className="text-wise-green mb-2" />
+      ) : (
+        <Scale size={32} className="text-amber-500 mb-2" />
+      )}
+      <h3 className="font-bold text-wise-blue">
+        {isBalanced ? "Expenses Balanced" : "Expense Imbalance"}
+      </h3>
+      <p className="text-sm text-slate-600">
+        {isBalanced
+          ? "Partners are settled."
+          : `${loan.owedBy} owes ${formatCurrency(loan.amount)}`}
+      </p>
     </div>
   );
 };
