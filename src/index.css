@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  /* ==========================================================================
+     Font Family
+     ========================================================================== */
+  --font-sans: "Inter", sans-serif;
+  --color-wise-green: #00b98d;
+  --color-wise-green-light: #e6f8f4;
+  --color-wise-green-dark: #00a37a;
+
+  --color-wise-blue: #003f5f;
+  --color-wise-blue-light: #f0f4f7;
+}
+
+/* For a cleaner scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+body {
+  @apply bg-gray-50;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
