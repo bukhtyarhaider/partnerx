@@ -86,15 +86,9 @@ export default function App() {
       amount: Math.abs(expenseDifference) / 2,
       owedBy:
         expenseDifference > 0
-          ? "Bukhtyar"
+          ? ("Bukhtyar" as PartnerName)
           : expenseDifference < 0
-          ? "Asjad"
-          : null,
-      owedTo:
-        expenseDifference > 0
-          ? "Asjad"
-          : expenseDifference < 0
-          ? "Bukhtyar"
+          ? ("Asjad" as PartnerName)
           : null,
     };
     return {
