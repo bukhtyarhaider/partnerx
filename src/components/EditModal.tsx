@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { Transaction, Expense, DonationPayout } from "../types";
 import { TransactionForm } from "./TransactionForm";
 import { ExpenseForm } from "./ExpenseForm";
@@ -24,6 +25,17 @@ export const EditModal: React.FC<EditModalProps> = ({
   type,
   ...props
 }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => setIsAnimating(true), 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimating(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen || !entry) return null;
 
   const renderForm = () => {
@@ -63,8 +75,16 @@ export const EditModal: React.FC<EditModalProps> = ({
   const title = `Edit ${type?.charAt(0).toUpperCase() + type!.slice(1)}`;
 
   return (
-    <div className="fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+    <div
+      className={`fixed inset-0 backdrop-blur-xs z-50 flex justify-center items-center p-4 bg-black/50 transition-opacity duration-300 ease-in-out ${
+        isAnimating ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div
+        className={`bg-white rounded-2xl shadow-2xl w-full max-w-lg transition-all duration-300 ease-in-out ${
+          isAnimating ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        }`}
+      >
         <div className="flex justify-between items-center p-6 border-b border-slate-200">
           <h2 className="text-xl font-bold text-wise-blue">{title}</h2>
           <button
