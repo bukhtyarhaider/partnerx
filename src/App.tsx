@@ -302,16 +302,10 @@ export default function App() {
           <h2 className="text-3xl font-bold text-wise-blue mb-6">Overview</h2>
           <Dashboard financials={financials} />
           <div className="mt-8">
-            <h3 className="text-2xl font-bold text-wise-blue mb-4">
-              Income Analysis
-            </h3>
             <IncomeChart transactions={sortedTransactions} />
           </div>
           <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-wise-blue mb-4">
-                Income History
-              </h3>
               <TransactionHistory
                 transactions={sortedTransactions}
                 onEdit={(tx) => openEditModal(tx, "transaction")}
@@ -319,9 +313,6 @@ export default function App() {
               />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-wise-blue mb-4">
-                Expense History
-              </h3>
               <ExpenseHistory
                 expenses={sortedExpenses}
                 onEdit={(ex) => openEditModal(ex, "expense")}
