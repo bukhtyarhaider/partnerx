@@ -10,6 +10,8 @@ import {
 } from "recharts";
 import type { Transaction } from "../types";
 import { Info } from "lucide-react";
+import { ExpandableCard } from "./common/ExpandableCard";
+import { useState } from "react";
 
 interface ChartProps {
   transactions: Transaction[];
@@ -77,6 +79,9 @@ const CustomTooltip: React.FC<
 };
 
 export const IncomeChart: React.FC<ChartProps> = ({ transactions }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const handleToggleExpand = () => setIsExpanded(!isExpanded);
+
   const data = transactions.reduce((acc, tx) => {
     const month = new Date(tx.date).toLocaleString("default", {
       month: "short",
@@ -110,69 +115,79 @@ export const IncomeChart: React.FC<ChartProps> = ({ transactions }) => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-slate-200 h-96">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
-          data={chartData}
-          margin={{ top: 10, right: 30, left: 20, bottom: 0 }}
-        >
-          {/* 2. Define the gradients for our areas */}
-          <defs>
-            <linearGradient id="colorNetProfit" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#00B98D" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#00B98D" stopOpacity={0} />
-            </linearGradient>
-            <linearGradient id="colorDeductions" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#A0AEC0" stopOpacity={0.7} />
-              <stop offset="95%" stopColor="#A0AEC0" stopOpacity={0} />
-            </linearGradient>
-          </defs>
+    <ExpandableCard
+      title="Income Analytics"
+      isExpanded={isExpanded}
+      onToggleExpand={handleToggleExpand}
+    >
+      <div
+        className={`hide-scrollbar bg-white ${
+          isExpanded ? "h-full overflow-y-auto" : "h-[50vh] overflow-y-auto"
+        }`}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={chartData}
+            margin={{ top: 10, right: 30, left: 20, bottom: 0 }}
+          >
+            {/* 2. Define the gradients for our areas */}
+            <defs>
+              <linearGradient id="colorNetProfit" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#00B98D" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#00B98D" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorDeductions" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#A0AEC0" stopOpacity={0.7} />
+                <stop offset="95%" stopColor="#A0AEC0" stopOpacity={0} />
+              </linearGradient>
+            </defs>
 
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={false}
-            stroke="#e2e8f0"
-          />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#e2e8f0"
+            />
 
-          <XAxis
-            dataKey="month"
-            stroke="#64748b"
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            stroke="#64748b"
-            fontSize={12}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={formatCurrencyForAxis}
-          />
+            <XAxis
+              dataKey="month"
+              stroke="#64748b"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              stroke="#64748b"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={formatCurrencyForAxis}
+            />
 
-          <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip />} />
 
-          <Area
-            type="monotone"
-            dataKey="deductions"
-            stackId="1"
-            stroke="#A0AEC0"
-            strokeWidth={2}
-            fillOpacity={1}
-            fill="url(#colorDeductions)"
-            name="Deductions"
-          />
-          <Area
-            type="monotone"
-            dataKey="netProfit"
-            stackId="1"
-            stroke="#00B98D"
-            strokeWidth={2}
-            fillOpacity={1}
-            fill="url(#colorNetProfit)"
-            name="Net Profit"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
+            <Area
+              type="monotone"
+              dataKey="deductions"
+              stackId="1"
+              stroke="#A0AEC0"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorDeductions)"
+              name="Deductions"
+            />
+            <Area
+              type="monotone"
+              dataKey="netProfit"
+              stackId="1"
+              stroke="#00B98D"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorNetProfit)"
+              name="Net Profit"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </ExpandableCard>
   );
 };
