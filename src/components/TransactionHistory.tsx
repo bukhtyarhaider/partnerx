@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Youtube, Landmark, Pencil, Trash2, ReceiptText } from "lucide-react";
 import type { Transaction } from "../types";
+import TikTok from "/tiktok.png";
 import { ExpandableCard } from "./common/ExpandableCard";
 
 interface TransactionHistoryProps {
@@ -96,7 +97,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                             <Youtube className="text-red-500" />
                           ) : (
                             <img
-                              src="/public/tiktok.png"
+                              src={TikTok}
                               alt="TikTok"
                               className="text-slate-500"
                             />
