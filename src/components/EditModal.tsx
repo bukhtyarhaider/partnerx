@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import type { Transaction, Expense, DonationPayout } from "../types";
-import { TransactionForm } from "./TransactionForm";
-import { ExpenseForm } from "./ExpenseForm";
-import { DonationForm } from "./DonationForm";
+
 import { X } from "lucide-react";
+import { DonationForm, ExpenseForm, TransactionForm } from "./Forms";
 
 type EditableEntry = Transaction | Expense | DonationPayout;
 
@@ -36,7 +35,7 @@ export const EditModal: React.FC<EditModalProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen || !entry) return null;
+  if (!isOpen && !isAnimating) return null;
 
   const renderForm = () => {
     switch (type) {
@@ -76,25 +75,36 @@ export const EditModal: React.FC<EditModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 backdrop-blur-xs z-50 flex justify-center items-center p-4 bg-black/50 transition-opacity duration-300 ease-in-out ${
-        isAnimating ? "opacity-100" : "opacity-0"
+      onClick={onClose}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+        isAnimating && isOpen ? "opacity-100" : "opacity-0"
       }`}
     >
       <div
-        className={`bg-white rounded-2xl shadow-2xl w-full max-w-lg transition-all duration-300 ease-in-out ${
-          isAnimating ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full max-w-lg rounded-2xl bg-white shadow-2xl transition-all duration-300 ease-in-out dark:bg-slate-800 dark:shadow-black/50 ${
+          isAnimating && isOpen
+            ? "translate-y-0 opacity-100 scale-100"
+            : "translate-y-4 opacity-0 scale-95"
         }`}
       >
-        <div className="flex justify-between items-center p-6 border-b border-slate-200">
-          <h2 className="text-xl font-bold text-wise-blue">{title}</h2>
+        <div className="flex items-center justify-between border-b border-slate-200 p-6 dark:border-slate-700">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-50">
+            {title}
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-100"
+            title="Close modal"
+            className="rounded-full p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:focus:ring-offset-slate-800"
           >
-            <X size={20} className="text-slate-500" />
+            <X
+              size={20}
+              className="transition-transform duration-200 hover:rotate-90"
+            />
           </button>
         </div>
-        <div className="p-6 max-h-[70vh] overflow-y-auto">{renderForm()}</div>
+
+        <div className="max-h-[70vh] overflow-y-auto p-6">{renderForm()}</div>
       </div>
     </div>
   );

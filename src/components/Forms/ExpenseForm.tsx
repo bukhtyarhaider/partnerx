@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { PlusCircle, Save } from "lucide-react";
-import type { NewExpenseEntry, Expense, PartnerName } from "../types";
+import React, { useState, useEffect } from "react";
+import { PlusCircle, Save, AlertCircle } from "lucide-react";
+import type { NewExpenseEntry, Expense, PartnerName } from "../../types";
+import { getTodayString } from "../../utils";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -9,22 +10,22 @@ interface FormProps {
   onSave?: (entry: Expense) => void;
 }
 
-const getTodayString = () =>
-  new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-
 export const ExpenseForm: React.FC<FormProps> = ({
   mode = "add",
   initialData,
   onAddExpense,
   onSave,
 }) => {
+  // State for form fields
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(getTodayString());
   const [category, setCategory] = useState("");
   const [byWhom, setByWhom] = useState<PartnerName>("Bukhtyar");
+  const [error, setError] = useState<string | null>(null);
+
+  // **ANIMATION:** State to trigger the entrance animation
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -36,10 +37,17 @@ export const ExpenseForm: React.FC<FormProps> = ({
     }
   }, [mode, initialData]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setIsAnimating(true), 10);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
+
     if (!amount || !description || !date || !category) {
-      alert("Please fill out all fields.");
+      setError("Please fill out all required fields.");
       return;
     }
 
@@ -55,28 +63,34 @@ export const ExpenseForm: React.FC<FormProps> = ({
       onSave({ ...initialData, ...commonData });
     } else if (mode === "add" && onAddExpense) {
       onAddExpense(commonData);
+      // Reset form after successful submission
       setAmount("");
       setDescription("");
       setCategory("");
+      setDate(getTodayString());
     }
   };
 
   const isEditMode = mode === "edit";
 
+  const inputStyles =
+    "w-full rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 outline-none transition-all duration-200 focus:ring-2 focus:ring-green-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:ring-green-400 dark:[color-scheme:dark]";
+  const labelStyles =
+    "mb-1.5 block text-sm font-semibold text-slate-600 dark:text-slate-300";
+
   return (
-    <div>
-      {!isEditMode && (
-        <h2 className="text-lg font-semibold text-wise-blue mb-4">
-          Add New Expense
-        </h2>
-      )}
+    <div
+      className={`transition-all duration-500 ease-in-out ${
+        isAnimating ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      }`}
+    >
+      <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">
+        {isEditMode ? "Edit Expense" : "Add New Expense"}
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label
-              htmlFor="exp-date"
-              className="block mb-1.5 text-sm font-semibold text-slate-600"
-            >
+            <label htmlFor="exp-date" className={labelStyles}>
               Date
             </label>
             <input
@@ -84,14 +98,11 @@ export const ExpenseForm: React.FC<FormProps> = ({
               id="exp-date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+              className={inputStyles}
             />
           </div>
           <div>
-            <label
-              htmlFor="exp-amount"
-              className="block mb-1.5 text-sm font-semibold text-slate-600"
-            >
+            <label htmlFor="exp-amount" className={labelStyles}>
               Amount (PKR)
             </label>
             <input
@@ -100,15 +111,12 @@ export const ExpenseForm: React.FC<FormProps> = ({
               placeholder="e.g., 5000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+              className={inputStyles}
             />
           </div>
         </div>
         <div>
-          <label
-            htmlFor="exp-desc"
-            className="block mb-1.5 text-sm font-semibold text-slate-600"
-          >
+          <label htmlFor="exp-desc" className={labelStyles}>
             Description
           </label>
           <input
@@ -117,15 +125,12 @@ export const ExpenseForm: React.FC<FormProps> = ({
             placeholder="e.g., Domain Renewal"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+            className={inputStyles}
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label
-              htmlFor="exp-cat"
-              className="block mb-1.5 text-sm font-semibold text-slate-600"
-            >
+            <label htmlFor="exp-cat" className={labelStyles}>
               Category
             </label>
             <input
@@ -134,30 +139,35 @@ export const ExpenseForm: React.FC<FormProps> = ({
               placeholder="e.g., Software"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+              className={inputStyles}
             />
           </div>
           <div>
-            <label
-              htmlFor="exp-by"
-              className="block mb-1.5 text-sm font-semibold text-slate-600"
-            >
+            <label htmlFor="exp-by" className={labelStyles}>
               By Whom
             </label>
             <select
               id="exp-by"
               value={byWhom}
               onChange={(e) => setByWhom(e.target.value as PartnerName)}
-              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+              className={inputStyles}
             >
               <option>Bukhtyar</option>
               <option>Asjad</option>
             </select>
           </div>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
+            <AlertCircle size={20} />
+            <p>{error}</p>
+          </div>
+        )}
+
         <button
           type="submit"
-          className="w-full p-3 flex items-center justify-center gap-2 bg-wise-green text-white font-bold rounded-lg hover:bg-wise-green-dark"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 p-3 font-bold text-white transition-all duration-200 ease-in-out hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-95 dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-offset-slate-800"
         >
           {isEditMode ? (
             <>

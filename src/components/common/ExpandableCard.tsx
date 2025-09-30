@@ -37,6 +37,7 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
 }) => {
   const actionBarPosition = actionBar?.position || "right";
 
+  // Determines the flexbox justification for the action bar
   const getJustifyClass = () => {
     switch (actionBarPosition) {
       case "left":
@@ -55,14 +56,16 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
       layout
       transition={{ type: "spring", stiffness: 400, damping: 40 }}
       animate={{ borderRadius: isExpanded ? "1.5rem" : "0.75rem" }}
-      className={`bg-white shadow-lg ${
+      // **DARK MODE:** Added dark background and a more pronounced shadow for dark theme
+      className={`shadow-lg dark:shadow-2xl dark:shadow-black/25 ${
         isExpanded
-          ? "fixed inset-2 z-50 p-2 md:inset-6 md:p-4 flex flex-col"
-          : "relative p-4 rounded-xl"
+          ? "fixed inset-2 z-50 flex flex-col bg-white/80 p-2 backdrop-blur-sm dark:bg-slate-800/80 md:inset-6 md:p-4"
+          : "relative rounded-xl bg-white p-4 dark:bg-slate-800"
       }`}
     >
-      <motion.div layout className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold flex items-center">
+      <motion.div layout className="mb-4 flex items-center justify-between">
+        {/* **DARK MODE:** Title text color updated */}
+        <h2 className="flex items-center text-xl font-semibold text-slate-800 dark:text-slate-50">
           {icon && <span className="mr-3">{icon}</span>}
           {title}
         </h2>
@@ -72,7 +75,8 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
         {onToggleExpand && (
           <button
             onClick={onToggleExpand}
-            className="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-wise-green hover:bg-gray-100 transition relative flex items-center justify-center w-9 h-9" // Set a fixed size for stability
+            // **DARK MODE:** Added dark mode hover, focus ring, and text colors
+            className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-slate-300 dark:hover:bg-slate-700 dark:focus:ring-offset-slate-800"
             title={isExpanded ? "Minimize" : "Maximize"}
             aria-label={isExpanded ? "Minimize card" : "Maximize card"}
           >

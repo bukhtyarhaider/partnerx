@@ -13,6 +13,16 @@
 
   --color-wise-blue: #003f5f;
   --color-wise-blue-light: #f0f4f7;
+
+  --chart-grid: #e2e8f0; /* slate-200 */
+  --chart-axis: #64748b; /* slate-500 */
+  --chart-cursor: #334155; /* slate-700 */
+}
+
+.dark {
+  --chart-grid: #334155; /* slate-700 */
+  --chart-axis: #94a3b8; /* slate-400 */
+  --chart-cursor: #cbd5e1; /* slate-300 */
 }
 
 /* For a cleaner scrollbar */
@@ -57,4 +67,19 @@ body {
 
 .animate-flash {
   animation: flash-animation 1.2s ease-out;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out forwards;
 }

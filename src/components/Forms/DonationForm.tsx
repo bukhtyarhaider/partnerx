@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { PlusCircle, Save } from "lucide-react";
-import type { NewDonationPayoutEntry, DonationPayout } from "../types";
+import React, { useState, useEffect } from "react";
+import { PlusCircle, Save, AlertCircle } from "lucide-react";
+import type { DonationPayout, NewDonationPayoutEntry } from "../../types";
+import { formatCurrency, getTodayString } from "../../utils";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -9,17 +10,6 @@ interface FormProps {
   onSave?: (entry: DonationPayout) => void;
   availableFunds: number;
 }
-
-const getTodayString = () =>
-  new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-PK", {
-    style: "currency",
-    currency: "PKR",
-    minimumFractionDigits: 0,
-  }).format(amount);
 
 export const DonationForm: React.FC<FormProps> = ({
   mode = "add",
@@ -32,6 +22,10 @@ export const DonationForm: React.FC<FormProps> = ({
   const [date, setDate] = useState(getTodayString());
   const [paidTo, setPaidTo] = useState("");
   const [description, setDescription] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  // **ANIMATION:** State to trigger the entrance animation
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -42,18 +36,23 @@ export const DonationForm: React.FC<FormProps> = ({
     }
   }, [mode, initialData]);
 
+  // **ANIMATION:** Trigger animation on component mount
+  useEffect(() => {
+    setIsAnimating(true);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
+
     const payoutAmount = parseFloat(amount);
     if (!payoutAmount || !date || !paidTo) {
-      alert("Please fill out Date, Amount, and Paid To fields.");
+      setError("Please fill out Date, Amount, and Paid To fields.");
       return;
     }
     if (payoutAmount > availableFunds) {
-      alert(
-        `Cannot process payout. Amount exceeds available fund of ${formatCurrency(
-          availableFunds
-        )}.`
+      setError(
+        `Amount exceeds available fund of ${formatCurrency(availableFunds)}.`
       );
       return;
     }
@@ -64,34 +63,43 @@ export const DonationForm: React.FC<FormProps> = ({
       onSave({ ...initialData, ...commonData });
     } else if (mode === "add" && onAddDonationPayout) {
       onAddDonationPayout(commonData);
+      // Reset form after successful submission in 'add' mode
       setAmount("");
       setPaidTo("");
       setDescription("");
+      setDate(getTodayString());
     }
   };
 
   const isEditMode = mode === "edit";
+  const inputStyles =
+    "w-full rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 outline-none transition-all duration-200 focus:ring-2 focus:ring-green-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:ring-green-400 dark:[color-scheme:dark]";
+  const labelStyles =
+    "mb-1.5 block text-sm font-semibold text-slate-600 dark:text-slate-300";
 
   return (
-    <div>
+    <div
+      className={`transition-all duration-500 ease-in-out ${
+        isAnimating ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      }`}
+    >
       {!isEditMode && (
-        <div className="p-4 mb-4 bg-wise-green-light border-l-4 border-wise-green">
-          <h3 className="font-bold text-wise-green-dark">Available Fund</h3>
-          <p className="text-2xl font-bold text-wise-blue">
+        <div className="mb-4 rounded-lg border-l-4 border-green-500 bg-green-50 p-4 transition-transform hover:scale-[1.02] dark:border-green-400 dark:bg-green-900/50">
+          <h3 className="font-bold text-green-800 dark:text-green-300">
+            Available Fund
+          </h3>
+          <p className="text-2xl font-bold text-slate-800 dark:text-slate-50">
             {formatCurrency(availableFunds)}
           </p>
         </div>
       )}
-      <h2 className="text-lg font-semibold text-wise-blue mb-4">
+      <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">
         {isEditMode ? "Edit Payout" : "Record Donation Payout"}
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label
-              htmlFor="don-date"
-              className="block mb-1.5 text-sm font-semibold text-slate-600"
-            >
+            <label htmlFor="don-date" className={labelStyles}>
               Date
             </label>
             <input
@@ -99,14 +107,11 @@ export const DonationForm: React.FC<FormProps> = ({
               id="don-date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+              className={inputStyles}
             />
           </div>
           <div>
-            <label
-              htmlFor="don-amount"
-              className="block mb-1.5 text-sm font-semibold text-slate-600"
-            >
+            <label htmlFor="don-amount" className={labelStyles}>
               Amount (PKR)
             </label>
             <input
@@ -115,15 +120,12 @@ export const DonationForm: React.FC<FormProps> = ({
               placeholder="e.g., 10000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+              className={inputStyles}
             />
           </div>
         </div>
         <div>
-          <label
-            htmlFor="don-paidTo"
-            className="block mb-1.5 text-sm font-semibold text-slate-600"
-          >
+          <label htmlFor="don-paidTo" className={labelStyles}>
             Paid To (Organization/Cause)
           </label>
           <input
@@ -132,14 +134,11 @@ export const DonationForm: React.FC<FormProps> = ({
             placeholder="e.g., Edhi Foundation"
             value={paidTo}
             onChange={(e) => setPaidTo(e.target.value)}
-            className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+            className={inputStyles}
           />
         </div>
         <div>
-          <label
-            htmlFor="don-desc"
-            className="block mb-1.5 text-sm font-semibold text-slate-600"
-          >
+          <label htmlFor="don-desc" className={labelStyles}>
             Description (Optional)
           </label>
           <input
@@ -148,12 +147,20 @@ export const DonationForm: React.FC<FormProps> = ({
             placeholder="e.g., Monthly contribution"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-wise-green outline-none"
+            className={inputStyles}
           />
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
+            <AlertCircle size={20} />
+            <p>{error}</p>
+          </div>
+        )}
+
         <button
           type="submit"
-          className="w-full p-3 flex items-center justify-center gap-2 bg-wise-green text-white font-bold rounded-lg hover:bg-wise-green-dark"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 p-3 font-bold text-white transition-all duration-200 ease-in-out hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-95 dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-offset-slate-800"
         >
           {isEditMode ? (
             <>

@@ -7,10 +7,11 @@ import {
   useSortedDonations,
 } from "../hooks/useSortedData";
 
-import { TransactionForm } from "../components/TransactionForm";
-import { ExpenseForm } from "../components/ExpenseForm";
-import { DonationForm } from "../components/DonationForm";
-
+import {
+  DonationForm,
+  ExpenseForm,
+  TransactionForm,
+} from "../components/Forms";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
