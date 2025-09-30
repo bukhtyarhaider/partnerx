@@ -10,7 +10,7 @@ import {
 import { TransactionForm } from "../components/TransactionForm";
 import { ExpenseForm } from "../components/ExpenseForm";
 import { DonationForm } from "../components/DonationForm";
-import { Stats } from "../components/Stats";
+
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
@@ -27,6 +27,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
+import { Stats } from "../components/Stats";
 
 export default function DashboardPage() {
   const {
