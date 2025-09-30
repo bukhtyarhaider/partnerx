@@ -15,6 +15,12 @@ import type { Financials } from "../hooks/useFinancials";
 import type { DonationPayout, Expense, Transaction } from "../types";
 import { FinancialSummary } from "../components/FinancialSummary";
 import { LiveRate } from "../components/LiveRate";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/CustomTabs";
 
 type MobileTab = "overview" | "history" | "settings";
 
@@ -54,23 +60,38 @@ export const MobileLayout = ({
         );
       case "history":
         return (
-          <div className="space-y-6">
-            <TransactionHistory
-              transactions={sortedTransactions}
-              onEdit={(tx) => appState.openEditModal(tx, "transaction")}
-              onDelete={appState.handleDeleteTransaction}
-            />
-            <ExpenseHistory
-              expenses={sortedExpenses}
-              onEdit={(ex) => appState.openEditModal(ex, "expense")}
-              onDelete={appState.handleDeleteExpense}
-            />
-            <DonationHistory
-              donations={sortedDonations}
-              onEdit={(dp) => appState.openEditModal(dp, "donation")}
-              onDelete={appState.handleDeleteDonationPayout}
-            />
-          </div>
+          <Tabs defaultValue="transactions">
+            <TabsList>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="expenses">Expenses</TabsTrigger>
+              <TabsTrigger value="donations">Donations</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="transactions">
+              <TransactionHistory
+                transactions={sortedTransactions}
+                onEdit={(tx) => appState.openEditModal(tx, "transaction")}
+                onDelete={appState.handleDeleteTransaction}
+              />
+            </TabsContent>
+
+            <TabsContent value="expenses">
+              <ExpenseHistory
+                expenses={sortedExpenses}
+                onEdit={(ex) => appState.openEditModal(ex, "expense")}
+                onDelete={appState.handleDeleteExpense}
+              />
+            </TabsContent>
+
+            {/* The content panel for "Donations" */}
+            <TabsContent value="donations">
+              <DonationHistory
+                donations={sortedDonations}
+                onEdit={(dp) => appState.openEditModal(dp, "donation")}
+                onDelete={appState.handleDeleteDonationPayout}
+              />
+            </TabsContent>
+          </Tabs>
         );
       case "settings":
         return (
