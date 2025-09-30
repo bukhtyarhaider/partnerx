@@ -5,11 +5,10 @@ import {
   HeartHandshake,
   DollarSign,
 } from "lucide-react";
-
+import { StatCard } from "./StatCard";
 import { LoanCard } from "./LoanCard";
 import { formatCurrency } from "../utils/format";
 import type { PartnerName } from "../types";
-import { StatCard } from "./StatCard";
 
 // The main data structure for financial stats
 type Financials = {
@@ -39,7 +38,7 @@ export const Stats: React.FC<StatsProps> = ({ financials }) => {
   } = financials;
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="hide-scrollbar -mx-4 flex space-x-4 overflow-x-auto px-4 pt-6 pb-2 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-x-0 lg:px-5 lg:py-6">
       <StatCard
         title="Gross Profit"
         value={formatCurrency(totalGrossProfit)}
