@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useAppHandlers } from "../hooks/useAppHandlers";
 import { useFinancials } from "../hooks/useFinancials";
 import { useLocalStorageSync } from "../hooks/useLocalStorageSync";
@@ -60,16 +61,36 @@ export default function DashboardPage() {
   const sortedExpenses = useSortedExpenses(expenses);
   const sortedDonations = useSortedDonations(donationPayouts);
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 10);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const baseTabStyle =
+    "flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ease-in-out transform hover:-translate-y-0.5";
+  const activeTabStyle =
+    "border-green-500 text-green-500 dark:border-green-400 dark:text-green-400";
+  const inactiveTabStyle =
+    "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200";
+
   return (
     <>
-      <div className="flex flex-col lg:flex-row min-h-screen bg-wise-blue-light font-sans">
-        {/* Sidebar */}
-        <aside className="w-full lg:w-96 bg-white p-4 sm:p-6 flex-shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-slate-200">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-wise-green rounded-full p-2">
-              <LayoutDashboard className="text-white size-6" />
+      <div className="flex min-h-screen flex-col font-sans lg:flex-row bg-slate-50 dark:bg-slate-900">
+        <aside
+          className={`flex w-full shrink-0 transform flex-col border-b border-slate-200 bg-white p-4 transition-all duration-500 sm:p-6 lg:w-96 lg:border-b-0 lg:border-r dark:border-slate-700 dark:bg-slate-800 ${
+            isMounted
+              ? "translate-x-0 opacity-100"
+              : "-translate-x-full opacity-0"
+          }`}
+        >
+          <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-full bg-green-500 p-2">
+              <LayoutDashboard className="size-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-wise-blue">PartnerX</h1>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-50">
+              PartnerX
+            </h1>
           </div>
 
           <div className="mb-1">
@@ -77,38 +98,32 @@ export default function DashboardPage() {
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-200 dark:border-slate-700">
             <nav
               className="-mb-px flex space-x-4 sm:space-x-6"
               aria-label="Tabs"
             >
               <button
                 onClick={() => setActiveTab("income")}
-                className={`${
-                  activeTab === "income"
-                    ? "border-wise-green text-wise-green"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                } flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                className={`${baseTabStyle} ${
+                  activeTab === "income" ? activeTabStyle : inactiveTabStyle
+                }`}
               >
                 <HandCoins size={16} /> Income
               </button>
               <button
                 onClick={() => setActiveTab("expense")}
-                className={`${
-                  activeTab === "expense"
-                    ? "border-wise-green text-wise-green"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                } flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                className={`${baseTabStyle} ${
+                  activeTab === "expense" ? activeTabStyle : inactiveTabStyle
+                }`}
               >
                 <TrendingDown size={16} /> Expense
               </button>
               <button
                 onClick={() => setActiveTab("donation")}
-                className={`${
-                  activeTab === "donation"
-                    ? "border-wise-green text-wise-green"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                } flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                className={`${baseTabStyle} ${
+                  activeTab === "donation" ? activeTabStyle : inactiveTabStyle
+                }`}
               >
                 <HeartHandshake size={16} /> Donation
               </button>
@@ -146,10 +161,15 @@ export default function DashboardPage() {
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
-          <div className="mb-6 flex flex-row justify-between items-center">
-            <h2 className="text-3xl font-bold text-wise-blue mb-6">Overview</h2>
+        <main
+          className={`flex-1 overflow-y-auto p-4 transition-opacity duration-700 delay-200 sm:p-8 ${
+            isMounted ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <div className="mb-6 flex flex-row items-center justify-between">
+            <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-50">
+              Overview
+            </h2>
             <ThemeToggleButton />
           </div>
           <Stats financials={financials} />
@@ -157,7 +177,7 @@ export default function DashboardPage() {
             <IncomeChart transactions={sortedTransactions} />
           </div>
 
-          <div className="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-2">
             <div>
               <TransactionHistory
                 transactions={sortedTransactions}
@@ -175,7 +195,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-8">
-            <h3 className="text-2xl font-bold text-wise-blue mb-4">
+            <h3 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-50">
               Donation Payout History
             </h3>
             <DonationHistory
@@ -187,7 +207,6 @@ export default function DashboardPage() {
         </main>
       </div>
 
-      {/* Edit Modal */}
       <EditModal
         isOpen={!!editingEntry}
         onClose={() => setEditingEntry(null)}
