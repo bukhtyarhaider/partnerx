@@ -7,13 +7,48 @@ import type {
   NewDonationPayoutEntry,
   TransactionCalculations,
 } from "../types";
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 
 type EditableEntry = Transaction | Expense | DonationPayout;
 
 type ModalType = "transaction" | "expense" | "donation" | null;
 
-export function useAppHandlers() {
+export interface AppHandlers {
+  transactions: Transaction[];
+  setTransactions: Dispatch<SetStateAction<Transaction[]>>;
+  expenses: Expense[];
+  setExpenses: Dispatch<SetStateAction<Expense[]>>;
+  donationPayouts: DonationPayout[];
+  setDonationPayouts: Dispatch<SetStateAction<DonationPayout[]>>;
+  activeTab: "income" | "expense" | "donation";
+  setActiveTab: Dispatch<SetStateAction<"income" | "expense" | "donation">>;
+  editingEntry: EditableEntry | null;
+  setEditingEntry: Dispatch<SetStateAction<EditableEntry | null>>;
+  modalType: "transaction" | "expense" | "donation" | null;
+  setModalType: Dispatch<
+    SetStateAction<"transaction" | "expense" | "donation" | null>
+  >;
+  handleImportData: (data: {
+    transactions: Transaction[];
+    expenses: Expense[];
+    donationPayouts: DonationPayout[];
+  }) => void;
+  handleAddTransaction: (entry: NewTransactionEntry) => void;
+  handleAddExpense: (entry: NewExpenseEntry) => void;
+  handleAddDonationPayout: (entry: NewDonationPayoutEntry) => void;
+  handleUpdateTransaction: (updatedTx: Transaction) => void;
+  handleUpdateExpense: (updatedEx: Expense) => void;
+  handleUpdateDonationPayout: (updatedDp: DonationPayout) => void;
+  handleDeleteTransaction: (id: number) => void;
+  handleDeleteExpense: (id: number) => void;
+  handleDeleteDonationPayout: (id: number) => void;
+  openEditModal: (
+    entry: EditableEntry,
+    type: "transaction" | "expense" | "donation"
+  ) => void;
+}
+
+export function useAppHandlers(): AppHandlers {
   const [transactions, setTransactions] = useState<Transaction[]>(() =>
     JSON.parse(localStorage.getItem("transactions") || "[]")
   );

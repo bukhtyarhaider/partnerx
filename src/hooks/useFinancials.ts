@@ -6,11 +6,22 @@ import type {
   PartnerName,
 } from "../types";
 
+export interface Financials {
+  totalGrossProfit: number;
+  totalNetProfit: number;
+  totalExpenses: number;
+  companyCapital: number;
+  availableDonationsFund: number;
+  loan: { amount: number; owedBy: PartnerName | null };
+  partnerEarnings: Record<PartnerName, number>;
+  partnerExpenses: Record<PartnerName, number>;
+}
+
 export function useFinancials(
   transactions: Transaction[],
   expenses: Expense[],
   donationPayouts: DonationPayout[]
-) {
+): Financials {
   return useMemo(() => {
     let totalDonationsAccrued = 0;
     let totalGrossProfit = 0;
