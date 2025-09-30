@@ -22,6 +22,7 @@ import { LiveRate } from "../components/LiveRate";
 import type { AppHandlers } from "../hooks/useAppHandlers";
 import type { Financials } from "../hooks/useFinancials";
 import type { DonationPayout, Expense, Transaction } from "../types";
+import { FinancialSummary } from "../components/FinancialSummary";
 
 export interface DesktopLayoutProps {
   appState: AppHandlers;
@@ -144,6 +145,11 @@ export const DesktopLayout = ({
           <ThemeToggleButton />
         </div>
         <Stats financials={financials} />
+        <FinancialSummary
+          financials={financials}
+          transactions={sortedTransactions}
+          expenses={sortedExpenses}
+        />
         <div className="mt-8">
           <IncomeChart transactions={sortedTransactions} />
         </div>
