@@ -21,7 +21,7 @@ type Financials = {
   };
 };
 
-interface DashboardProps {
+interface StatsProps {
   financials: Financials;
 }
 
@@ -33,7 +33,7 @@ const formatCurrency = (amount: number) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-export const Dashboard: React.FC<DashboardProps> = ({ financials }) => {
+export const Stats: React.FC<StatsProps> = ({ financials }) => {
   const {
     totalGrossProfit,
     totalNetProfit,
@@ -117,7 +117,7 @@ const StatCard: React.FC<{
 };
 
 /**
- * Loan Status Card (Unchanged Logic)
+ * Loan Status Card
  * Displays the balance status between partners.
  */
 const LoanCard: React.FC<{ loan: Financials["loan"] }> = ({ loan }) => {
