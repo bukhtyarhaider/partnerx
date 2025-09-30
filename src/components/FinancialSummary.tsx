@@ -69,36 +69,29 @@ export const FinancialSummary = ({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white/80 p-5 shadow-md transition-shadow hover:shadow-lg dark:border-slate-700 dark:bg-slate-800/80">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
+        onClick={() => setIsMaximized((prev) => !prev)}
+      >
         <h3 className="text-base font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
           <Sparkles size={18} className="text-green-500" />
           AI Financial Summary
         </h3>
 
-        <div className="mt-3 sm:mt-0 flex items-center gap-1">
-          <button
-            onClick={() => setIsMaximized((prev) => !prev)}
-            aria-label={isMaximized ? "Minimize summary" : "Maximize summary"}
-            className="ml-3 p-1 rounded bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-700"
-          >
-            {isMaximized ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          </button>
-          <button
-            onClick={handleGenerateSummary}
-            disabled={isLoading}
-            className="mt-3 sm:mt-0 flex items-center gap-2 rounded-md bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-400"
-          >
-            {isLoading ? (
-              <Loader2 className="animate-spin" size={16} />
-            ) : (
-              <Sparkles size={16} className="animate-bounce" />
-            )}
-            {isLoading ? "Analyzing..." : "Generate New Summary"}
-          </button>
-        </div>
+        <button
+          onClick={handleGenerateSummary}
+          disabled={isLoading}
+          className="mt-3 sm:mt-0 flex items-center gap-2 rounded-md bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-400"
+        >
+          {isLoading ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <Sparkles size={16} className="animate-bounce" />
+          )}
+          {isLoading ? "Analyzing..." : "Generate New Summary"}
+        </button>
       </div>
 
-      {/* Conditionally render all below only if maximized */}
       {isMaximized && (
         <>
           {isLoading && (
