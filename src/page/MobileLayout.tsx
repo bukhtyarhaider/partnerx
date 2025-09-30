@@ -21,6 +21,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/CustomTabs";
+import { AppInfoModal } from "../components/AppInfoModal";
 
 type MobileTab = "overview" | "history" | "settings";
 
@@ -106,6 +107,7 @@ export const MobileLayout = ({
               donationPayouts={appState.donationPayouts}
               onImport={appState.handleImportData}
             />
+            <AppInfoModal />
           </div>
         );
       default:

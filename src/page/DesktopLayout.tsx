@@ -23,6 +23,7 @@ import type { AppHandlers } from "../hooks/useAppHandlers";
 import type { Financials } from "../hooks/useFinancials";
 import type { DonationPayout, Expense, Transaction } from "../types";
 import { FinancialSummary } from "../components/FinancialSummary";
+import { AppInfoModal } from "../components/AppInfoModal";
 
 export interface DesktopLayoutProps {
   appState: AppHandlers;
@@ -131,6 +132,7 @@ export const DesktopLayout = ({
             donationPayouts={appState.donationPayouts}
             onImport={appState.handleImportData}
           />
+          <AppInfoModal />
         </div>
       </aside>
       <main
