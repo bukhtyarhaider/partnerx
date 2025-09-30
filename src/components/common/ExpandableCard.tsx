@@ -57,7 +57,7 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
       animate={{ borderRadius: isExpanded ? "1.25rem" : "0.75rem" }}
       className={`shadow-lg dark:shadow-2xl dark:shadow-black/25 ${
         isExpanded
-          ? "fixed inset-1 z-50 flex flex-col bg-white/90 p-2 backdrop-blur-sm dark:bg-slate-800/90 md:inset-6 md:p-4"
+          ? "fixed inset-1 z-60 flex flex-col bg-white/90 p-2 backdrop-blur-sm dark:bg-slate-800/90 md:inset-6 md:p-4"
           : "relative rounded-xl bg-white px-1 py-2 md:p-4 dark:bg-slate-800"
       }`}
     >
