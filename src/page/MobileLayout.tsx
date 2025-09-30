@@ -13,6 +13,7 @@ import { AddEntryModal } from "../components/mobile-specific/AddEntryModal";
 import type { AppHandlers } from "../hooks/useAppHandlers";
 import type { Financials } from "../hooks/useFinancials";
 import type { DonationPayout, Expense, Transaction } from "../types";
+import { FinancialSummary } from "../components/FinancialSummary";
 
 type MobileTab = "overview" | "history" | "settings";
 
@@ -41,6 +42,11 @@ export const MobileLayout = ({
         return (
           <div className="space-y-6">
             <Stats financials={financials} />
+            <FinancialSummary
+              transactions={sortedTransactions}
+              expenses={sortedExpenses}
+              financials={financials}
+            />
             <IncomeChart transactions={sortedTransactions} />
           </div>
         );
