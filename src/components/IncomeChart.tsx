@@ -3,12 +3,11 @@ import {
   Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   type TooltipProps,
 } from "recharts";
-import { Info } from "lucide-react";
+import { Info, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import type { Transaction } from "../types";
 import { ExpandableCard } from "./common/ExpandableCard";
@@ -33,33 +32,30 @@ const CustomTooltip: React.FC<
           {label}
         </p>
         <div className="space-y-1 text-sm">
-          {/* Net Profit Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <span className="mr-2 h-2.5 w-2.5 rounded-full bg-green-500"></span>
+              <span className="mr-2 h-2.5 w-2.5 rounded-full bg-green-500" />
               <p className="text-slate-500 dark:text-slate-400">Net Profit:</p>
             </div>
-            <p className="ml-4 font-semibold text-slate-800 dark:text-slate-200">
-              {formatCurrency(netProfit as number)}
+            <p className="font-semibold text-slate-800 dark:text-slate-200">
+              {formatCurrency(netProfit)}
             </p>
           </div>
-          {/* Deductions Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <span className="mr-2 h-2.5 w-2.5 rounded-full bg-slate-400"></span>
+              <span className="mr-2 h-2.5 w-2.5 rounded-full bg-slate-400" />
               <p className="text-slate-500 dark:text-slate-400">Deductions:</p>
             </div>
-            <p className="ml-4 font-semibold text-slate-800 dark:text-slate-200">
-              {formatCurrency(deductions as number)}
+            <p className="font-semibold text-slate-800 dark:text-slate-200">
+              {formatCurrency(deductions)}
             </p>
           </div>
-          {/* Gross Profit Row */}
           <div className="flex items-center justify-between border-t border-slate-200 pt-1 dark:border-slate-600">
             <p className="font-medium text-slate-500 dark:text-slate-400">
               Gross Profit:
             </p>
-            <p className="ml-4 font-bold text-slate-800 dark:text-slate-50">
-              {formatCurrency(grossProfit as number)}
+            <p className="font-bold text-slate-800 dark:text-slate-50">
+              {formatCurrency(grossProfit)}
             </p>
           </div>
         </div>
@@ -73,8 +69,8 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
   transactions,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isHorizontal, setIsHorizontal] = useState(false);
 
-  // Process transaction data for the chart
   const chartData = Object.values(
     transactions.reduce((acc, tx) => {
       const month = new Date(tx.date).toLocaleString("default", {
@@ -114,20 +110,41 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
       title="Income Analytics"
       isExpanded={isExpanded}
       onToggleExpand={() => setIsExpanded(!isExpanded)}
+      actionBar={{
+        position: "left",
+        content: isExpanded && (
+          <button
+            onClick={() => setIsHorizontal(!isHorizontal)}
+            className="flex items-center gap-2 text-sm text-green-600 hover:underline"
+          >
+            <RotateCcw size={16} />
+            {isHorizontal ? "Vertical View" : "Horizontal View"}
+          </button>
+        ),
+      }}
     >
-      {/* Container with smooth height transition */}
       <div
-        className={`bg-white rounded-xl dark:bg-slate-900 transition-all duration-500 ease-in-out ${
-          isExpanded ? "h-[80vh]" : "h-[50vh]"
-        }`}
+        className={`
+    relative w-full 
+    ${
+      isExpanded
+        ? isHorizontal
+          ? "h-[100vw] md:h-[70vh]"
+          : "h-[70vh]"
+        : "h-[45vh]"
+    }
+    transition-all duration-500 ease-in-out
+    rounded-xl bg-white dark:bg-slate-900
+    overflow-hidden
+  `}
       >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}
+            layout={isHorizontal ? "vertical" : "horizontal"}
             margin={{ top: 20, right: 30, left: 20, bottom: 0 }}
           >
             <defs>
-              {/* Gradients work in both light and dark mode */}
               <linearGradient id="colorNetProfit" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
@@ -138,26 +155,44 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
               </linearGradient>
             </defs>
 
-            {/* Grid and Axis lines now use CSS variables for dynamic theme switching */}
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="var(--chart-grid)"
-            />
-            <XAxis
-              dataKey="month"
-              stroke="var(--chart-axis)"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              stroke="var(--chart-axis)"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={formatCurrencyForAxis}
-            />
+            {/* Axis layout changes depending on orientation */}
+            {isHorizontal ? (
+              <>
+                <YAxis
+                  type="category"
+                  dataKey="month"
+                  stroke="var(--chart-axis)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <XAxis
+                  type="number"
+                  stroke="var(--chart-axis)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={formatCurrencyForAxis}
+                />
+              </>
+            ) : (
+              <>
+                <XAxis
+                  dataKey="month"
+                  stroke="var(--chart-axis)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="var(--chart-axis)"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={formatCurrencyForAxis}
+                />
+              </>
+            )}
 
             <Tooltip
               content={<CustomTooltip />}
@@ -167,7 +202,6 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
                 strokeDasharray: "3 3",
               }}
             />
-
             <Area
               type="monotone"
               dataKey="deductions"

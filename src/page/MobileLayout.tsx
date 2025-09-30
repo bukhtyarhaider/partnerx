@@ -14,6 +14,7 @@ import type { AppHandlers } from "../hooks/useAppHandlers";
 import type { Financials } from "../hooks/useFinancials";
 import type { DonationPayout, Expense, Transaction } from "../types";
 import { FinancialSummary } from "../components/FinancialSummary";
+import { LiveRate } from "../components/LiveRate";
 
 type MobileTab = "overview" | "history" | "settings";
 
@@ -47,6 +48,7 @@ export const MobileLayout = ({
               expenses={sortedExpenses}
               financials={financials}
             />
+            <LiveRate />
             <IncomeChart transactions={sortedTransactions} />
           </div>
         );
