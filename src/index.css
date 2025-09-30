@@ -42,3 +42,19 @@ body {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+@keyframes flash-animation {
+  0% {
+    background-color: transparent;
+  }
+  25% {
+    background-color: rgba(74, 222, 128, 0.25); /* Light green background */
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-flash {
+  animation: flash-animation 1.2s ease-out;
+}
