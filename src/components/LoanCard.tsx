@@ -17,7 +17,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({ loan }) => {
       className={`relative flex h-full transform flex-col items-center justify-center rounded-2xl border border-slate-100 p-6 text-center shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg dark:border-slate-700 dark:shadow-slate-900/50 ${
         isBalanced
           ? "bg-green-50 dark:bg-green-500/10"
-          : "bg-amber-50 dark:bg-amber-500/10"
+          : "bg-amber-50 dark:bg-black"
       }`}
     >
       <div className="mb-2">
