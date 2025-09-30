@@ -32,7 +32,7 @@ export const BottomNavBar = ({
         <button
           type="button"
           onClick={onAddClick}
-          className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 transform rounded-full bg-green-500 p-4 text-white shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-400 dark:focus:ring-green-600"
+          className="fixed bottom-25 left-1/2 z-50 -translate-x-1/2 transform rounded-full bg-green-500 p-4 text-white shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-green-400 dark:focus:ring-green-600"
           aria-label="Add"
         >
           <Plus

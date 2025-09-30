@@ -25,7 +25,7 @@ export const PartnerSummary: React.FC<PartnerSummaryProps> = ({
 
   return (
     <div
-      className={`border-t border-slate-200 pt-6 transition-opacity duration-500 dark:border-slate-700 ${
+      className={`md:border-t border-slate-200 pt-6 transition-opacity duration-500 dark:border-slate-700 ${
         isAnimating ? "opacity-100" : "opacity-0"
       }`}
     >
