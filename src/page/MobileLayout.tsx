@@ -10,9 +10,14 @@ import { LayoutDashboard } from "lucide-react";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import { BottomNavBar } from "../components/mobile-specific/BottomNavBar";
 import { AddEntryModal } from "../components/mobile-specific/AddEntryModal";
-import type { AppHandlers } from "../hooks/useAppHandlers";
+
 import type { Financials } from "../hooks/useFinancials";
-import type { DonationPayout, Expense, Transaction } from "../types";
+import type {
+  AppHandlers,
+  DonationPayout,
+  Expense,
+  Transaction,
+} from "../types";
 import { FinancialSummary } from "../components/FinancialSummary";
 import { LiveRate } from "../components/LiveRate";
 import {
@@ -54,6 +59,9 @@ export const MobileLayout = ({
               transactions={sortedTransactions}
               expenses={sortedExpenses}
               financials={financials}
+              summaries={appState.summaries}
+              onAddSummary={appState.handleAddSummary}
+              onDeleteSummary={appState.handleDeleteSummary}
             />
             <LiveRate />
             <IncomeChart transactions={sortedTransactions} />
@@ -105,7 +113,8 @@ export const MobileLayout = ({
               transactions={appState.transactions}
               expenses={appState.expenses}
               donationPayouts={appState.donationPayouts}
-              onImport={appState.handleImportData}
+              onImport={appState.handleImport}
+              summaries={appState.summaries}
             />
             <AppInfoModal />
           </div>

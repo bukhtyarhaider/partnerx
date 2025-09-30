@@ -1,16 +1,23 @@
 import React, { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { DownloadCloud, UploadCloud, AlertTriangle } from "lucide-react";
-import type { Transaction, Expense, DonationPayout } from "../types";
+import type {
+  Transaction,
+  Expense,
+  DonationPayout,
+  FinancialSummaryRecord,
+} from "../types";
 
 interface ImportExportProps {
   transactions: Transaction[];
   expenses: Expense[];
   donationPayouts: DonationPayout[];
+  summaries: FinancialSummaryRecord[];
   onImport: (data: {
     transactions: Transaction[];
     expenses: Expense[];
     donationPayouts: DonationPayout[];
+    summaries: FinancialSummaryRecord[];
   }) => void;
 }
 
@@ -43,7 +50,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             </h3>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
               Importing a new file will replace all existing transactions,
-              expenses, and donation records. This action cannot be undone.
+              expenses, donation records, and AI summaries. This action cannot
+              be undone.
             </p>
           </div>
         </div>
@@ -71,6 +79,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   transactions,
   expenses,
   donationPayouts,
+  summaries,
   onImport,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +93,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   }, []);
 
   const handleExport = () => {
-    const exportData = { transactions, expenses, donationPayouts };
+    const exportData = { transactions, expenses, donationPayouts, summaries };
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(dataBlob);
@@ -123,7 +132,8 @@ export const ImportExport: React.FC<ImportExportProps> = ({
         if (
           !Array.isArray(parsedData.transactions) ||
           !Array.isArray(parsedData.expenses) ||
-          !Array.isArray(parsedData.donationPayouts)
+          !Array.isArray(parsedData.donationPayouts) ||
+          !Array.isArray(parsedData.summaries)
         ) {
           throw new Error("Invalid data structure in the imported file.");
         }
@@ -158,7 +168,6 @@ export const ImportExport: React.FC<ImportExportProps> = ({
         onConfirm={handleConfirmImport}
         onCancel={resetImport}
       />
-      {/* **DARK MODE & ANIMATION:** Themed container with a fade-in animation */}
       <div
         className={`border-t border-slate-200 pt-6 transition-opacity duration-500 dark:border-slate-700 ${
           isAnimating ? "opacity-100" : "opacity-0"

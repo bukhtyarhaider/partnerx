@@ -19,9 +19,14 @@ import { TransactionHistory } from "../components/TransactionHistory";
 import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
 import { LiveRate } from "../components/LiveRate";
-import type { AppHandlers } from "../hooks/useAppHandlers";
+
 import type { Financials } from "../hooks/useFinancials";
-import type { DonationPayout, Expense, Transaction } from "../types";
+import type {
+  AppHandlers,
+  DonationPayout,
+  Expense,
+  Transaction,
+} from "../types";
 import { FinancialSummary } from "../components/FinancialSummary";
 import { AppInfoModal } from "../components/AppInfoModal";
 
@@ -130,7 +135,8 @@ export const DesktopLayout = ({
             transactions={appState.transactions}
             expenses={appState.expenses}
             donationPayouts={appState.donationPayouts}
-            onImport={appState.handleImportData}
+            onImport={appState.handleImport}
+            summaries={appState.summaries}
           />
           <AppInfoModal />
         </div>
@@ -151,6 +157,9 @@ export const DesktopLayout = ({
           financials={financials}
           transactions={sortedTransactions}
           expenses={sortedExpenses}
+          summaries={appState.summaries}
+          onAddSummary={appState.handleAddSummary}
+          onDeleteSummary={appState.handleDeleteSummary}
         />
         <div className="mt-8">
           <IncomeChart transactions={sortedTransactions} />

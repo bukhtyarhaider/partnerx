@@ -8,8 +8,8 @@ import {
 } from "../hooks/useSortedData";
 
 import { EditModal } from "../components/EditModal";
-import { DesktopLayout } from "./DesktopLayout";
 import { MobileLayout } from "./MobileLayout";
+import { DesktopLayout } from "./DesktopLayout";
 
 export default function DashboardPage() {
   const appState = useAppHandlers();
@@ -25,7 +25,8 @@ export default function DashboardPage() {
   useLocalStorageSync(
     appState.transactions,
     appState.expenses,
-    appState.donationPayouts
+    appState.donationPayouts,
+    appState.summaries
   );
 
   return (

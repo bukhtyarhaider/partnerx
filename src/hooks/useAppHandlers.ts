@@ -1,52 +1,18 @@
+import { useState } from "react";
 import type {
   Transaction,
   Expense,
   DonationPayout,
+  FinancialSummaryRecord,
   NewTransactionEntry,
   NewExpenseEntry,
   NewDonationPayoutEntry,
   TransactionCalculations,
+  AppHandlers,
 } from "../types";
-import { useState, type Dispatch, type SetStateAction } from "react";
 
 type EditableEntry = Transaction | Expense | DonationPayout;
-
 type ModalType = "transaction" | "expense" | "donation" | null;
-
-export interface AppHandlers {
-  transactions: Transaction[];
-  setTransactions: Dispatch<SetStateAction<Transaction[]>>;
-  expenses: Expense[];
-  setExpenses: Dispatch<SetStateAction<Expense[]>>;
-  donationPayouts: DonationPayout[];
-  setDonationPayouts: Dispatch<SetStateAction<DonationPayout[]>>;
-  activeTab: "income" | "expense" | "donation";
-  setActiveTab: Dispatch<SetStateAction<"income" | "expense" | "donation">>;
-  editingEntry: EditableEntry | null;
-  setEditingEntry: Dispatch<SetStateAction<EditableEntry | null>>;
-  modalType: "transaction" | "expense" | "donation" | null;
-  setModalType: Dispatch<
-    SetStateAction<"transaction" | "expense" | "donation" | null>
-  >;
-  handleImportData: (data: {
-    transactions: Transaction[];
-    expenses: Expense[];
-    donationPayouts: DonationPayout[];
-  }) => void;
-  handleAddTransaction: (entry: NewTransactionEntry) => void;
-  handleAddExpense: (entry: NewExpenseEntry) => void;
-  handleAddDonationPayout: (entry: NewDonationPayoutEntry) => void;
-  handleUpdateTransaction: (updatedTx: Transaction) => void;
-  handleUpdateExpense: (updatedEx: Expense) => void;
-  handleUpdateDonationPayout: (updatedDp: DonationPayout) => void;
-  handleDeleteTransaction: (id: number) => void;
-  handleDeleteExpense: (id: number) => void;
-  handleDeleteDonationPayout: (id: number) => void;
-  openEditModal: (
-    entry: EditableEntry,
-    type: "transaction" | "expense" | "donation"
-  ) => void;
-}
 
 export function useAppHandlers(): AppHandlers {
   const [transactions, setTransactions] = useState<Transaction[]>(() =>
@@ -58,20 +24,25 @@ export function useAppHandlers(): AppHandlers {
   const [donationPayouts, setDonationPayouts] = useState<DonationPayout[]>(() =>
     JSON.parse(localStorage.getItem("donationPayouts") || "[]")
   );
+  const [summaries, setSummaries] = useState<FinancialSummaryRecord[]>(() =>
+    JSON.parse(localStorage.getItem("summaries") || "[]")
+  );
   const [activeTab, setActiveTab] = useState<"income" | "expense" | "donation">(
     "income"
   );
   const [editingEntry, setEditingEntry] = useState<EditableEntry | null>(null);
   const [modalType, setModalType] = useState<ModalType>(null);
 
-  const handleImportData = (data: {
+  const handleImport = (data: {
     transactions: Transaction[];
     expenses: Expense[];
     donationPayouts: DonationPayout[];
+    summaries: FinancialSummaryRecord[];
   }) => {
-    setTransactions(data.transactions);
-    setExpenses(data.expenses);
-    setDonationPayouts(data.donationPayouts);
+    setTransactions(data.transactions || []);
+    setExpenses(data.expenses || []);
+    setDonationPayouts(data.donationPayouts || []);
+    setSummaries(data.summaries || []);
   };
 
   const recalculateTransaction = (
@@ -109,6 +80,14 @@ export function useAppHandlers(): AppHandlers {
     setExpenses((prev) => [{ id: Date.now(), ...entry }, ...prev]);
   const handleAddDonationPayout = (entry: NewDonationPayoutEntry) =>
     setDonationPayouts((prev) => [{ id: Date.now(), ...entry }, ...prev]);
+  const handleAddSummary = (text: string) => {
+    const newSummary: FinancialSummaryRecord = {
+      id: Date.now(),
+      text,
+      createdAt: new Date().toISOString(),
+    };
+    setSummaries((prev) => [newSummary, ...prev]);
+  };
 
   const handleUpdateTransaction = (updatedTx: Transaction) => {
     updatedTx.calculations = recalculateTransaction(updatedTx);
@@ -141,6 +120,11 @@ export function useAppHandlers(): AppHandlers {
     if (window.confirm("Are you sure you want to delete this donation payout?"))
       setDonationPayouts(donationPayouts.filter((dp) => dp.id !== id));
   };
+  const handleDeleteSummary = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this AI summary?")) {
+      setSummaries((prev) => prev.filter((summary) => summary.id !== id));
+    }
+  };
   const openEditModal = (
     entry: EditableEntry,
     type: "transaction" | "expense" | "donation"
@@ -156,22 +140,26 @@ export function useAppHandlers(): AppHandlers {
     setExpenses,
     donationPayouts,
     setDonationPayouts,
+    summaries,
+    setSummaries,
     activeTab,
     setActiveTab,
     editingEntry,
     setEditingEntry,
     modalType,
     setModalType,
-    handleImportData,
+    handleImport,
     handleAddTransaction,
     handleAddExpense,
     handleAddDonationPayout,
+    handleAddSummary,
     handleUpdateTransaction,
     handleUpdateExpense,
     handleUpdateDonationPayout,
     handleDeleteTransaction,
     handleDeleteExpense,
     handleDeleteDonationPayout,
+    handleDeleteSummary,
     openEditModal,
   };
 }
