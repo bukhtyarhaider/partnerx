@@ -109,7 +109,14 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
     <ExpandableCard
       title="Income Analytics"
       isExpanded={isExpanded}
-      onToggleExpand={() => setIsExpanded(!isExpanded)}
+      onToggleExpand={() => {
+        setIsExpanded(!isExpanded);
+        if (isExpanded) {
+          setIsHorizontal(false);
+        } else {
+          setIsHorizontal(true);
+        }
+      }}
       actionBar={{
         position: "left",
         content: isExpanded && (
@@ -129,7 +136,7 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
     ${
       isExpanded
         ? isHorizontal
-          ? "h-[100vw] md:h-[70vh]"
+          ? "h-full md:h-[70vh]"
           : "h-[70vh]"
         : "h-[45vh]"
     }
