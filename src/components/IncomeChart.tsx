@@ -95,7 +95,6 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
         new Date(`1 ${a.month}`).getTime() - new Date(`1 ${b.month}`).getTime()
     );
 
-  // No Data State with Dark Mode support
   if (chartData.length === 0) {
     return (
       <div className="flex h-96 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-6 text-center dark:border-slate-700 dark:bg-slate-800">
@@ -118,7 +117,7 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
     >
       {/* Container with smooth height transition */}
       <div
-        className={`bg-white dark:bg-slate-900 transition-all duration-500 ease-in-out ${
+        className={`bg-white rounded-xl dark:bg-slate-900 transition-all duration-500 ease-in-out ${
           isExpanded ? "h-[80vh]" : "h-[50vh]"
         }`}
       >
