@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { DonationForm, ExpenseForm, TransactionForm } from "../Forms";
-import type { AppHandlers } from "../../hooks/useAppHandlers";
+
 import type { Financials } from "../../hooks/useFinancials";
+import type { AppHandlers } from "../../types";
 
 export interface AddEntryModalProps {
   isOpen: boolean;
