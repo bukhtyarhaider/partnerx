@@ -37,15 +37,14 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
 }) => {
   const actionBarPosition = actionBar?.position || "right";
 
-  // Determines the flexbox justification for the action bar
   const getJustifyClass = () => {
     switch (actionBarPosition) {
       case "left":
-        return "justify-start ml-4";
+        return "justify-start ml-2 md:ml-4";
       case "center":
         return "justify-center";
       case "right":
-        return "justify-end mr-4";
+        return "justify-end mr-2 md:mr-4";
       default:
         return "justify-end";
     }
@@ -55,27 +54,31 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
     <motion.div
       layout
       transition={{ type: "spring", stiffness: 400, damping: 40 }}
-      animate={{ borderRadius: isExpanded ? "1.5rem" : "0.75rem" }}
-      // **DARK MODE:** Added dark background and a more pronounced shadow for dark theme
+      animate={{ borderRadius: isExpanded ? "1.25rem" : "0.75rem" }}
       className={`shadow-lg dark:shadow-2xl dark:shadow-black/25 ${
         isExpanded
-          ? "fixed inset-2 z-50 flex flex-col bg-white/80 p-2 backdrop-blur-sm dark:bg-slate-800/80 md:inset-6 md:p-4"
-          : "relative rounded-xl bg-white p-4 dark:bg-slate-800"
+          ? "fixed inset-1 z-50 flex flex-col bg-white/90 p-2 backdrop-blur-sm dark:bg-slate-800/90 md:inset-6 md:p-4"
+          : "relative rounded-xl bg-white px-3 py-2 md:p-4 dark:bg-slate-800"
       }`}
     >
-      <motion.div layout className="mb-4 flex items-center justify-between">
-        {/* **DARK MODE:** Title text color updated */}
-        <h2 className="flex items-center text-xl font-semibold text-slate-800 dark:text-slate-50">
-          {icon && <span className="mr-3">{icon}</span>}
+      <motion.div
+        layout
+        className="mb-3 md:mb-4 flex flex-wrap items-center justify-between gap-2 md:gap-0"
+      >
+        <h2 className="flex items-center text-lg md:text-xl font-semibold text-slate-800 dark:text-slate-50">
+          {icon && <span className="mr-2 md:mr-3">{icon}</span>}
           {title}
         </h2>
-        <div className={`flex flex-1 items-center ${getJustifyClass()}`}>
+
+        <div
+          className={`flex flex-1 items-center ${getJustifyClass()} mt-1 md:mt-0`}
+        >
           {actionBar && actionBar.content}
         </div>
+
         {onToggleExpand && (
           <button
             onClick={onToggleExpand}
-            // **DARK MODE:** Added dark mode hover, focus ring, and text colors
             className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-slate-300 dark:hover:bg-slate-700 dark:focus:ring-offset-slate-800"
             title={isExpanded ? "Minimize" : "Maximize"}
             aria-label={isExpanded ? "Minimize card" : "Maximize card"}
@@ -100,7 +103,10 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
         )}
       </motion.div>
 
-      <motion.div layout className="flex-1 overflow-hidden">
+      <motion.div
+        layout
+        className="flex-1 overflow-y-auto md:overflow-visible max-h-[calc(100vh-6rem)] md:max-h-none"
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={isExpanded ? "expanded-content" : "collapsed-content"}
