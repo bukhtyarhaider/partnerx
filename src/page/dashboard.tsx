@@ -146,7 +146,6 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Bottom Sidebar Content */}
           <div className="mt-auto space-y-6">
             <PartnerSummary
               partnerEarnings={financials.partnerEarnings}
