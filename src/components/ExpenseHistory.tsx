@@ -46,7 +46,9 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
     >
       <div
         className={`hide-scrollbar dark:bg-slate-900/50 rounded-xl ${
-          isExpanded ? "h-full overflow-y-auto" : "h-[50vh] overflow-y-auto"
+          isExpanded
+            ? "h-full overflow-y-auto"
+            : " h-full lg:h-[50vh] overflow-y-auto"
         }`}
       >
         <div className="relative">

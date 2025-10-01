@@ -32,7 +32,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     >
       <div
         className={`dark:bg-slate-900/50 ${
-          isExpanded ? "h-full" : "h-[50vh]"
+          isExpanded ? "h-full" : "h-full lg:h-[50vh]"
         }  overflow-y-auto rounded-xl hide-scrollbar`}
       >
         <div className="relative">
