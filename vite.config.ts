@@ -119,8 +119,8 @@ export default defineConfig({
         categories: ["finance", "productivity", "business"],
         lang: "en",
         dir: "ltr",
-        theme_color: "#3193a2",
-        background_color: "#3193a2",
+        theme_color: "#ffffff",
+        background_color: "#ffffff",
         display: "standalone",
         display_override: [
           "window-controls-overlay",

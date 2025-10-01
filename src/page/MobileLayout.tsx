@@ -128,7 +128,7 @@ export const MobileLayout = ({
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 font-sans dark:bg-slate-900 lg:hidden">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white/80 p-4 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white/80 p-4 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80 mobile-app-header">
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-green-500 p-2">
             <LayoutDashboard className="size-5 text-white" />

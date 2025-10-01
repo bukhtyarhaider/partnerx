@@ -91,9 +91,31 @@ html,
   /* Ensure proper theme color inheritance */
   :root {
     --pwa-theme-color: #00b98d;
+    --pwa-theme-color-light: #ffffff;
+    --pwa-theme-color-dark: #1f2937;
   }
 }
 
+/* Dynamic theme color support */
+:root {
+  --theme-color-primary: #ffffff;
+  --theme-color-secondary: #f8fafc;
+  --theme-color-accent: #00b98d;
+}
+
+.dark {
+  --theme-color-primary: #1f2937;
+  --theme-color-secondary: #111827;
+  --theme-color-accent: #00b98d;
+}
+
+/* Ensure status bar colors are properly applied */
+@supports (padding: max(0px)) {
+  .mobile-app-header {
+    background-color: var(--theme-color-primary);
+    border-bottom: 1px solid var(--theme-color-secondary);
+  }
+}
 @keyframes flash-animation {
   0% {
     background-color: transparent;
