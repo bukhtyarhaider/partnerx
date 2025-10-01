@@ -62,15 +62,18 @@ export const PinLock = () => {
   const handleSubmit = useCallback(() => {
     if (pin.length !== 4 || isUnlocking) return;
 
-    let isCorrect = false;
-    if (isPinSet) {
-      const storedPin = atob(localStorage.getItem(PIN_STORAGE_KEY)!);
-      isCorrect = pin === storedPin;
-    } else {
+    if (!isPinSet) {
+      // Force user to set a PIN first
       localStorage.setItem(PIN_STORAGE_KEY, btoa(pin));
-      isCorrect = true;
+      setIsPinSet(true);
+      setPrompt("Enter Your 4-Digit PIN");
+      setPin("");
+      setError("PIN set! Please enter your new PIN to unlock.");
+      return;
     }
 
+    const storedPin = atob(localStorage.getItem(PIN_STORAGE_KEY)!);
+    const isCorrect = pin === storedPin;
     if (isCorrect) {
       setError("");
       setIsUnlocking(true);
