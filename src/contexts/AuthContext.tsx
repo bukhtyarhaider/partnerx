@@ -12,7 +12,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsUnlocked(false);
   };
 
-  const value = useMemo(() => ({ isUnlocked, unlockApp, lockApp }), [isUnlocked]);
+  const value = useMemo(
+    () => ({ isUnlocked, unlockApp, lockApp }),
+    [isUnlocked]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
