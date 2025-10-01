@@ -57,7 +57,7 @@ export function useAppHandlers(): AppHandlers {
     const taxableAmount = grossPKR - charityAmount;
     const taxAmount = taxableAmount * (taxRate / 100);
     const netProfit = taxableAmount - taxAmount;
-    const partnerShare = netProfit / 2;
+    const partnerShare = netProfit;
     return {
       feePKR,
       grossPKR,
