@@ -13,6 +13,7 @@ export const useAuth = () => {
     return {
       isUnlocked: false,
       unlockApp: () => {},
+      lockApp: () => {},
     };
   }
   return context;

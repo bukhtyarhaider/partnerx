@@ -3,6 +3,7 @@ import {
   HeartHandshake,
   LayoutDashboard,
   TrendingDown,
+  Lock,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -29,6 +30,7 @@ import type {
 } from "../types";
 import { FinancialSummary } from "../components/FinancialSummary";
 import { AppInfoModal } from "../components/AppInfoModal";
+import { useAuth } from "../hooks/useAuth";
 
 export interface DesktopLayoutProps {
   appState: AppHandlers;
@@ -45,6 +47,7 @@ export const DesktopLayout = ({
   sortedExpenses,
   sortedDonations,
 }: DesktopLayoutProps) => {
+  const { lockApp } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 10);
@@ -150,7 +153,16 @@ export const DesktopLayout = ({
           <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-50">
             Overview
           </h2>
-          <ThemeToggleButton />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={lockApp}
+              className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+              title="Lock App"
+            >
+              <Lock size={20} />
+            </button>
+            <ThemeToggleButton />
+          </div>
         </div>
         <Stats financials={financials} />
         <FinancialSummary

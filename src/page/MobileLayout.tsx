@@ -6,7 +6,7 @@ import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
 import { PartnerSummary } from "../components/PartnerSummary";
 import { ImportExport } from "../components/ImportExport";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Lock } from "lucide-react";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import { BottomNavBar } from "../components/mobile-specific/BottomNavBar";
 import { AddEntryModal } from "../components/mobile-specific/AddEntryModal";
@@ -27,6 +27,7 @@ import {
   TabsTrigger,
 } from "../components/ui/CustomTabs";
 import { AppInfoModal } from "../components/AppInfoModal";
+import { useAuth } from "../hooks/useAuth";
 
 type MobileTab = "overview" | "history" | "settings";
 
@@ -45,6 +46,7 @@ export const MobileLayout = ({
   sortedExpenses,
   sortedDonations,
 }: MobileLayoutProps) => {
+  const { lockApp } = useAuth();
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>("overview");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -135,7 +137,16 @@ export const MobileLayout = ({
             PartnerX
           </h1>
         </div>
-        <ThemeToggleButton />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={lockApp}
+            className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+            title="Lock App"
+          >
+            <Lock size={18} />
+          </button>
+          <ThemeToggleButton />
+        </div>
       </header>
 
       <main className="flex-1 overflow-y-auto p-4 pb-24">
