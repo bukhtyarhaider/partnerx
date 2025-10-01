@@ -5,19 +5,22 @@ import {
   Wallet,
   TrendingDown,
 } from "lucide-react";
-import type { PartnerName } from "../types";
+import type { PartnerRecord, Partner } from "../types";
 import { formatCurrency } from "../utils";
+import { usePartners } from "../hooks/usePartners";
 
 interface PartnerSummaryProps {
-  partnerEarnings: { [key in PartnerName]: number };
-  partnerExpenses: { [key in PartnerName]: number };
+  partnerEarnings: PartnerRecord<number>;
+  partnerExpenses: PartnerRecord<number>;
 }
 
 export const PartnerSummary: React.FC<PartnerSummaryProps> = ({
   partnerEarnings,
   partnerExpenses,
 }) => {
+  const { activePartners } = usePartners();
   const [isAnimating, setIsAnimating] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => setIsAnimating(true), 10);
     return () => clearTimeout(timer);
@@ -33,29 +36,27 @@ export const PartnerSummary: React.FC<PartnerSummaryProps> = ({
         Partner Wallets
       </h2>
       <div className="space-y-4">
-        <PartnerWalletCard
-          name="Bukhtyar"
-          earnings={partnerEarnings.Bukhtyar}
-          expenses={partnerExpenses.Bukhtyar}
-        />
-        <PartnerWalletCard
-          name="Asjad"
-          earnings={partnerEarnings.Asjad}
-          expenses={partnerExpenses.Asjad}
-        />
+        {activePartners.map((partner) => (
+          <PartnerWalletCard
+            key={partner.id}
+            partner={partner}
+            earnings={partnerEarnings[partner.id] || 0}
+            expenses={partnerExpenses[partner.id] || 0}
+          />
+        ))}
       </div>
     </div>
   );
 };
 
 interface PartnerWalletCardProps {
-  name: PartnerName;
+  partner: Partner;
   earnings: number;
   expenses: number;
 }
 
 const PartnerWalletCard: React.FC<PartnerWalletCardProps> = ({
-  name,
+  partner,
   earnings,
   expenses,
 }) => {
@@ -67,7 +68,9 @@ const PartnerWalletCard: React.FC<PartnerWalletCardProps> = ({
   return (
     <div className="transform rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-[1.03] hover:shadow-lg dark:border-slate-700 dark:bg-slate-800 dark:hover:shadow-black/30">
       <div className="mb-3 flex items-start justify-between">
-        <h3 className="font-bold text-slate-800 dark:text-slate-50">{name}</h3>
+        <h3 className="font-bold text-slate-800 dark:text-slate-50">
+          {partner.displayName}
+        </h3>
 
         <div
           className={`flex items-center gap-2 text-xl font-bold ${

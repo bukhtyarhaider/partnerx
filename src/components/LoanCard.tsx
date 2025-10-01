@@ -1,16 +1,18 @@
 import { CheckCircle2, Scale } from "lucide-react";
-import type { PartnerName } from "../types";
 import { formatCurrency } from "../utils/format";
+import { usePartners } from "../hooks/usePartners";
 
 interface LoanCardProps {
   loan: {
     amount: number;
-    owedBy: PartnerName | null;
+    owedBy: string | null;
   };
 }
 
 export const LoanCard: React.FC<LoanCardProps> = ({ loan }) => {
+  const { getPartner } = usePartners();
   const isBalanced = !loan.owedBy || loan.amount <= 0;
+  const owedByPartner = loan.owedBy ? getPartner(loan.owedBy) : null;
 
   return (
     <div
@@ -36,7 +38,9 @@ export const LoanCard: React.FC<LoanCardProps> = ({ loan }) => {
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
         {isBalanced
           ? "All partner expenses are settled."
-          : `${loan.owedBy} owes ${formatCurrency(loan.amount)}`}
+          : `${
+              owedByPartner?.displayName || "Unknown Partner"
+            } owes ${formatCurrency(loan.amount)}`}
       </p>
     </div>
   );

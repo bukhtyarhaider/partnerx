@@ -3,8 +3,9 @@ import type {
   Transaction,
   Expense,
   DonationPayout,
-  PartnerName,
+  PartnerRecord,
 } from "../types";
+import { usePartners } from "./usePartners";
 
 export interface Financials {
   totalGrossProfit: number;
@@ -12,9 +13,9 @@ export interface Financials {
   totalExpenses: number;
   companyCapital: number;
   availableDonationsFund: number;
-  loan: { amount: number; owedBy: PartnerName | null };
-  partnerEarnings: Record<PartnerName, number>;
-  partnerExpenses: Record<PartnerName, number>;
+  loan: { amount: number; owedBy: string | null };
+  partnerEarnings: PartnerRecord<number>;
+  partnerExpenses: PartnerRecord<number>;
 }
 
 export function useFinancials(
@@ -22,47 +23,80 @@ export function useFinancials(
   expenses: Expense[],
   donationPayouts: DonationPayout[]
 ): Financials {
+  const { activePartners, calculateShares } = usePartners();
+
   return useMemo(() => {
     let totalDonationsAccrued = 0;
     let totalGrossProfit = 0;
     let totalNetProfit = 0;
-    const partnerEarnings: { [key in PartnerName]: number } = {
-      Bukhtyar: 0,
-      Asjad: 0,
-    };
+
+    // Initialize partner earnings for all active partners
+    const partnerEarnings: PartnerRecord<number> = {};
+    activePartners.forEach((partner) => {
+      partnerEarnings[partner.id] = 0;
+    });
+
     for (const tx of transactions) {
       totalGrossProfit += tx.calculations.grossPKR;
       totalNetProfit += tx.calculations.netProfit;
-      partnerEarnings.Bukhtyar += tx.calculations.partnerShare;
-      partnerEarnings.Asjad += tx.calculations.partnerShare;
       totalDonationsAccrued += tx.calculations.charityAmount;
+
+      // Distribute partner share based on equity percentages
+      const shares = calculateShares(tx.calculations.partnerShare);
+      Object.entries(shares).forEach(([partnerId, share]) => {
+        partnerEarnings[partnerId] = (partnerEarnings[partnerId] || 0) + share;
+      });
     }
+
     const totalDonationsPaidOut = donationPayouts.reduce(
       (sum, payout) => sum + payout.amount,
       0
     );
     const availableDonationsFund =
       totalDonationsAccrued - totalDonationsPaidOut;
+
     let totalExpenses = 0;
-    const partnerExpenses: { [key in PartnerName]: number } = {
-      Bukhtyar: 0,
-      Asjad: 0,
-    };
+
+    // Initialize partner expenses for all active partners
+    const partnerExpenses: PartnerRecord<number> = {};
+    activePartners.forEach((partner) => {
+      partnerExpenses[partner.id] = 0;
+    });
+
     for (const ex of expenses) {
       totalExpenses += ex.amount;
-      partnerExpenses[ex.byWhom] += ex.amount;
+
+      // Find partner by name for backward compatibility
+      const partner = activePartners.find((p) => p.name === ex.byWhom);
+      if (partner) {
+        partnerExpenses[partner.id] =
+          (partnerExpenses[partner.id] || 0) + ex.amount;
+      }
     }
+
     const companyCapital = totalNetProfit - totalExpenses;
-    const expenseDifference = partnerExpenses.Bukhtyar - partnerExpenses.Asjad;
-    const loan = {
-      amount: Math.abs(expenseDifference) / 2,
-      owedBy:
-        expenseDifference > 0
-          ? ("Bukhtyar" as PartnerName)
-          : expenseDifference < 0
-          ? ("Asjad" as PartnerName)
-          : null,
-    };
+
+    // Calculate loan based on expense differences
+    // For now, we'll use the first two partners for backward compatibility
+    const partnerIds = Object.keys(partnerExpenses);
+    let loan = { amount: 0, owedBy: null as string | null };
+
+    if (partnerIds.length >= 2) {
+      const partner1Expenses = partnerExpenses[partnerIds[0]] || 0;
+      const partner2Expenses = partnerExpenses[partnerIds[1]] || 0;
+      const expenseDifference = partner1Expenses - partner2Expenses;
+
+      loan = {
+        amount: Math.abs(expenseDifference) / 2,
+        owedBy:
+          expenseDifference > 0
+            ? partnerIds[0]
+            : expenseDifference < 0
+            ? partnerIds[1]
+            : null,
+      };
+    }
+
     return {
       totalGrossProfit,
       totalNetProfit,
@@ -73,5 +107,11 @@ export function useFinancials(
       loan,
       availableDonationsFund,
     };
-  }, [transactions, expenses, donationPayouts]);
+  }, [
+    transactions,
+    expenses,
+    donationPayouts,
+    activePartners,
+    calculateShares,
+  ]);
 }

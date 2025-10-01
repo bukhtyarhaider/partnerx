@@ -8,7 +8,6 @@ import {
 import { StatCard } from "./StatCard";
 import { LoanCard } from "./LoanCard";
 import { formatCurrency } from "../utils/format";
-import type { PartnerName } from "../types";
 
 // The main data structure for financial stats
 type Financials = {
@@ -19,7 +18,7 @@ type Financials = {
   availableDonationsFund: number;
   loan: {
     amount: number;
-    owedBy: PartnerName | null;
+    owedBy: string | null;
   };
 };
 

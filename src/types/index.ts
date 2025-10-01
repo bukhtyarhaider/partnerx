@@ -1,6 +1,16 @@
 import type { Dispatch, SetStateAction } from "react";
 
+// Legacy type - to be phased out
 export type PartnerName = "Bukhtyar" | "Asjad";
+
+// New dynamic partner types
+export type {
+  Partner,
+  PartnerConfig,
+  PartnerRecord,
+  PartnerEarnings,
+  PartnerExpenses,
+} from "./partner";
 
 export interface TransactionCalculations {
   feePKR: number;

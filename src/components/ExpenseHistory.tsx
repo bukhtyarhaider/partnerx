@@ -3,6 +3,7 @@ import type { Expense } from "../types";
 import { Pencil, Trash2 } from "lucide-react";
 import { ExpandableCard } from "./common/ExpandableCard";
 import { formatCurrency } from "../utils";
+import { usePartners } from "../hooks/usePartners";
 
 interface ExpenseHistoryProps {
   expenses: Expense[];
@@ -15,8 +16,24 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { activePartners } = usePartners();
   const [isExpanded, setIsExpanded] = useState(false);
   const handleToggleExpand = () => setIsExpanded(!isExpanded);
+
+  // Helper function to get partner color based on index
+  const getPartnerColor = (partnerName: string) => {
+    const partnerIndex = activePartners.findIndex(
+      (p) => p.name === partnerName
+    );
+    const colors = [
+      "bg-sky-50 text-sky-700 ring-sky-600/20 dark:bg-sky-900/50 dark:text-sky-300 dark:ring-sky-400/20",
+      "bg-teal-50 text-teal-700 ring-teal-600/20 dark:bg-teal-900/50 dark:text-teal-300 dark:ring-teal-400/20",
+      "bg-purple-50 text-purple-700 ring-purple-600/20 dark:bg-purple-900/50 dark:text-purple-300 dark:ring-purple-400/20",
+      "bg-orange-50 text-orange-700 ring-orange-600/20 dark:bg-orange-900/50 dark:text-orange-300 dark:ring-orange-400/20",
+      "bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-900/50 dark:text-rose-300 dark:ring-rose-400/20",
+    ];
+    return colors[partnerIndex % colors.length] || colors[0];
+  };
 
   const thClasses =
     "sticky top-0 z-10 border-b border-slate-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-slate-800 backdrop-blur backdrop-filter dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-200";
@@ -82,11 +99,9 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-500">
                       <span
-                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                          ex.byWhom === "Bukhtyar"
-                            ? "bg-sky-50 text-sky-700 ring-sky-600/20 dark:bg-sky-900/50 dark:text-sky-300 dark:ring-sky-400/20"
-                            : "bg-teal-50 text-teal-700 ring-teal-600/20 dark:bg-teal-900/50 dark:text-teal-300 dark:ring-teal-400/20"
-                        }`}
+                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getPartnerColor(
+                          ex.byWhom
+                        )}`}
                       >
                         {ex.byWhom}
                       </span>

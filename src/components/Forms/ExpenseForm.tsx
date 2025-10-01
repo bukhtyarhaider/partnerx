@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { PlusCircle, Save, AlertCircle } from "lucide-react";
 import type { NewExpenseEntry, Expense, PartnerName } from "../../types";
 import { getTodayString } from "../../utils";
+import { usePartners } from "../../hooks/usePartners";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -16,12 +17,18 @@ export const ExpenseForm: React.FC<FormProps> = ({
   onAddExpense,
   onSave,
 }) => {
+  const { activePartners } = usePartners();
+
   // State for form fields
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(getTodayString());
   const [category, setCategory] = useState("");
-  const [byWhom, setByWhom] = useState<PartnerName>("Bukhtyar");
+  const [byWhom, setByWhom] = useState<PartnerName>(
+    activePartners.length > 0
+      ? (activePartners[0].name as PartnerName)
+      : "Bukhtyar"
+  );
   const [error, setError] = useState<string | null>(null);
 
   // **ANIMATION:** State to trigger the entrance animation
@@ -152,8 +159,11 @@ export const ExpenseForm: React.FC<FormProps> = ({
               onChange={(e) => setByWhom(e.target.value as PartnerName)}
               className={inputStyles}
             >
-              <option>Bukhtyar</option>
-              <option>Asjad</option>
+              {activePartners.map((partner) => (
+                <option key={partner.id} value={partner.name}>
+                  {partner.displayName}
+                </option>
+              ))}
             </select>
           </div>
         </div>
