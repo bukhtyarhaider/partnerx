@@ -26,6 +26,12 @@ const PinDigit = ({ digit }: { digit: string | null }) => {
   );
 };
 
+const triggerHapticFeedback = () => {
+  if (window.navigator && window.navigator.vibrate) {
+    window.navigator.vibrate(50);
+  }
+};
+
 export const PinLock = () => {
   const { unlockApp } = useAuth();
   const [pin, setPin] = useState("");
@@ -48,6 +54,8 @@ export const PinLock = () => {
 
   const handleKeyClick = useCallback(
     (key: string) => {
+      triggerHapticFeedback();
+
       if (isUnlocking) return;
       setError("");
       if (key === "del") {
@@ -61,6 +69,7 @@ export const PinLock = () => {
 
   const handleSubmit = useCallback(() => {
     if (pin.length !== 4 || isUnlocking) return;
+    triggerHapticFeedback();
 
     if (!isPinSet) {
       // Force user to set a PIN first
@@ -79,6 +88,9 @@ export const PinLock = () => {
       setIsUnlocking(true);
       unlockApp();
     } else {
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate([100, 50, 100]);
+      }
       setError("Incorrect PIN. Please try again.");
       setPin("");
     }
