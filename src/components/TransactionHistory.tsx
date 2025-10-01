@@ -83,10 +83,21 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                         {(() => {
                           const source = getSourceById(tx.sourceId);
                           return source ? (
-                            <IncomeSourceDisplay source={source} className="" />
+                            <IncomeSourceDisplay
+                              source={source}
+                              className=""
+                              date={new Date(tx.date).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                }
+                              )}
+                            />
                           ) : (
                             <div className="flex items-center">
-                              <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+                              <div className="mr-1 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
                                 <span className="text-slate-500 dark:text-slate-400 text-xs">
                                   ?
                                 </span>
@@ -102,15 +113,6 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                             </div>
                           );
                         })()}
-                        <div className="ml-auto">
-                          <div className="text-slate-500 dark:text-slate-400">
-                            {new Date(tx.date).toLocaleDateString("en-GB", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </div>
-                        </div>
                       </div>
                     </td>
                     <td className="hidden whitespace-nowrap px-3 py-4 text-sm text-slate-500 sm:table-cell">

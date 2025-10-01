@@ -14,9 +14,9 @@ export const IncomeSourceIcon: React.FC<IncomeSourceIconProps> = ({
   className = "",
 }) => {
   const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-5 w-5",
-    lg: "h-6 w-6",
+    sm: "h-4 ",
+    md: "h-5 ",
+    lg: "h-6 ",
   };
 
   const iconSize = sizeClasses[size];
@@ -67,12 +67,14 @@ interface IncomeSourceDisplayProps {
   source: IncomeSource;
   showDescription?: boolean;
   className?: string;
+  date?: string;
 }
 
 export const IncomeSourceDisplay: React.FC<IncomeSourceDisplayProps> = ({
   source,
   showDescription = false,
   className = "",
+  date,
 }) => {
   const displayName = source.metadata?.display?.displayName || source.name;
   const description = source.metadata?.display?.description;
@@ -83,7 +85,6 @@ export const IncomeSourceDisplay: React.FC<IncomeSourceDisplayProps> = ({
         className={`mr-3 flex h-8 w-8 items-center justify-center rounded-full`}
         style={{
           backgroundColor: source.metadata?.icon?.backgroundColor || "#f1f5f9",
-          // Dark mode handled by CSS or theme system
         }}
       >
         <IncomeSourceIcon source={source} size="md" />
@@ -95,6 +96,15 @@ export const IncomeSourceDisplay: React.FC<IncomeSourceDisplayProps> = ({
         {showDescription && description && (
           <div className="text-sm text-slate-500 dark:text-slate-400">
             {description}
+          </div>
+        )}
+        {date && (
+          <div className="ml-auto">
+            <div className="text-slate-500 dark:text-slate-400">
+              <div className="text-xsm text-slate-500 dark:text-slate-400">
+                {date}
+              </div>
+            </div>
           </div>
         )}
       </div>
