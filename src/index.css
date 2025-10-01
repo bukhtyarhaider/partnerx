@@ -82,6 +82,18 @@ html,
   }
 }
 
+/* PWA Theme and Icon Optimization */
+@media (display-mode: standalone) {
+  body {
+    background-color: var(--color-wise-green-light);
+  }
+
+  /* Ensure proper theme color inheritance */
+  :root {
+    --pwa-theme-color: #00b98d;
+  }
+}
+
 @keyframes flash-animation {
   0% {
     background-color: transparent;

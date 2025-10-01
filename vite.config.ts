@@ -112,15 +112,15 @@ export default defineConfig({
       ],
       manifest: {
         id: "/",
-        name: "PartnerWise - Financial Management",
+        name: "PartnerWise",
         short_name: "PartnerWise",
         description:
           "Manage your personal finances with ease. Track income, expenses, donations, and partnerships in one beautiful app with PartnerWise.",
         categories: ["finance", "productivity", "business"],
         lang: "en",
         dir: "ltr",
-        theme_color: "#1f2937",
-        background_color: "#ffffff",
+        theme_color: "#3193a2",
+        background_color: "#3193a2",
         display: "standalone",
         display_override: [
           "window-controls-overlay",
@@ -136,16 +136,19 @@ export default defineConfig({
             src: "/AppImages/android/partnerwise-64x64.png",
             sizes: "64x64",
             type: "image/png",
+            purpose: "any",
           },
           {
             src: "/AppImages/android/partnerwise-192x192.png",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any",
           },
           {
             src: "/AppImages/android/partnerwise-512x512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any",
           },
           {
             src: "/AppImages/android/partnerwise-maskable-512x512.png",
@@ -154,10 +157,10 @@ export default defineConfig({
             purpose: "maskable",
           },
           {
-            src: "/AppImages/android/partnerwise-512x512.png",
+            src: "/AppImages/android/partnerwise-maskable-512x512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any",
+            purpose: "maskable any",
           },
         ],
         screenshots: [
