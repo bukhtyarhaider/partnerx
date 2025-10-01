@@ -25,7 +25,7 @@ export const defaultIncomeSources: IncomeSource[] = [
         method: "fixed",
       },
       settings: {
-        defaultTaxRate: 15,
+        defaultTaxRate: 0,
         commissionRate: 0,
         analyticsUrl:
           "https://studio.youtube.com/channel/{channelId}/analytics",
@@ -58,11 +58,11 @@ export const defaultIncomeSources: IncomeSource[] = [
         },
       },
       fees: {
-        fixedFeeUSD: 5.0,
+        fixedFeeUSD: 0,
         method: "fixed",
       },
       settings: {
-        defaultTaxRate: 15,
+        defaultTaxRate: 0,
         commissionRate: 0,
         analyticsUrl: "https://business.tiktok.com/analytics",
         apiConfig: {
