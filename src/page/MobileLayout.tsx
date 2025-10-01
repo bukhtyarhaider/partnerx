@@ -149,7 +149,7 @@ export const MobileLayout = ({
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 pb-24">
+      <main className="flex-1 overflow-y-auto p-4 pb-24 mobile-safe-area">
         {renderContent()}
       </main>
 
