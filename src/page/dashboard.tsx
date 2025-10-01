@@ -1,34 +1,30 @@
-import { useAppHandlers } from "../hooks/useAppHandlers";
-import { useFinancials } from "../hooks/useFinancials";
-import { useLocalStorageSync } from "../hooks/useLocalStorageSync";
-import {
+import type { AppHandlers } from "../types";
+import type { useFinancials } from "../hooks/useFinancials";
+import type {
   useSortedTransactions,
   useSortedExpenses,
   useSortedDonations,
 } from "../hooks/useSortedData";
 
 import { EditModal } from "../components/EditModal";
-import { MobileLayout } from "./MobileLayout";
 import { DesktopLayout } from "./DesktopLayout";
+import { MobileLayout } from "./MobileLayout";
 
-export default function DashboardPage() {
-  const appState = useAppHandlers();
-  const financials = useFinancials(
-    appState.transactions,
-    appState.expenses,
-    appState.donationPayouts
-  );
-  const sortedTransactions = useSortedTransactions(appState.transactions);
-  const sortedExpenses = useSortedExpenses(appState.expenses);
-  const sortedDonations = useSortedDonations(appState.donationPayouts);
+interface DashboardPageProps {
+  appState: AppHandlers;
+  financials: ReturnType<typeof useFinancials>;
+  sortedTransactions: ReturnType<typeof useSortedTransactions>;
+  sortedExpenses: ReturnType<typeof useSortedExpenses>;
+  sortedDonations: ReturnType<typeof useSortedDonations>;
+}
 
-  useLocalStorageSync(
-    appState.transactions,
-    appState.expenses,
-    appState.donationPayouts,
-    appState.summaries
-  );
-
+export default function DashboardPage({
+  appState,
+  financials,
+  sortedTransactions,
+  sortedExpenses,
+  sortedDonations,
+}: DashboardPageProps) {
   return (
     <>
       <DesktopLayout
