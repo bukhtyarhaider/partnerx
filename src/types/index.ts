@@ -12,6 +12,16 @@ export type {
   PartnerExpenses,
 } from "./partner";
 
+// Income source types
+export type {
+  IncomeSource,
+  IncomeSourceConfig,
+  IncomeSourceMetadata,
+  IncomeSourceService,
+  IncomeSourceValidation,
+  UseIncomeSourcesResult,
+} from "./incomeSource";
+
 export interface TransactionCalculations {
   feePKR: number;
   grossPKR: number;
@@ -23,7 +33,7 @@ export interface TransactionCalculations {
 
 export interface Transaction {
   id: number;
-  source: "youtube" | "tiktok";
+  sourceId: string; // Changed from hardcoded union to dynamic string
   amountUSD: number;
   conversionRate: number;
   date: string;
@@ -86,11 +96,11 @@ export interface AppHandlers {
     donationPayouts: DonationPayout[];
     summaries: FinancialSummaryRecord[];
   }) => void;
-  handleAddTransaction: (entry: NewTransactionEntry) => void;
+  handleAddTransaction: (entry: NewTransactionEntry) => Promise<void>;
   handleAddExpense: (entry: NewExpenseEntry) => void;
   handleAddDonationPayout: (entry: NewDonationPayoutEntry) => void;
   handleAddSummary: (text: string) => void;
-  handleUpdateTransaction: (updatedTx: Transaction) => void;
+  handleUpdateTransaction: (updatedTx: Transaction) => Promise<void>;
   handleUpdateExpense: (updatedEx: Expense) => void;
   handleUpdateDonationPayout: (updatedDp: DonationPayout) => void;
   handleDeleteTransaction: (id: number) => void;

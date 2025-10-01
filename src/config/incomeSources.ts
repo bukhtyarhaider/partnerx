@@ -1,0 +1,255 @@
+import type { IncomeSource, IncomeSourceConfig } from "../types/incomeSource";
+
+/**
+ * Default income sources configuration
+ * This simulates data that would eventually come from backend/onboarding
+ */
+export const defaultIncomeSources: IncomeSource[] = [
+  {
+    id: "youtube",
+    name: "YouTube",
+    enabled: true,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Youtube",
+        color: "#ef4444", // red-500
+        backgroundColor: "#fef2f2", // red-50
+        darkMode: {
+          color: "#f87171", // red-400
+          backgroundColor: "rgba(239, 68, 68, 0.1)", // red-500 with opacity
+        },
+      },
+      fees: {
+        fixedFeeUSD: 0,
+        method: "fixed",
+      },
+      settings: {
+        defaultTaxRate: 15,
+        commissionRate: 0,
+        analyticsUrl:
+          "https://studio.youtube.com/channel/{channelId}/analytics",
+        apiConfig: {
+          baseUrl: "https://www.googleapis.com/youtube/v3",
+          authType: "oauth",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube.readonly"],
+        },
+      },
+      display: {
+        description: "Revenue from YouTube monetization and partnerships",
+        category: "Video Platform",
+        sortOrder: 1,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "tiktok",
+    name: "TikTok",
+    enabled: true,
+    metadata: {
+      icon: {
+        type: "image",
+        value: "/tiktok.png",
+        backgroundColor: "#f1f5f9", // slate-100
+        darkMode: {
+          backgroundColor: "#334155", // slate-700
+        },
+      },
+      fees: {
+        fixedFeeUSD: 5.0,
+        method: "fixed",
+      },
+      settings: {
+        defaultTaxRate: 15,
+        commissionRate: 0,
+        analyticsUrl: "https://business.tiktok.com/analytics",
+        apiConfig: {
+          baseUrl: "https://business-api.tiktok.com",
+          authType: "oauth",
+          requiredScopes: ["business.analytics.read"],
+        },
+      },
+      display: {
+        description: "Revenue from TikTok Creator Fund and brand partnerships",
+        category: "Social Media",
+        sortOrder: 2,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  // Additional dummy sources for demonstration
+  {
+    id: "instagram",
+    name: "Instagram",
+    enabled: false, // Disabled by default - can be enabled during onboarding
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Instagram",
+        color: "#e11d48", // rose-600
+        backgroundColor: "#fff1f2", // rose-50
+        darkMode: {
+          color: "#fb7185", // rose-400
+          backgroundColor: "rgba(225, 29, 72, 0.1)",
+        },
+      },
+      fees: {
+        fixedFeeUSD: 0,
+        method: "fixed",
+      },
+      settings: {
+        defaultTaxRate: 15,
+        commissionRate: 0,
+        analyticsUrl: "https://business.instagram.com/insights",
+        apiConfig: {
+          baseUrl: "https://graph.instagram.com",
+          authType: "oauth",
+          requiredScopes: ["instagram_basic", "instagram_content_publish"],
+        },
+      },
+      display: {
+        description:
+          "Revenue from Instagram Reels, IGTV, and sponsored content",
+        category: "Social Media",
+        sortOrder: 3,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "twitch",
+    name: "Twitch",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Twitch",
+        color: "#7c3aed", // violet-600
+        backgroundColor: "#f5f3ff", // violet-50
+        darkMode: {
+          color: "#a78bfa", // violet-400
+          backgroundColor: "rgba(124, 58, 237, 0.1)",
+        },
+      },
+      fees: {
+        fixedFeeUSD: 0,
+        percentageFee: 2.5, // Example: Twitch takes 2.5% for some transactions
+        method: "percentage",
+      },
+      settings: {
+        defaultTaxRate: 15,
+        commissionRate: 50, // Revenue split with Twitch
+        analyticsUrl: "https://dashboard.twitch.tv/analytics/revenue",
+        apiConfig: {
+          baseUrl: "https://api.twitch.tv/helix",
+          authType: "oauth",
+          requiredScopes: ["analytics:read:extensions", "user:read:email"],
+        },
+      },
+      display: {
+        description:
+          "Revenue from Twitch streaming, subscriptions, and donations",
+        category: "Live Streaming",
+        sortOrder: 4,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "patreon",
+    name: "Patreon",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Heart",
+        color: "#f97316", // orange-500
+        backgroundColor: "#fff7ed", // orange-50
+        darkMode: {
+          color: "#fb923c", // orange-400
+          backgroundColor: "rgba(249, 115, 22, 0.1)",
+        },
+      },
+      fees: {
+        percentageFee: 8, // Patreon's fee structure
+        method: "percentage",
+      },
+      settings: {
+        defaultTaxRate: 15,
+        commissionRate: 0,
+        analyticsUrl: "https://www.patreon.com/portal/analytics",
+        apiConfig: {
+          baseUrl: "https://www.patreon.com/api/oauth2/v2",
+          authType: "oauth",
+          requiredScopes: ["identity", "campaigns"],
+        },
+      },
+      display: {
+        description: "Monthly recurring revenue from Patreon subscribers",
+        category: "Subscription",
+        sortOrder: 5,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+];
+
+/**
+ * Default income source configuration
+ */
+export const defaultIncomeSourceConfig: IncomeSourceConfig = {
+  sources: defaultIncomeSources,
+  defaultSourceId: "youtube", // YouTube as default
+  version: "1.0.0",
+  lastUpdated: new Date().toISOString(),
+};
+
+/**
+ * Helper function to get enabled sources only
+ */
+export const getEnabledSources = (
+  config: IncomeSourceConfig = defaultIncomeSourceConfig
+): IncomeSource[] => {
+  return config.sources.filter((source) => source.enabled);
+};
+
+/**
+ * Helper function to get source by ID
+ */
+export const getSourceById = (
+  id: string,
+  config: IncomeSourceConfig = defaultIncomeSourceConfig
+): IncomeSource | undefined => {
+  return config.sources.find((source) => source.id === id);
+};
+
+/**
+ * Helper function to get sources by category
+ */
+export const getSourcesByCategory = (
+  category: string,
+  config: IncomeSourceConfig = defaultIncomeSourceConfig
+): IncomeSource[] => {
+  return config.sources.filter(
+    (source) => source.metadata?.display?.category === category
+  );
+};
+
+/**
+ * Helper function to get sorted sources
+ */
+export const getSortedSources = (
+  config: IncomeSourceConfig = defaultIncomeSourceConfig
+): IncomeSource[] => {
+  return [...config.sources].sort((a, b) => {
+    const orderA = a.metadata?.display?.sortOrder ?? 999;
+    const orderB = b.metadata?.display?.sortOrder ?? 999;
+    return orderA - orderB;
+  });
+};

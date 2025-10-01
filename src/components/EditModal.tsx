@@ -11,7 +11,7 @@ interface EditModalProps {
   onClose: () => void;
   entry: EditableEntry | null;
   type: "transaction" | "expense" | "donation" | null;
-  onUpdateTransaction: (tx: Transaction) => void;
+  onUpdateTransaction: (tx: Transaction) => Promise<void>;
   onUpdateExpense: (ex: Expense) => void;
   onUpdateDonationPayout: (dp: DonationPayout) => void;
   availableDonationFunds: number;

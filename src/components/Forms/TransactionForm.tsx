@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { PlusCircle, Save, AlertCircle } from "lucide-react";
 import type { NewTransactionEntry, Transaction } from "../../types";
 import { getTodayString } from "../../utils";
+import { useEnabledIncomeSources } from "../../hooks/useIncomeSources";
 
 interface FormProps {
   mode?: "add" | "edit";
   initialData?: Transaction;
-  onAddTransaction?: (entry: NewTransactionEntry) => void;
-  onSave?: (entry: Transaction) => void;
+  onAddTransaction?: (entry: NewTransactionEntry) => Promise<void>;
+  onSave?: (entry: Transaction) => Promise<void>;
 }
 
 export const TransactionForm: React.FC<FormProps> = ({
@@ -16,7 +17,8 @@ export const TransactionForm: React.FC<FormProps> = ({
   onAddTransaction,
   onSave,
 }) => {
-  const [source, setSource] = useState<"youtube" | "tiktok">("youtube");
+  const { sources: enabledSources } = useEnabledIncomeSources();
+  const [sourceId, setSourceId] = useState<string>("");
   const [amountUSD, setAmountUSD] = useState("");
   const [conversionRate, setConversionRate] = useState("");
   const [taxRate, setTaxRate] = useState("");
@@ -26,9 +28,16 @@ export const TransactionForm: React.FC<FormProps> = ({
 
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Set default source when sources are loaded
+  useEffect(() => {
+    if (enabledSources.length > 0 && !sourceId && mode === "add") {
+      setSourceId(enabledSources[0].id);
+    }
+  }, [enabledSources, sourceId, mode]);
+
   useEffect(() => {
     if (mode === "edit" && initialData) {
-      setSource(initialData.source);
+      setSourceId(initialData.sourceId);
       setAmountUSD(String(initialData.amountUSD));
       setConversionRate(String(initialData.conversionRate));
       setTaxRate(String(initialData.taxRate));
@@ -42,17 +51,24 @@ export const TransactionForm: React.FC<FormProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null); // Clear previous errors
 
-    if (!amountUSD || !conversionRate || !taxRate || !bank || !date) {
+    if (
+      !amountUSD ||
+      !conversionRate ||
+      !taxRate ||
+      !bank ||
+      !date ||
+      !sourceId
+    ) {
       setError("Please fill out all required fields.");
       return;
     }
 
     const commonData = {
-      source,
+      sourceId,
       date,
       bank,
       amountUSD: parseFloat(amountUSD),
@@ -60,16 +76,26 @@ export const TransactionForm: React.FC<FormProps> = ({
       taxRate: parseFloat(taxRate),
     };
 
-    if (mode === "edit" && onSave && initialData) {
-      onSave({ ...initialData, ...commonData });
-    } else if (mode === "add" && onAddTransaction) {
-      onAddTransaction(commonData);
-      // Reset form after successful submission
-      setAmountUSD("");
-      setConversionRate("");
-      setTaxRate("");
-      setBank("");
-      setDate(getTodayString());
+    try {
+      if (mode === "edit" && onSave && initialData) {
+        await onSave({ ...initialData, ...commonData });
+      } else if (mode === "add" && onAddTransaction) {
+        await onAddTransaction(commonData);
+        // Reset form after successful submission
+        setAmountUSD("");
+        setConversionRate("");
+        setTaxRate("");
+        setBank("");
+        setDate(getTodayString());
+        // Reset to first enabled source
+        if (enabledSources.length > 0) {
+          setSourceId(enabledSources[0].id);
+        }
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
+      setError(errorMessage);
     }
   };
 
@@ -108,12 +134,20 @@ export const TransactionForm: React.FC<FormProps> = ({
           </label>
           <select
             id="source"
-            value={source}
-            onChange={(e) => setSource(e.target.value as "youtube" | "tiktok")}
+            value={sourceId}
+            onChange={(e) => setSourceId(e.target.value)}
             className={inputStyles}
+            disabled={enabledSources.length === 0}
           >
-            <option value="youtube">YouTube</option>
-            <option value="tiktok">TikTok</option>
+            {enabledSources.length === 0 ? (
+              <option value="">No income sources available</option>
+            ) : (
+              enabledSources.map((source) => (
+                <option key={source.id} value={source.id}>
+                  {source.name}
+                </option>
+              ))
+            )}
           </select>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

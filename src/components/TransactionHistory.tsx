@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Youtube, Landmark, Pencil, Trash2, ReceiptText } from "lucide-react";
+import { Landmark, Pencil, Trash2, ReceiptText } from "lucide-react";
 import type { Transaction } from "../types";
-import TikTokLogo from "/tiktok.png";
 import { ExpandableCard } from "./common/ExpandableCard";
 import { pkrFormatter, usdFormatter } from "../utils";
+import { useIncomeSources } from "../hooks/useIncomeSources";
+import { IncomeSourceDisplay } from "./common/IncomeSourceDisplay";
 
 interface TransactionHistoryProps {
   transactions: Transaction[];
@@ -17,6 +18,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   onDelete,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { getSourceById } = useIncomeSources();
   const handleToggleExpand = () => setIsExpanded(!isExpanded);
 
   const thClasses =
@@ -78,27 +80,29 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   >
                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6 lg:pl-8">
                       <div className="flex items-center">
-                        <div
-                          className={`mr-4 flex h-8 w-8 items-center justify-center rounded-full ${
-                            tx.source === "youtube"
-                              ? "bg-red-100 dark:bg-red-900/50"
-                              : "bg-slate-200 dark:bg-slate-700"
-                          }`}
-                        >
-                          {tx.source === "youtube" ? (
-                            <Youtube className="text-red-500 dark:text-red-400" />
+                        {(() => {
+                          const source = getSourceById(tx.sourceId);
+                          return source ? (
+                            <IncomeSourceDisplay source={source} className="" />
                           ) : (
-                            <img
-                              src={TikTokLogo}
-                              alt="TikTok"
-                              className="h-5 w-5"
-                            />
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-900 dark:text-slate-50">
-                            {tx.source === "youtube" ? "YouTube" : "TikTok"}
-                          </div>
+                            <div className="flex items-center">
+                              <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+                                <span className="text-slate-500 dark:text-slate-400 text-xs">
+                                  ?
+                                </span>
+                              </div>
+                              <div>
+                                <div className="font-medium text-slate-900 dark:text-slate-50">
+                                  Unknown Source
+                                </div>
+                                <div className="text-sm text-red-500 dark:text-red-400">
+                                  Source ID: {tx.sourceId}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        <div className="ml-auto">
                           <div className="text-slate-500 dark:text-slate-400">
                             {new Date(tx.date).toLocaleDateString("en-GB", {
                               day: "2-digit",

@@ -10,13 +10,15 @@ import type {
   TransactionCalculations,
   AppHandlers,
 } from "../types";
+import { incomeSourceService } from "../services/incomeSourceService";
+import { loadTransactionsWithMigration } from "../utils/migration";
 
 type EditableEntry = Transaction | Expense | DonationPayout;
 type ModalType = "transaction" | "expense" | "donation" | null;
 
 export function useAppHandlers(): AppHandlers {
   const [transactions, setTransactions] = useState<Transaction[]>(() =>
-    JSON.parse(localStorage.getItem("transactions") || "[]")
+    loadTransactionsWithMigration()
   );
   const [expenses, setExpenses] = useState<Expense[]>(() =>
     JSON.parse(localStorage.getItem("expenses") || "[]")
@@ -45,11 +47,36 @@ export function useAppHandlers(): AppHandlers {
     setSummaries(data.summaries || []);
   };
 
-  const recalculateTransaction = (
+  const recalculateTransaction = async (
     entry: NewTransactionEntry | Transaction
-  ): TransactionCalculations => {
-    const { amountUSD, conversionRate, source, taxRate } = entry;
-    const feeUSD = source === "tiktok" ? 5.0 : 0;
+  ): Promise<TransactionCalculations> => {
+    const { amountUSD, conversionRate, sourceId, taxRate } = entry;
+
+    // Get the income source to determine fees
+    let feeUSD = 0;
+    try {
+      const source = await incomeSourceService.getSource(sourceId);
+      if (source?.metadata?.fees) {
+        const fees = source.metadata.fees;
+        if (fees.method === "fixed") {
+          feeUSD = fees.fixedFeeUSD || 0;
+        } else if (fees.method === "percentage") {
+          feeUSD = amountUSD * ((fees.percentageFee || 0) / 100);
+        } else if (fees.method === "hybrid") {
+          feeUSD =
+            (fees.fixedFeeUSD || 0) +
+            amountUSD * ((fees.percentageFee || 0) / 100);
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to get fee information for source ${sourceId}:`,
+        error
+      );
+      // Fall back to legacy behavior for backward compatibility
+      feeUSD = sourceId === "tiktok" ? 5.0 : 0;
+    }
+
     const feePKR = feeUSD * conversionRate;
     const amountAfterFeesUSD = amountUSD - feeUSD;
     const grossPKR = amountAfterFeesUSD * conversionRate;
@@ -68,11 +95,12 @@ export function useAppHandlers(): AppHandlers {
     };
   };
 
-  const handleAddTransaction = (entry: NewTransactionEntry) => {
+  const handleAddTransaction = async (entry: NewTransactionEntry) => {
+    const calculations = await recalculateTransaction(entry);
     const newTransaction: Transaction = {
       id: Date.now(),
       ...entry,
-      calculations: recalculateTransaction(entry),
+      calculations,
     };
     setTransactions((prev) => [newTransaction, ...prev]);
   };
@@ -89,8 +117,8 @@ export function useAppHandlers(): AppHandlers {
     setSummaries((prev) => [newSummary, ...prev]);
   };
 
-  const handleUpdateTransaction = (updatedTx: Transaction) => {
-    updatedTx.calculations = recalculateTransaction(updatedTx);
+  const handleUpdateTransaction = async (updatedTx: Transaction) => {
+    updatedTx.calculations = await recalculateTransaction(updatedTx);
     setTransactions(
       transactions.map((tx) => (tx.id === updatedTx.id ? updatedTx : tx))
     );
