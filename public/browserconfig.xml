@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+    <msapplication>
+        <tile>
+            <square70x70logo src="/AppImages/windows/partnerwise-tile-64x64.png"/>
+            <square150x150logo src="/AppImages/windows/partnerwise-tile-192x192.png"/>
+            <square310x310logo src="/AppImages/windows/partnerwise-tile-512x512.png"/>
+            <TileColor>#1f2937</TileColor>
+        </tile>
+    </msapplication>
+</browserconfig>

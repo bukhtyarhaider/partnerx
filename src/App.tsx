@@ -3,6 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import { useAppHandlers } from "./hooks/useAppHandlers";
 import { useFinancials } from "./hooks/useFinancials";
 import { useLocalStorageSync } from "./hooks/useLocalStorageSync";
+import { useA11yEnhancements } from "./hooks/useA11yEnhancements";
 import {
   useSortedTransactions,
   useSortedExpenses,
@@ -16,6 +17,8 @@ import { PinLock } from "./components/PinLock";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useAuth } from "./hooks/useAuth";
+import InstallPrompt from "./components/InstallPrompt";
+import PerformanceMonitor from "./components/PerformanceMonitor";
 import type {
   AppHandlers,
   DonationPayout,
@@ -29,6 +32,9 @@ export default function App() {
   const sortedExpenses = useSortedExpenses(appState.expenses);
   const sortedDonations = useSortedDonations(appState.donationPayouts);
 
+  // Enable accessibility enhancements
+  useA11yEnhancements();
+
   useLocalStorageSync(
     appState.transactions,
     appState.expenses,
@@ -41,6 +47,7 @@ export default function App() {
       <ThemeProvider>
         <PartnerProvider>
           <ErrorBoundary>
+            <PerformanceMonitor />
             <InnerApp
               appState={appState}
               sortedTransactions={sortedTransactions}
@@ -72,7 +79,10 @@ function InnerApp(props: InnerAppProps) {
   return (
     <AnimatePresence mode="wait">
       {isUnlocked ? (
-        <DashboardPage key="dashboard" {...props} financials={financials} />
+        <>
+          <DashboardPage key="dashboard" {...props} financials={financials} />
+          <InstallPrompt />
+        </>
       ) : (
         <PinLock key="pin-lock" />
       )}

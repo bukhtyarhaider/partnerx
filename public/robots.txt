@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: /sitemap.xml
+
+# Performance: Crawl delay for better server performance
+Crawl-delay: 1
+
+# Block common bot paths that aren't needed for a PWA
+Disallow: /api/
+Disallow: /_next/
+Disallow: /node_modules/
+Disallow: /.git/
