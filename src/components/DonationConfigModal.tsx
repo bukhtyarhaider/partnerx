@@ -84,8 +84,8 @@ export const DonationConfigModal: React.FC<DonationConfigModalProps> = ({
       <div className="w-full max-w-md rounded-xl bg-white shadow-xl dark:bg-slate-800">
         <div className="flex items-center justify-between border-b border-slate-200 p-6 dark:border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/50">
-              <Settings className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900/50">
+              <Settings className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
               Donation Settings
@@ -112,7 +112,7 @@ export const DonationConfigModal: React.FC<DonationConfigModalProps> = ({
                 onChange={(e) => handleInputChange("enabled", e.target.checked)}
                 className="peer sr-only"
               />
-              <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-slate-600 dark:bg-slate-700 dark:peer-focus:ring-blue-800"></div>
+              <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:border-slate-600 dark:bg-slate-700 dark:peer-focus:ring-green-800"></div>
             </label>
           </div>
 
@@ -138,7 +138,7 @@ export const DonationConfigModal: React.FC<DonationConfigModalProps> = ({
                 className={`w-full rounded-lg border px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 disabled:opacity-50 ${
                   errors.percentage
                     ? "border-red-300 focus:ring-red-500"
-                    : "border-slate-300 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                    : "border-slate-300 focus:ring-green-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 }`}
                 placeholder="10"
               />
@@ -167,7 +167,7 @@ export const DonationConfigModal: React.FC<DonationConfigModalProps> = ({
                     handleInputChange("taxPreference", e.target.value)
                   }
                   disabled={!formData.enabled}
-                  className="mr-2 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                  className="mr-2 text-green-600 focus:ring-green-500 disabled:opacity-50"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   Before Tax (from gross income)
@@ -183,7 +183,7 @@ export const DonationConfigModal: React.FC<DonationConfigModalProps> = ({
                     handleInputChange("taxPreference", e.target.value)
                   }
                   disabled={!formData.enabled}
-                  className="mr-2 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                  className="mr-2 text-green-600 focus:ring-green-500 disabled:opacity-50"
                 />
                 <span className="text-sm text-slate-700 dark:text-slate-300">
                   After Tax (from net income)
@@ -212,7 +212,7 @@ export const DonationConfigModal: React.FC<DonationConfigModalProps> = ({
               className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 disabled:opacity-50 ${
                 errors.minimumAmount
                   ? "border-red-300 focus:ring-red-500"
-                  : "border-slate-300 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  : "border-slate-300 focus:ring-green-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               }`}
               placeholder="Leave empty for no minimum"
             />
@@ -243,7 +243,7 @@ export const DonationConfigModal: React.FC<DonationConfigModalProps> = ({
               className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 disabled:opacity-50 ${
                 errors.maximumAmount
                   ? "border-red-300 focus:ring-red-500"
-                  : "border-slate-300 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  : "border-slate-300 focus:ring-green-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               }`}
               placeholder="Leave empty for no maximum"
             />
@@ -258,24 +258,24 @@ export const DonationConfigModal: React.FC<DonationConfigModalProps> = ({
         <div className="flex justify-between border-t border-slate-200 p-6 dark:border-slate-700">
           <button
             onClick={handleReset}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
           >
             <RotateCcw size={16} />
-            Reset to Default
+            Reset
           </button>
-          <div className="flex gap-3">
+          <div className="flex gap-1">
             <button
               onClick={onClose}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <Save size={16} />
-              Save Changes
+              Save
             </button>
           </div>
         </div>
