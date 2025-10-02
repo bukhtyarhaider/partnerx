@@ -55,8 +55,9 @@ export const MobileLayout = ({
     switch (activeMobileTab) {
       case "overview":
         return (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Stats financials={financials} />
+
             <FinancialSummary
               transactions={sortedTransactions}
               expenses={sortedExpenses}
@@ -65,7 +66,9 @@ export const MobileLayout = ({
               onAddSummary={appState.handleAddSummary}
               onDeleteSummary={appState.handleDeleteSummary}
             />
+
             <LiveRate />
+
             <IncomeChart transactions={sortedTransactions} />
           </div>
         );
@@ -94,7 +97,6 @@ export const MobileLayout = ({
               />
             </TabsContent>
 
-            {/* The content panel for "Donations" */}
             <TabsContent value="donations">
               <DonationHistory
                 donations={sortedDonations}
@@ -106,11 +108,12 @@ export const MobileLayout = ({
         );
       case "settings":
         return (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <PartnerSummary
               partnerEarnings={financials.partnerEarnings}
               partnerExpenses={financials.partnerExpenses}
             />
+
             <ImportExport
               transactions={appState.transactions}
               expenses={appState.expenses}
@@ -118,6 +121,7 @@ export const MobileLayout = ({
               onImport={appState.handleImport}
               summaries={appState.summaries}
             />
+
             <AppInfoModal />
           </div>
         );
@@ -134,25 +138,24 @@ export const MobileLayout = ({
             <LayoutDashboard className="size-5 text-white" />
           </div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-slate-50">
-            PartnerX
+            PartnerWise
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={lockApp}
-            className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+            className="rounded-2xl p-2 text-slate-600 transition-all duration-200 hover:bg-white/40 hover:text-slate-800 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-700/40 dark:hover:text-slate-200"
             title="Lock App"
+            aria-label="Lock application"
           >
             <Lock size={18} />
           </button>
           <ThemeToggleButton />
         </div>
-      </header>
-
-      <main className="flex-1 overflow-y-auto p-4 pb-24 mobile-safe-area">
-        {renderContent()}
+      </header>{" "}
+      <main className="flex-1 overflow-y-auto p-4 pb-28 mobile-safe-area">
+        <div className="space-y-4">{renderContent()}</div>
       </main>
-
       <BottomNavBar
         activeTab={activeMobileTab}
         onTabChange={setActiveMobileTab}
@@ -162,7 +165,6 @@ export const MobileLayout = ({
         }}
         isAddOpen={isAddOpen}
       />
-
       <AddEntryModal
         isOpen={isAddModalOpen}
         onClose={() => {

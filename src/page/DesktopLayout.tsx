@@ -5,7 +5,6 @@ import {
   TrendingDown,
   Lock,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import {
   DonationForm,
   ExpenseForm,
@@ -48,88 +47,90 @@ export const DesktopLayout = ({
   sortedDonations,
 }: DesktopLayoutProps) => {
   const { lockApp } = useAuth();
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 10);
-    return () => clearTimeout(timer);
-  }, []);
 
-  const baseTabStyle =
-    "flex items-center gap-2 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ease-in-out transform hover:-translate-y-0.5";
-  const activeTabStyle =
-    "border-green-500 text-green-500 dark:border-green-400 dark:text-green-400";
-  const inactiveTabStyle =
-    "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200";
+  const tabs = [
+    {
+      id: "income" as const,
+      label: "Income",
+      icon: HandCoins,
+      component: (
+        <TransactionForm onAddTransaction={appState.handleAddTransaction} />
+      ),
+    },
+    {
+      id: "expense" as const,
+      label: "Expense",
+      icon: TrendingDown,
+      component: <ExpenseForm onAddExpense={appState.handleAddExpense} />,
+    },
+    {
+      id: "donation" as const,
+      label: "Donation",
+      icon: HeartHandshake,
+      component: (
+        <DonationForm
+          onAddDonationPayout={appState.handleAddDonationPayout}
+          availableFunds={financials.availableDonationsFund}
+        />
+      ),
+    },
+  ];
+
+  const activeTab = tabs.find((tab) => tab.id === appState.activeTab);
 
   return (
-    <div className="hidden min-h-screen flex-col font-sans lg:flex lg:flex-row bg-slate-50 dark:bg-slate-900">
-      <aside
-        className={`flex w-full shrink-0 transform flex-col border-b border-slate-200 bg-white p-4 transition-all duration-500 sm:p-6 lg:w-96 lg:border-b-0 lg:border-r dark:border-slate-700 dark:bg-slate-800 ${
-          isMounted
-            ? "translate-x-0 opacity-100"
-            : "-translate-x-full opacity-0"
-        }`}
-      >
-        <div className="mb-6 flex items-center gap-3">
-          <div className="rounded-full bg-green-500 p-2">
-            <LayoutDashboard className="size-6 text-white" />
+    <div className="hidden min-h-screen bg-gradient-to-br from-slate-50 via-green-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 lg:flex">
+      {/* Sidebar */}
+      <aside className="flex w-80 flex-col border-r border-white/20 bg-white/70 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-800/70">
+        {/* Header */}
+        <div className="flex items-center gap-3 bg-white/30 px-4 py-5 backdrop-blur-sm dark:bg-slate-800/30">
+          <div className="rounded-lg bg-gradient-to-br from-green-500 to-green-600 p-2 shadow-lg shadow-green-500/25">
+            <LayoutDashboard className="size-4 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-50">
-            PartnerX
+          <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            PartnerWise
           </h1>
         </div>
-        <div className="mb-1">
+
+        {/* Live Rate */}
+        <div className="px-4 py-2">
           <LiveRate />
         </div>
-        <div className="border-b border-gray-200 dark:border-slate-700">
-          <nav className="-mb-px flex space-x-4 sm:space-x-6" aria-label="Tabs">
-            <button
-              onClick={() => appState.setActiveTab("income")}
-              className={`${baseTabStyle} ${
-                appState.activeTab === "income"
-                  ? activeTabStyle
-                  : inactiveTabStyle
-              }`}
-            >
-              <HandCoins size={16} /> Income
-            </button>
-            <button
-              onClick={() => appState.setActiveTab("expense")}
-              className={`${baseTabStyle} ${
-                appState.activeTab === "expense"
-                  ? activeTabStyle
-                  : inactiveTabStyle
-              }`}
-            >
-              <TrendingDown size={16} /> Expense
-            </button>
-            <button
-              onClick={() => appState.setActiveTab("donation")}
-              className={`${baseTabStyle} ${
-                appState.activeTab === "donation"
-                  ? activeTabStyle
-                  : inactiveTabStyle
-              }`}
-            >
-              <HeartHandshake size={16} /> Donation
-            </button>
-          </nav>
-        </div>
-        <div className="py-6 lg:flex-grow lg:overflow-y-auto">
-          {appState.activeTab === "income" && (
-            <TransactionForm onAddTransaction={appState.handleAddTransaction} />
-          )}
-          {appState.activeTab === "expense" && (
-            <ExpenseForm onAddExpense={appState.handleAddExpense} />
-          )}
-          {appState.activeTab === "donation" && (
-            <DonationForm
-              onAddDonationPayout={appState.handleAddDonationPayout}
-              availableFunds={financials.availableDonationsFund}
-            />
-          )}
-        </div>
-        <div className="mt-auto space-y-6">
+
+        {/* Navigation Tabs */}
+        <nav
+          className="bg-white/20 backdrop-blur-sm dark:bg-slate-800/20"
+          aria-label="Navigation tabs"
+        >
+          <div className="flex">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = appState.activeTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => appState.setActiveTab(tab.id)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? "border-b-2 border-green-500 bg-green-50/50 text-green-600 backdrop-blur-sm dark:bg-green-900/30 dark:text-green-400"
+                      : "text-slate-600 hover:bg-white/30 hover:text-slate-900 hover:backdrop-blur-sm dark:text-slate-400 dark:hover:bg-slate-700/30 dark:hover:text-slate-200"
+                  }`}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon size={14} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* Tab Content */}
+        <div className="flex-1 overflow-y-auto p-3">{activeTab?.component}</div>
+
+        {/* Footer Content */}
+        <div className="space-y-3 bg-white/20 p-3 backdrop-blur-sm dark:bg-slate-800/20">
           <PartnerSummary
             partnerEarnings={financials.partnerEarnings}
             partnerExpenses={financials.partnerExpenses}
@@ -144,63 +145,70 @@ export const DesktopLayout = ({
           <AppInfoModal />
         </div>
       </aside>
-      <main
-        className={`flex-1 overflow-y-auto p-4 transition-opacity duration-700 delay-200 sm:p-8 ${
-          isMounted ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <div className="mb-6 flex flex-row items-center justify-between">
-          <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-50">
-            Overview
-          </h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={lockApp}
-              className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
-              title="Lock App"
-            >
-              <Lock size={20} />
-            </button>
-            <ThemeToggleButton />
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-4">
+          {/* Header */}
+          <header className="mb-4 flex items-center justify-between rounded-xl bg-white/30 p-4 backdrop-blur-sm dark:bg-slate-800/30">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+              Overview
+            </h2>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={lockApp}
+                className="rounded-lg p-1.5 text-slate-500 transition-all duration-200 hover:bg-white/50 hover:text-slate-700 hover:backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-300 dark:focus:ring-offset-slate-800"
+                title="Lock App"
+                aria-label="Lock application"
+              >
+                <Lock size={16} />
+              </button>
+              <ThemeToggleButton />
+            </div>
+          </header>
+
+          <Stats financials={financials} />
+
+          {/* Financial Summary */}
+          <div className="mb-4 ">
+            <FinancialSummary
+              financials={financials}
+              transactions={sortedTransactions}
+              expenses={sortedExpenses}
+              summaries={appState.summaries}
+              onAddSummary={appState.handleAddSummary}
+              onDeleteSummary={appState.handleDeleteSummary}
+            />
           </div>
-        </div>
-        <Stats financials={financials} />
-        <FinancialSummary
-          financials={financials}
-          transactions={sortedTransactions}
-          expenses={sortedExpenses}
-          summaries={appState.summaries}
-          onAddSummary={appState.handleAddSummary}
-          onDeleteSummary={appState.handleDeleteSummary}
-        />
-        <div className="mt-8">
+
           <IncomeChart transactions={sortedTransactions} />
-        </div>
-        <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-2">
-          <div>
+
+          {/* Transaction and Expense History */}
+          <div className="mt-4 mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
             <TransactionHistory
               transactions={sortedTransactions}
               onEdit={(tx) => appState.openEditModal(tx, "transaction")}
               onDelete={appState.handleDeleteTransaction}
             />
-          </div>
-          <div>
+
             <ExpenseHistory
               expenses={sortedExpenses}
               onEdit={(ex) => appState.openEditModal(ex, "expense")}
               onDelete={appState.handleDeleteExpense}
             />
           </div>
-        </div>
-        <div className="mt-8">
-          <h3 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-50">
-            Donation Payout History
-          </h3>
-          <DonationHistory
-            donations={sortedDonations}
-            onEdit={(dp) => appState.openEditModal(dp, "donation")}
-            onDelete={appState.handleDeleteDonationPayout}
-          />
+
+          {/* Donation History */}
+          <div className="rounded-xl bg-white/20 p-4 backdrop-blur-sm dark:bg-slate-800/20">
+            <h3 className="mb-3 text-lg font-bold text-slate-900 dark:text-slate-100">
+              Donation Payout History
+            </h3>
+            <DonationHistory
+              donations={sortedDonations}
+              onEdit={(dp) => appState.openEditModal(dp, "donation")}
+              onDelete={appState.handleDeleteDonationPayout}
+            />
+          </div>
         </div>
       </main>
     </div>
