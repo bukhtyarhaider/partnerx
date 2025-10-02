@@ -12,6 +12,7 @@ import type {
   Expense,
   DonationPayout,
   FinancialSummaryRecord,
+  DonationConfig,
 } from "../types";
 
 interface ImportExportProps {
@@ -19,11 +20,13 @@ interface ImportExportProps {
   expenses: Expense[];
   donationPayouts: DonationPayout[];
   summaries: FinancialSummaryRecord[];
+  donationConfig: DonationConfig;
   onImport: (data: {
     transactions: Transaction[];
     expenses: Expense[];
     donationPayouts: DonationPayout[];
     summaries: FinancialSummaryRecord[];
+    donationConfig?: DonationConfig;
   }) => void;
 }
 
@@ -128,6 +131,7 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   expenses,
   donationPayouts,
   summaries,
+  donationConfig,
   onImport,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -154,7 +158,13 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   const handleExport = useCallback(async () => {
     setIsExporting(true);
     try {
-      const exportData = { transactions, expenses, donationPayouts, summaries };
+      const exportData = {
+        transactions,
+        expenses,
+        donationPayouts,
+        summaries,
+        donationConfig,
+      };
       const dataStr = JSON.stringify(exportData, null, 2);
       const dataBlob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(dataBlob);
@@ -173,7 +183,14 @@ export const ImportExport: React.FC<ImportExportProps> = ({
     } finally {
       setIsExporting(false);
     }
-  }, [transactions, expenses, donationPayouts, summaries, showNotification]);
+  }, [
+    transactions,
+    expenses,
+    donationPayouts,
+    summaries,
+    donationConfig,
+    showNotification,
+  ]);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();

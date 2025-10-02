@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type {
   Transaction,
   Expense,
@@ -9,12 +9,19 @@ import type {
   NewDonationPayoutEntry,
   TransactionCalculations,
   AppHandlers,
+  DonationConfig,
 } from "../types";
 import { incomeSourceService } from "../services/incomeSourceService";
 import { loadTransactionsWithMigration } from "../utils/migration";
 
 type EditableEntry = Transaction | Expense | DonationPayout;
 type ModalType = "transaction" | "expense" | "donation" | null;
+
+const DEFAULT_DONATION_CONFIG: DonationConfig = {
+  percentage: 10,
+  taxPreference: "before-tax",
+  enabled: true,
+};
 
 export function useAppHandlers(): AppHandlers {
   const [transactions, setTransactions] = useState<Transaction[]>(() =>
@@ -29,28 +36,45 @@ export function useAppHandlers(): AppHandlers {
   const [summaries, setSummaries] = useState<FinancialSummaryRecord[]>(() =>
     JSON.parse(localStorage.getItem("summaries") || "[]")
   );
+  const [donationConfig, setDonationConfig] = useState<DonationConfig>(() => {
+    const saved = localStorage.getItem("donationConfig");
+    return saved
+      ? { ...DEFAULT_DONATION_CONFIG, ...JSON.parse(saved) }
+      : DEFAULT_DONATION_CONFIG;
+  });
   const [activeTab, setActiveTab] = useState<"income" | "expense" | "donation">(
     "income"
   );
   const [editingEntry, setEditingEntry] = useState<EditableEntry | null>(null);
   const [modalType, setModalType] = useState<ModalType>(null);
 
+  // Save donation config to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("donationConfig", JSON.stringify(donationConfig));
+  }, [donationConfig]);
+
   const handleImport = (data: {
     transactions: Transaction[];
     expenses: Expense[];
     donationPayouts: DonationPayout[];
     summaries: FinancialSummaryRecord[];
+    donationConfig?: DonationConfig;
   }) => {
     setTransactions(data.transactions || []);
     setExpenses(data.expenses || []);
     setDonationPayouts(data.donationPayouts || []);
     setSummaries(data.summaries || []);
+    if (data.donationConfig) {
+      setDonationConfig({ ...DEFAULT_DONATION_CONFIG, ...data.donationConfig });
+    }
   };
 
   const recalculateTransaction = async (
-    entry: NewTransactionEntry | Transaction
+    entry: NewTransactionEntry | Transaction,
+    configOverride?: DonationConfig
   ): Promise<TransactionCalculations> => {
     const { amountUSD, conversionRate, sourceId, taxRate } = entry;
+    const activeConfig = configOverride || donationConfig;
 
     // Get the income source to determine fees
     let feeUSD = 0;
@@ -80,11 +104,50 @@ export function useAppHandlers(): AppHandlers {
     const feePKR = feeUSD * conversionRate;
     const amountAfterFeesUSD = amountUSD - feeUSD;
     const grossPKR = amountAfterFeesUSD * conversionRate;
-    const charityAmount = grossPKR * 0.1;
-    const taxableAmount = grossPKR - charityAmount;
-    const taxAmount = taxableAmount * (taxRate / 100);
-    const netProfit = taxableAmount - taxAmount;
+
+    let charityAmount = 0;
+    let taxableAmount = grossPKR;
+
+    if (activeConfig.enabled) {
+      if (activeConfig.taxPreference === "before-tax") {
+        // Calculate donation from gross amount before tax
+        charityAmount = grossPKR * (activeConfig.percentage / 100);
+        taxableAmount = grossPKR - charityAmount;
+      } else {
+        // Calculate donation from net amount after tax
+        const tempTaxAmount = grossPKR * (taxRate / 100);
+        const tempNetAmount = grossPKR - tempTaxAmount;
+        charityAmount = tempNetAmount * (activeConfig.percentage / 100);
+        taxableAmount = grossPKR; // Tax is calculated on full gross amount
+      }
+
+      // Apply min/max limits if configured
+      if (
+        activeConfig.minimumAmount &&
+        charityAmount < activeConfig.minimumAmount
+      ) {
+        charityAmount = activeConfig.minimumAmount;
+      }
+      if (
+        activeConfig.maximumAmount &&
+        charityAmount > activeConfig.maximumAmount
+      ) {
+        charityAmount = activeConfig.maximumAmount;
+      }
+    }
+
+    const taxAmount =
+      activeConfig.taxPreference === "before-tax"
+        ? taxableAmount * (taxRate / 100)
+        : grossPKR * (taxRate / 100);
+
+    const netProfit =
+      activeConfig.taxPreference === "before-tax"
+        ? taxableAmount - taxAmount
+        : grossPKR - taxAmount - charityAmount;
+
     const partnerShare = netProfit;
+
     return {
       feePKR,
       grossPKR,
@@ -101,6 +164,7 @@ export function useAppHandlers(): AppHandlers {
       id: Date.now(),
       ...entry,
       calculations,
+      donationConfigSnapshot: { ...donationConfig }, // Store current config
     };
     setTransactions((prev) => [newTransaction, ...prev]);
   };
@@ -118,7 +182,18 @@ export function useAppHandlers(): AppHandlers {
   };
 
   const handleUpdateTransaction = async (updatedTx: Transaction) => {
-    updatedTx.calculations = await recalculateTransaction(updatedTx);
+    // Use the original donation config if available, otherwise use current config
+    const configToUse = updatedTx.donationConfigSnapshot || donationConfig;
+    updatedTx.calculations = await recalculateTransaction(
+      updatedTx,
+      configToUse
+    );
+
+    // Preserve the original donation config snapshot
+    if (!updatedTx.donationConfigSnapshot) {
+      updatedTx.donationConfigSnapshot = { ...donationConfig };
+    }
+
     setTransactions(
       transactions.map((tx) => (tx.id === updatedTx.id ? updatedTx : tx))
     );
@@ -153,6 +228,18 @@ export function useAppHandlers(): AppHandlers {
       setSummaries((prev) => prev.filter((summary) => summary.id !== id));
     }
   };
+
+  const handleUpdateDonationConfig = (
+    configUpdate: Partial<DonationConfig>
+  ) => {
+    const newConfig = { ...donationConfig, ...configUpdate };
+    setDonationConfig(newConfig);
+    localStorage.setItem("donationConfig", JSON.stringify(newConfig));
+
+    // Note: Donation config changes only apply to new transactions, not existing ones
+    // This preserves the historical accuracy of past transactions
+  };
+
   const openEditModal = (
     entry: EditableEntry,
     type: "transaction" | "expense" | "donation"
@@ -170,6 +257,8 @@ export function useAppHandlers(): AppHandlers {
     setDonationPayouts,
     summaries,
     setSummaries,
+    donationConfig,
+    setDonationConfig,
     activeTab,
     setActiveTab,
     editingEntry,
@@ -188,6 +277,7 @@ export function useAppHandlers(): AppHandlers {
     handleDeleteExpense,
     handleDeleteDonationPayout,
     handleDeleteSummary,
+    handleUpdateDonationConfig,
     openEditModal,
   };
 }

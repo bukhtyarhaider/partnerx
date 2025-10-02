@@ -4,6 +4,8 @@ import { IncomeChart } from "../components/IncomeChart";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
+import { DonationConfigModal } from "../components/DonationConfigModal";
+import { DonationSettingsButton } from "../components/DonationSettingsButton";
 import { PartnerSummary } from "../components/PartnerSummary";
 import { ImportExport } from "../components/ImportExport";
 import { LayoutDashboard, Lock } from "lucide-react";
@@ -50,6 +52,7 @@ export const MobileLayout = ({
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>("overview");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
 
   const renderContent = () => {
     switch (activeMobileTab) {
@@ -98,11 +101,19 @@ export const MobileLayout = ({
             </TabsContent>
 
             <TabsContent value="donations">
-              <DonationHistory
-                donations={sortedDonations}
-                onEdit={(dp) => appState.openEditModal(dp, "donation")}
-                onDelete={appState.handleDeleteDonationPayout}
-              />
+              <div className="space-y-4">
+                <div className="flex justify-end">
+                  <DonationSettingsButton
+                    onClick={() => setIsDonationConfigOpen(true)}
+                    className="w-full sm:w-auto"
+                  />
+                </div>
+                <DonationHistory
+                  donations={sortedDonations}
+                  onEdit={(dp) => appState.openEditModal(dp, "donation")}
+                  onDelete={appState.handleDeleteDonationPayout}
+                />
+              </div>
             </TabsContent>
           </Tabs>
         );
@@ -120,6 +131,7 @@ export const MobileLayout = ({
               donationPayouts={appState.donationPayouts}
               onImport={appState.handleImport}
               summaries={appState.summaries}
+              donationConfig={appState.donationConfig}
             />
 
             <AppInfoModal />
@@ -173,6 +185,13 @@ export const MobileLayout = ({
         }}
         appState={appState}
         financials={financials}
+      />
+      {/* Donation Configuration Modal */}
+      <DonationConfigModal
+        isOpen={isDonationConfigOpen}
+        onClose={() => setIsDonationConfigOpen(false)}
+        config={appState.donationConfig}
+        onUpdate={appState.handleUpdateDonationConfig}
       />
     </div>
   );

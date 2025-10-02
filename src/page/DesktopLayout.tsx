@@ -18,6 +18,8 @@ import { IncomeChart } from "../components/IncomeChart";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
+import { DonationConfigModal } from "../components/DonationConfigModal";
+import { DonationSettingsButton } from "../components/DonationSettingsButton";
 import { LiveRate } from "../components/LiveRate";
 
 import type { Financials } from "../hooks/useFinancials";
@@ -30,6 +32,7 @@ import type {
 import { FinancialSummary } from "../components/FinancialSummary";
 import { AppInfoModal } from "../components/AppInfoModal";
 import { useAuth } from "../hooks/useAuth";
+import { useState } from "react";
 
 export interface DesktopLayoutProps {
   appState: AppHandlers;
@@ -47,6 +50,7 @@ export const DesktopLayout = ({
   sortedDonations,
 }: DesktopLayoutProps) => {
   const { lockApp } = useAuth();
+  const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
 
   const tabs = [
     {
@@ -141,6 +145,7 @@ export const DesktopLayout = ({
             donationPayouts={appState.donationPayouts}
             onImport={appState.handleImport}
             summaries={appState.summaries}
+            donationConfig={appState.donationConfig}
           />
           <AppInfoModal />
         </div>
@@ -200,9 +205,14 @@ export const DesktopLayout = ({
 
           {/* Donation History */}
           <div className="rounded-xl bg-white/20 p-4 backdrop-blur-sm dark:bg-slate-800/20">
-            <h3 className="mb-3 text-lg font-bold text-slate-900 dark:text-slate-100">
-              Donation Payout History
-            </h3>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                Donation Payout History
+              </h3>
+              <DonationSettingsButton
+                onClick={() => setIsDonationConfigOpen(true)}
+              />
+            </div>
             <DonationHistory
               donations={sortedDonations}
               onEdit={(dp) => appState.openEditModal(dp, "donation")}
@@ -211,6 +221,14 @@ export const DesktopLayout = ({
           </div>
         </div>
       </main>
+
+      {/* Donation Configuration Modal */}
+      <DonationConfigModal
+        isOpen={isDonationConfigOpen}
+        onClose={() => setIsDonationConfigOpen(false)}
+        config={appState.donationConfig}
+        onUpdate={appState.handleUpdateDonationConfig}
+      />
     </div>
   );
 };

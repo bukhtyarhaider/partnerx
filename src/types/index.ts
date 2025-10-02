@@ -40,6 +40,7 @@ export interface Transaction {
   taxRate: number;
   bank: string;
   calculations: TransactionCalculations;
+  donationConfigSnapshot?: DonationConfig; // Store the donation config used for this transaction
 }
 
 export type NewTransactionEntry = Omit<Transaction, "id" | "calculations">;
@@ -65,6 +66,14 @@ export interface DonationPayout {
 
 export type NewDonationPayoutEntry = Omit<DonationPayout, "id">;
 
+export interface DonationConfig {
+  percentage: number;
+  taxPreference: "before-tax" | "after-tax";
+  enabled: boolean;
+  minimumAmount?: number;
+  maximumAmount?: number;
+}
+
 export interface FinancialSummaryRecord {
   id: number;
   text: string;
@@ -80,6 +89,8 @@ export interface AppHandlers {
   setDonationPayouts: Dispatch<SetStateAction<DonationPayout[]>>;
   summaries: FinancialSummaryRecord[];
   setSummaries: Dispatch<SetStateAction<FinancialSummaryRecord[]>>;
+  donationConfig: DonationConfig;
+  setDonationConfig: Dispatch<SetStateAction<DonationConfig>>;
   activeTab: "income" | "expense" | "donation";
   setActiveTab: Dispatch<SetStateAction<"income" | "expense" | "donation">>;
   editingEntry: Transaction | Expense | DonationPayout | null;
@@ -95,6 +106,7 @@ export interface AppHandlers {
     expenses: Expense[];
     donationPayouts: DonationPayout[];
     summaries: FinancialSummaryRecord[];
+    donationConfig?: DonationConfig;
   }) => void;
   handleAddTransaction: (entry: NewTransactionEntry) => Promise<void>;
   handleAddExpense: (entry: NewExpenseEntry) => void;
@@ -107,6 +119,7 @@ export interface AppHandlers {
   handleDeleteExpense: (id: number) => void;
   handleDeleteDonationPayout: (id: number) => void;
   handleDeleteSummary: (id: number) => void;
+  handleUpdateDonationConfig: (config: Partial<DonationConfig>) => void;
   openEditModal: (
     entry: Transaction | Expense | DonationPayout,
     type: "transaction" | "expense" | "donation"
