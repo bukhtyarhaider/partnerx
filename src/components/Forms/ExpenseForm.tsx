@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Save, AlertCircle } from "lucide-react";
-import type { NewExpenseEntry, Expense, PartnerName } from "../../types";
+import type {
+  NewExpenseEntry,
+  Expense,
+  PartnerName,
+  ExpenseType,
+} from "../../types";
 import { getTodayString } from "../../utils";
 import { usePartners } from "../../hooks/usePartners";
 
@@ -29,6 +34,7 @@ export const ExpenseForm: React.FC<FormProps> = ({
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(getTodayString());
   const [category, setCategory] = useState("");
+  const [type, setType] = useState<ExpenseType>("personal");
   const [byWhom, setByWhom] = useState<PartnerName>(
     activePartners.length > 0
       ? (activePartners[0].name as PartnerName)
@@ -43,6 +49,7 @@ export const ExpenseForm: React.FC<FormProps> = ({
       setDescription(initialData.description);
       setDate(initialData.date);
       setCategory(initialData.category);
+      setType(initialData.type || "personal"); // Default to personal for backward compatibility
       setByWhom(initialData.byWhom);
     }
   }, [mode, initialData]);
@@ -51,6 +58,7 @@ export const ExpenseForm: React.FC<FormProps> = ({
     setAmount("");
     setDescription("");
     setCategory("");
+    setType("personal");
     setDate(getTodayString());
     if (activePartners.length > 0) {
       setByWhom(activePartners[0].name as PartnerName);
@@ -72,6 +80,7 @@ export const ExpenseForm: React.FC<FormProps> = ({
         description,
         date,
         category,
+        type,
         byWhom,
       };
 
@@ -160,8 +169,26 @@ export const ExpenseForm: React.FC<FormProps> = ({
             />
           </div>
           <div>
+            <label htmlFor="expense-type" className={LABEL_STYLES}>
+              Expense Type *
+            </label>
+            <select
+              id="expense-type"
+              value={type}
+              onChange={(e) => setType(e.target.value as ExpenseType)}
+              className={INPUT_STYLES}
+              required
+            >
+              <option value="personal">Personal</option>
+              <option value="company">Company/Shared</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-1">
+          <div>
             <label htmlFor="expense-by-whom" className={LABEL_STYLES}>
-              By Whom *
+              {type === "company" ? "Paid By *" : "By Whom *"}
             </label>
             <select
               id="expense-by-whom"
@@ -176,6 +203,13 @@ export const ExpenseForm: React.FC<FormProps> = ({
                 </option>
               ))}
             </select>
+            {type === "company" && (
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Company expenses will be split according to partner equity
+                (50/50). The person who paid will receive credit for the other
+                partner's share.
+              </p>
+            )}
           </div>
         </div>
 

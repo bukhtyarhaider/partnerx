@@ -12,7 +12,10 @@ import type {
   DonationConfig,
 } from "../types";
 import { incomeSourceService } from "../services/incomeSourceService";
-import { loadTransactionsWithMigration } from "../utils/migration";
+import {
+  loadTransactionsWithMigration,
+  loadExpensesWithMigration,
+} from "../utils/migration";
 
 type EditableEntry = Transaction | Expense | DonationPayout;
 type ModalType = "transaction" | "expense" | "donation" | null;
@@ -28,7 +31,7 @@ export function useAppHandlers(): AppHandlers {
     loadTransactionsWithMigration()
   );
   const [expenses, setExpenses] = useState<Expense[]>(() =>
-    JSON.parse(localStorage.getItem("expenses") || "[]")
+    loadExpensesWithMigration()
   );
   const [donationPayouts, setDonationPayouts] = useState<DonationPayout[]>(() =>
     JSON.parse(localStorage.getItem("donationPayouts") || "[]")

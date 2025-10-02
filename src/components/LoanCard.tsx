@@ -33,14 +33,16 @@ export const LoanCard: React.FC<LoanCardProps> = ({ loan }) => {
         )}
       </div>
       <h3 className="text-lg font-bold text-slate-800 dark:text-slate-50">
-        {isBalanced ? "Expenses Balanced" : "Expense Imbalance"}
+        {isBalanced ? "All Settled" : "Expense Deficit"}
       </h3>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
         {isBalanced
-          ? "All partner expenses are settled."
+          ? "All partners have sufficient funds to cover their expenses."
           : `${
               owedByPartner?.displayName || "Unknown Partner"
-            } owes ${formatCurrency(loan.amount)}`}
+            } has overspent by ${formatCurrency(
+              loan.amount
+            )} and needs to settle up.`}
       </p>
     </div>
   );

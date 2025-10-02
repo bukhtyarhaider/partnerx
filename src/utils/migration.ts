@@ -1,4 +1,9 @@
-import type { Transaction, DonationConfig } from "../types";
+import type {
+  Transaction,
+  DonationConfig,
+  Expense,
+  PartnerName,
+} from "../types";
 
 /**
  * Migration utilities for handling legacy data formats
@@ -148,4 +153,80 @@ export const clearMigrationData = (): void => {
   localStorage.removeItem("transactions");
   localStorage.removeItem("incomeSourceConfig");
   console.log("Migration data cleared");
+};
+
+// Legacy expense interface for backward compatibility
+interface LegacyExpense {
+  id: number;
+  amount: number;
+  description: string;
+  date: string;
+  category: string;
+  byWhom: PartnerName;
+}
+
+/**
+ * Check if expense data needs migration for type field
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const expenseNeedsMigration = (expense: any): boolean => {
+  return expense.type === undefined;
+};
+
+/**
+ * Migrate legacy expense format to include type field
+ */
+export const migrateLegacyExpense = (legacyExpense: LegacyExpense): Expense => {
+  return {
+    ...legacyExpense,
+    type: "personal" as const, // Default to personal for backward compatibility
+    metadata: {},
+  };
+};
+
+/**
+ * Migrate an array of expenses
+ */
+export const migrateExpenses = (expenses: unknown[]): Expense[] => {
+  return expenses.map((ex) => {
+    let migrated = ex as Expense;
+
+    if (expenseNeedsMigration(ex)) {
+      migrated = migrateLegacyExpense(ex as LegacyExpense);
+      console.log(
+        `Migrated expense ${(ex as LegacyExpense).id} to include type field`
+      );
+    }
+
+    return migrated;
+  });
+};
+
+/**
+ * Load and migrate expenses from localStorage
+ */
+export const loadExpensesWithMigration = (): Expense[] => {
+  try {
+    const stored = localStorage.getItem("expenses");
+    if (!stored) return [];
+
+    const parsed = JSON.parse(stored);
+    const migrated = migrateExpenses(parsed);
+
+    // Save back the migrated data if any migration was needed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hasExpenseMigration = parsed.some((ex: any) =>
+      expenseNeedsMigration(ex)
+    );
+
+    if (hasExpenseMigration) {
+      localStorage.setItem("expenses", JSON.stringify(migrated));
+      console.log("Migrated expense data saved to localStorage");
+    }
+
+    return migrated;
+  } catch (error) {
+    console.error("Error loading/migrating expenses:", error);
+    return [];
+  }
 };

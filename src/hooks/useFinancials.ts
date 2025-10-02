@@ -69,31 +69,60 @@ export function useFinancials(
       // Find partner by name for backward compatibility
       const partner = activePartners.find((p) => p.name === ex.byWhom);
       if (partner) {
-        partnerExpenses[partner.id] =
-          (partnerExpenses[partner.id] || 0) + ex.amount;
+        // Handle different expense types
+        const expenseType = ex.type || "personal"; // Default to personal for backward compatibility
+
+        if (expenseType === "personal") {
+          // Personal expenses: deduct from the partner who spent it
+          partnerExpenses[partner.id] =
+            (partnerExpenses[partner.id] || 0) + ex.amount;
+        } else if (expenseType === "company") {
+          // Company expenses: split according to equity, but track who paid
+          const shares = calculateShares(ex.amount);
+
+          // Each partner should be charged their equity share
+          Object.entries(shares).forEach(([partnerId, share]) => {
+            partnerExpenses[partnerId] =
+              (partnerExpenses[partnerId] || 0) + share;
+          });
+
+          // But since one partner actually paid, give them credit for the difference
+          const paidByShare = shares[partner.id] || 0;
+          const actualPaid = ex.amount;
+          const overpayment = actualPaid - paidByShare;
+
+          // The person who paid gets credited for what others should have paid
+          if (overpayment > 0) {
+            partnerExpenses[partner.id] -= overpayment;
+          }
+        }
       }
     }
 
     const companyCapital = totalNetProfit - totalExpenses;
 
-    // Calculate loan based on expense differences
-    // For now, we'll use the first two partners for backward compatibility
-    const partnerIds = Object.keys(partnerExpenses);
+    // Calculate loan based on actual deficit (when a partner spends more than they earned)
+    // This is the correct logic: only show imbalance if someone has negative wallet balance
     let loan = { amount: 0, owedBy: null as string | null };
+    let maxDeficit = 0;
+    let deficitPartnerId: string | null = null;
 
-    if (partnerIds.length >= 2) {
-      const partner1Expenses = partnerExpenses[partnerIds[0]] || 0;
-      const partner2Expenses = partnerExpenses[partnerIds[1]] || 0;
-      const expenseDifference = partner1Expenses - partner2Expenses;
+    // Find the partner with the largest deficit (negative balance)
+    Object.keys(partnerEarnings).forEach((partnerId) => {
+      const earnings = partnerEarnings[partnerId] || 0;
+      const expenses = partnerExpenses[partnerId] || 0;
+      const balance = earnings - expenses;
 
+      if (balance < 0 && Math.abs(balance) > maxDeficit) {
+        maxDeficit = Math.abs(balance);
+        deficitPartnerId = partnerId;
+      }
+    });
+
+    if (deficitPartnerId && maxDeficit > 0) {
       loan = {
-        amount: Math.abs(expenseDifference) / 2,
-        owedBy:
-          expenseDifference > 0
-            ? partnerIds[0]
-            : expenseDifference < 0
-            ? partnerIds[1]
-            : null,
+        amount: maxDeficit,
+        owedBy: deficitPartnerId,
       };
     }
 

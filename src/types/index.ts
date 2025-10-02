@@ -45,6 +45,8 @@ export interface Transaction {
 
 export type NewTransactionEntry = Omit<Transaction, "id" | "calculations">;
 
+export type ExpenseType = "personal" | "company";
+
 export interface Expense {
   id: number;
   amount: number;
@@ -52,6 +54,11 @@ export interface Expense {
   date: string;
   category: string;
   byWhom: PartnerName;
+  type: ExpenseType;
+  metadata?: {
+    notes?: string;
+    companyCategory?: string; // e.g., salary, dinner, rent, etc.
+  };
 }
 
 export type NewExpenseEntry = Omit<Expense, "id">;
