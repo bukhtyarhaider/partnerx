@@ -65,7 +65,12 @@ export const DesktopLayout = ({
       id: "expense" as const,
       label: "Expense",
       icon: TrendingDown,
-      component: <ExpenseForm onAddExpense={appState.handleAddExpense} />,
+      component: (
+        <ExpenseForm
+          onAddExpense={appState.handleAddExpense}
+          financials={financials}
+        />
+      ),
     },
     {
       id: "donation" as const,

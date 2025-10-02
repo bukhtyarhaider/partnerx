@@ -6,14 +6,17 @@ import type {
   PartnerName,
   ExpenseType,
 } from "../../types";
+import type { Financials } from "../../hooks/useFinancials";
 import { getTodayString } from "../../utils";
 import { usePartners } from "../../hooks/usePartners";
+import { formatCurrency } from "../../utils/format";
 
 interface FormProps {
   mode?: "add" | "edit";
   initialData?: Expense;
   onAddExpense?: (entry: NewExpenseEntry) => void;
   onSave?: (entry: Expense) => void;
+  financials?: Financials; // Add financials for spending validation
 }
 
 const INPUT_STYLES =
@@ -27,6 +30,7 @@ export const ExpenseForm: React.FC<FormProps> = ({
   initialData,
   onAddExpense,
   onSave,
+  financials,
 }) => {
   const { activePartners } = usePartners();
 
@@ -75,8 +79,48 @@ export const ExpenseForm: React.FC<FormProps> = ({
         throw new Error("Please fill out all required fields.");
       }
 
+      const expenseAmount = parseFloat(amount);
+      const expenseType = type;
+      const spendingPartner = byWhom;
+
+      // Validate spending limits for new expenses
+      if (mode === "add" && financials) {
+        const partner = activePartners.find((p) => p.name === spendingPartner);
+        if (partner) {
+          const currentEarnings = financials.partnerEarnings[partner.id] || 0;
+          const currentExpenses = financials.partnerExpenses[partner.id] || 0;
+          const currentBalance = currentEarnings - currentExpenses;
+
+          if (expenseType === "personal") {
+            // For personal expenses, check if partner has enough in their wallet
+            if (expenseAmount > currentBalance) {
+              throw new Error(
+                `Insufficient funds. ${
+                  partner.displayName
+                } has ${formatCurrency(
+                  currentBalance
+                )} available, but trying to spend ${formatCurrency(
+                  expenseAmount
+                )}. Available balance would be ${formatCurrency(
+                  currentBalance - expenseAmount
+                )} (deficit).`
+              );
+            }
+          } else if (expenseType === "company") {
+            // For company expenses, check if total company capital is sufficient
+            if (expenseAmount > financials.companyCapital) {
+              throw new Error(
+                `Insufficient company capital. Available: ${formatCurrency(
+                  financials.companyCapital
+                )}, Required: ${formatCurrency(expenseAmount)}.`
+              );
+            }
+          }
+        }
+      }
+
       const commonData = {
-        amount: parseFloat(amount),
+        amount: expenseAmount,
         description,
         date,
         category,
@@ -135,6 +179,43 @@ export const ExpenseForm: React.FC<FormProps> = ({
               className={INPUT_STYLES}
               required
             />
+            {/* Show available balance for spending validation */}
+            {financials && mode === "add" && (
+              <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {type === "personal" ? (
+                  (() => {
+                    const partner = activePartners.find(
+                      (p) => p.name === byWhom
+                    );
+                    if (partner) {
+                      const currentEarnings =
+                        financials.partnerEarnings[partner.id] || 0;
+                      const currentExpenses =
+                        financials.partnerExpenses[partner.id] || 0;
+                      const availableBalance =
+                        currentEarnings - currentExpenses;
+                      return (
+                        <span
+                          className={
+                            availableBalance < 0
+                              ? "text-red-500 dark:text-red-400"
+                              : ""
+                          }
+                        >
+                          Available balance: {formatCurrency(availableBalance)}
+                        </span>
+                      );
+                    }
+                    return null;
+                  })()
+                ) : (
+                  <span>
+                    Company capital available:{" "}
+                    {formatCurrency(financials.companyCapital)}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

@@ -215,21 +215,16 @@ export function useAppHandlers(): AppHandlers {
     setEditingEntry(null);
   };
   const handleDeleteTransaction = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this income entry?"))
-      setTransactions(transactions.filter((tx) => tx.id !== id));
+    setTransactions(transactions.filter((tx) => tx.id !== id));
   };
   const handleDeleteExpense = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this expense?"))
-      setExpenses(expenses.filter((ex) => ex.id !== id));
+    setExpenses(expenses.filter((ex) => ex.id !== id));
   };
   const handleDeleteDonationPayout = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this donation payout?"))
-      setDonationPayouts(donationPayouts.filter((dp) => dp.id !== id));
+    setDonationPayouts(donationPayouts.filter((dp) => dp.id !== id));
   };
   const handleDeleteSummary = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this AI summary?")) {
-      setSummaries((prev) => prev.filter((summary) => summary.id !== id));
-    }
+    setSummaries((prev) => prev.filter((summary) => summary.id !== id));
   };
 
   const handleUpdateDonationConfig = (

@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import type { Expense } from "../types";
 import { Pencil, Trash2 } from "lucide-react";
 import { ExpandableCard } from "./common/ExpandableCard";
+import { ConfirmationModal } from "./common/ConfirmationModal";
 import { formatCurrency } from "../utils";
 import { usePartners } from "../hooks/usePartners";
+import { useConfirmation } from "../hooks/useConfirmation";
 
 interface ExpenseHistoryProps {
   expenses: Expense[];
@@ -18,7 +20,22 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
 }) => {
   const { activePartners } = usePartners();
   const [isExpanded, setIsExpanded] = useState(false);
+  const { confirmation, showConfirmation, hideConfirmation } =
+    useConfirmation();
+
   const handleToggleExpand = () => setIsExpanded(!isExpanded);
+
+  const handleDeleteClick = (expense: Expense) => {
+    showConfirmation({
+      title: "Delete Expense",
+      message: `Are you sure you want to delete "${
+        expense.description
+      }" (${formatCurrency(expense.amount)})? This action cannot be undone.`,
+      confirmText: "Delete Expense",
+      variant: "danger",
+      onConfirm: () => onDelete(expense.id),
+    });
+  };
 
   // Helper function to get partner color based on index
   const getPartnerColor = (partnerName: string) => {
@@ -137,7 +154,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
                           <Pencil size={16} />
                         </button>
                         <button
-                          onClick={() => onDelete(ex.id)}
+                          onClick={() => handleDeleteClick(ex)}
                           className="text-slate-400 transition-all hover:scale-110 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400"
                           title="Delete"
                         >
@@ -152,6 +169,17 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmation.isOpen}
+        onClose={hideConfirmation}
+        onConfirm={confirmation.onConfirm}
+        title={confirmation.title}
+        message={confirmation.message}
+        confirmText={confirmation.confirmText}
+        variant={confirmation.variant}
+      />
     </ExpandableCard>
   );
 };

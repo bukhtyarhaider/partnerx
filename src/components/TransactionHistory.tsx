@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { Landmark, Pencil, Trash2, ReceiptText } from "lucide-react";
 import type { Transaction } from "../types";
 import { ExpandableCard } from "./common/ExpandableCard";
+import { ConfirmationModal } from "./common/ConfirmationModal";
 import { pkrFormatter, usdFormatter } from "../utils";
 import { useIncomeSources } from "../hooks/useIncomeSources";
 import { IncomeSourceDisplay } from "./common/IncomeSourceDisplay";
+import { useConfirmation } from "../hooks/useConfirmation";
 
 interface TransactionHistoryProps {
   transactions: Transaction[];
@@ -19,7 +21,22 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { getSourceById } = useIncomeSources();
+  const { confirmation, showConfirmation, hideConfirmation } =
+    useConfirmation();
+
   const handleToggleExpand = () => setIsExpanded(!isExpanded);
+
+  const handleDeleteClick = (transaction: Transaction) => {
+    showConfirmation({
+      title: "Delete Transaction",
+      message: `Are you sure you want to delete this transaction (${usdFormatter.format(
+        transaction.amountUSD
+      )})? This action cannot be undone.`,
+      confirmText: "Delete Transaction",
+      variant: "danger",
+      onConfirm: () => onDelete(transaction.id),
+    });
+  };
 
   const thClasses =
     "sticky top-0 z-10 border-b border-slate-300 bg-white/75 px-3 py-3.5 text-left text-sm font-semibold text-slate-800 backdrop-blur backdrop-filter dark:border-slate-700 dark:bg-slate-900/75 dark:text-slate-200";
@@ -159,7 +176,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                           <Pencil size={16} />
                         </button>
                         <button
-                          onClick={() => onDelete(tx.id)}
+                          onClick={() => handleDeleteClick(tx)}
                           className="text-slate-400 transition-all hover:scale-110 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400"
                           title="Delete"
                         >
@@ -174,6 +191,17 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmation.isOpen}
+        onClose={hideConfirmation}
+        onConfirm={confirmation.onConfirm}
+        title={confirmation.title}
+        message={confirmation.message}
+        confirmText={confirmation.confirmText}
+        variant={confirmation.variant}
+      />
     </ExpandableCard>
   );
 };

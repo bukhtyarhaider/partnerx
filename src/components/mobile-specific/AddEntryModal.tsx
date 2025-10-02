@@ -85,7 +85,10 @@ export const AddEntryModal = ({
                   />
                 )}
                 {appState.activeTab === "expense" && (
-                  <ExpenseForm onAddExpense={appState.handleAddExpense} />
+                  <ExpenseForm
+                    onAddExpense={appState.handleAddExpense}
+                    financials={financials}
+                  />
                 )}
                 {appState.activeTab === "donation" && (
                   <DonationForm

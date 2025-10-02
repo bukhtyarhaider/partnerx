@@ -9,7 +9,9 @@ import {
 import { useState } from "react";
 import type { Expense, Transaction, FinancialSummaryRecord } from "../types";
 import type { Financials } from "../hooks/useFinancials";
+import { ConfirmationModal } from "./common/ConfirmationModal";
 import { generateFinancialSummary } from "../utils/generateFinancialSummary";
+import { useConfirmation } from "../hooks/useConfirmation";
 
 export interface FinancialSummaryProps {
   transactions: Transaction[];
@@ -30,11 +32,22 @@ export const FinancialSummary = ({
 }: FinancialSummaryProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMaximized, setIsMaximized] = useState(false);
   const [expandedSummaryId, setExpandedSummaryId] = useState<number | null>(
     null
   );
+  const { confirmation, showConfirmation, hideConfirmation } =
+    useConfirmation();
 
-  const [isMaximized, setIsMaximized] = useState(false);
+  const handleDeleteClick = (summary: FinancialSummaryRecord) => {
+    showConfirmation({
+      title: "Delete Summary",
+      message: `Are you sure you want to delete this AI-generated summary? This action cannot be undone.`,
+      confirmText: "Delete Summary",
+      variant: "danger",
+      onConfirm: () => onDeleteSummary(summary.id),
+    });
+  };
 
   const handleGenerateSummary = async () => {
     setIsMaximized(true);
@@ -140,7 +153,7 @@ export const FinancialSummary = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onDeleteSummary(summary.id);
+                            handleDeleteClick(summary);
                           }}
                           className="rounded-full p-1.5 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/50 dark:hover:text-red-400"
                           aria-label="Delete summary"
@@ -184,6 +197,17 @@ export const FinancialSummary = ({
           </div>
         </>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmation.isOpen}
+        onClose={hideConfirmation}
+        onConfirm={confirmation.onConfirm}
+        title={confirmation.title}
+        message={confirmation.message}
+        confirmText={confirmation.confirmText}
+        variant={confirmation.variant}
+      />
     </div>
   );
 };

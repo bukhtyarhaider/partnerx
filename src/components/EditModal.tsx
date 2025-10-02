@@ -38,6 +38,8 @@ export const EditModal: React.FC<EditModalProps> = ({
   if (!isOpen && !isAnimating) return null;
 
   const renderForm = () => {
+    if (!entry) return null;
+
     switch (type) {
       case "transaction":
         return (
