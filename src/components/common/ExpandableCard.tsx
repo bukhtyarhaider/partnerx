@@ -1,4 +1,4 @@
-import React, { type ReactElement, type ReactNode } from "react";
+import React, { type ReactElement, type ReactNode, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Maximize, Minimize } from "lucide-react";
 
@@ -14,17 +14,26 @@ interface ExpandableCardProps {
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   actionBar?: ActionBarConfig;
+  className?: string;
 }
 
 const contentVariants = {
-  collapsed: { opacity: 0, y: 10, transition: { duration: 0.25 } },
-  expanded: { opacity: 1, y: 0, transition: { duration: 0.25, delay: 0.15 } },
+  collapsed: {
+    opacity: 0,
+    y: 10,
+    transition: { duration: 0.2 },
+  },
+  expanded: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.2, delay: 0.1 },
+  },
 };
 
 const iconVariants = {
-  hidden: { rotate: -90, opacity: 0, scale: 0.5 },
+  hidden: { rotate: -90, opacity: 0, scale: 0.8 },
   visible: { rotate: 0, opacity: 1, scale: 1 },
-  exit: { rotate: 90, opacity: 0, scale: 0.5 },
+  exit: { rotate: 90, opacity: 0, scale: 0.8 },
 };
 
 export const ExpandableCard: React.FC<ExpandableCardProps> = ({
@@ -34,54 +43,68 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
   isExpanded = false,
   actionBar,
   onToggleExpand,
+  className = "",
 }) => {
-  const actionBarPosition = actionBar?.position || "right";
+  const actionBarPosition = actionBar?.position ?? "right";
 
-  const getJustifyClass = () => {
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (onToggleExpand && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        onToggleExpand();
+      }
+    },
+    [onToggleExpand]
+  );
+
+  const getActionBarClasses = useCallback(() => {
+    const baseClasses = "flex flex-1 items-center";
     switch (actionBarPosition) {
       case "left":
-        return "justify-start ml-2 md:ml-4";
+        return `${baseClasses} justify-start`;
       case "center":
-        return "justify-center";
+        return `${baseClasses} justify-center`;
       case "right":
-        return "justify-end mr-2 md:mr-4";
       default:
-        return "justify-end";
+        return `${baseClasses} justify-end`;
     }
-  };
+  }, [actionBarPosition]);
+
+  const cardClasses = isExpanded
+    ? "fixed inset-4 z-50 flex flex-col bg-white/95 backdrop-blur-md dark:bg-slate-800/95 rounded-2xl shadow-2xl"
+    : `relative bg-white dark:bg-slate-800 rounded-xl shadow-lg dark:shadow-xl ${className}`;
 
   return (
     <motion.div
       layout
       transition={{ type: "spring", stiffness: 400, damping: 40 }}
-      animate={{ borderRadius: isExpanded ? "1.25rem" : "0.75rem" }}
-      className={`shadow-lg dark:shadow-2xl dark:shadow-black/25 ${
-        isExpanded
-          ? "fixed inset-1 z-60 flex flex-col bg-white/90 p-2 backdrop-blur-sm dark:bg-slate-800/90 md:inset-6 md:p-4"
-          : "relative rounded-xl bg-white px-1 py-2 md:p-4 dark:bg-slate-800"
-      }`}
+      className={`${cardClasses} p-2 md:p-2`}
+      role="region"
+      aria-expanded={isExpanded}
+      aria-label={`${title} card`}
     >
       <motion.div
         layout
-        className="mb-3 md:mb-4 flex flex-wrap items-center justify-between gap-2 md:gap-0"
+        className="flex items-center justify-between gap-3 mb-1 md:mb-1"
       >
-        <h2 className="flex items-center text-lg px-2  md:text-xl font-semibold text-slate-800 dark:text-slate-50">
-          {icon && <span className="mr-2 md:mr-3">{icon}</span>}
-          {title}
+        <h2 className="flex items-center text-lg font-semibold text-slate-800 dark:text-slate-50 min-w-0 px-3 md:px-3 ">
+          {icon && (
+            <span className="md:mr-2 flex-shrink-0" aria-hidden="true">
+              {icon}
+            </span>
+          )}
+          <span className="truncate">{title}</span>
         </h2>
 
-        <div
-          className={`flex flex-1 items-center ${getJustifyClass()} mt-1 md:mt-0`}
-        >
-          {actionBar && actionBar.content}
-        </div>
+        <div className={getActionBarClasses()}>{actionBar?.content}</div>
 
         {onToggleExpand && (
           <button
             onClick={onToggleExpand}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-slate-300 dark:hover:bg-slate-700 dark:focus:ring-offset-slate-800"
-            title={isExpanded ? "Minimize" : "Maximize"}
+            onKeyDown={handleKeyDown}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-800 focus:ring-offset-2 dark:text-slate-300 dark:hover:bg-slate-700 dark:focus:ring-offset-slate-800"
             aria-label={isExpanded ? "Minimize card" : "Maximize card"}
+            aria-expanded={isExpanded}
           >
             <AnimatePresence initial={false} mode="wait">
               <motion.div
@@ -93,9 +116,9 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
                 {isExpanded ? (
-                  <Minimize className="h-5 w-5" />
+                  <Minimize className="h-4 w-4" aria-hidden="true" />
                 ) : (
-                  <Maximize className="h-5 w-5" />
+                  <Maximize className="h-4 w-4" aria-hidden="true" />
                 )}
               </motion.div>
             </AnimatePresence>
@@ -105,7 +128,9 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
 
       <motion.div
         layout
-        className="flex-1 overflow-y-auto md:overflow-visible max-h-[calc(100vh-6rem)] md:max-h-none"
+        className={`flex-1 ${
+          isExpanded ? "overflow-y-auto max-h-[calc(100vh-10rem)]" : ""
+        }`}
       >
         <AnimatePresence mode="wait">
           <motion.div

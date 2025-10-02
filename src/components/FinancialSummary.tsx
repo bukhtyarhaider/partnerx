@@ -68,7 +68,7 @@ export const FinancialSummary = ({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white/80 p-5 shadow-md transition-shadow hover:shadow-lg dark:border-slate-700 dark:bg-slate-800/80">
+    <div className="rounded-xl border border-slate-200 bg-white/80 p-5 md:mx-5 shadow-md transition-shadow hover:shadow-lg dark:border-slate-700 dark:bg-slate-800/80 ">
       <div
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between"
         onClick={() => setIsMaximized((prev) => !prev)}
