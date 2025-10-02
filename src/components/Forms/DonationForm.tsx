@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { PlusCircle, Save, AlertCircle } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { PlusCircle, Save, AlertCircle, TrendingUp } from "lucide-react";
 import type { DonationPayout, NewDonationPayoutEntry } from "../../types";
 import { formatCurrency, getTodayString } from "../../utils";
 
@@ -10,6 +10,12 @@ interface FormProps {
   onSave?: (entry: DonationPayout) => void;
   availableFunds: number;
 }
+
+const INPUT_STYLES =
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 outline-none transition-colors duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-green-400 dark:focus:ring-green-400/20";
+
+const LABEL_STYLES =
+  "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 export const DonationForm: React.FC<FormProps> = ({
   mode = "add",
@@ -23,9 +29,7 @@ export const DonationForm: React.FC<FormProps> = ({
   const [paidTo, setPaidTo] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  // **ANIMATION:** State to trigger the entrance animation
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -36,139 +40,155 @@ export const DonationForm: React.FC<FormProps> = ({
     }
   }, [mode, initialData]);
 
-  // **ANIMATION:** Trigger animation on component mount
-  useEffect(() => {
-    setIsAnimating(true);
+  const resetForm = useCallback(() => {
+    setAmount("");
+    setPaidTo("");
+    setDescription("");
+    setDate(getTodayString());
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
-    const payoutAmount = parseFloat(amount);
-    if (!payoutAmount || !date || !paidTo) {
-      setError("Please fill out Date, Amount, and Paid To fields.");
-      return;
-    }
-    if (payoutAmount > availableFunds) {
-      setError(
-        `Amount exceeds available fund of ${formatCurrency(availableFunds)}.`
-      );
-      return;
-    }
+    try {
+      const payoutAmount = parseFloat(amount);
 
-    const commonData = { amount: payoutAmount, date, paidTo, description };
+      if (!payoutAmount || !date || !paidTo) {
+        throw new Error("Please fill out Date, Amount, and Paid To fields.");
+      }
 
-    if (mode === "edit" && onSave && initialData) {
-      onSave({ ...initialData, ...commonData });
-    } else if (mode === "add" && onAddDonationPayout) {
-      onAddDonationPayout(commonData);
-      // Reset form after successful submission in 'add' mode
-      setAmount("");
-      setPaidTo("");
-      setDescription("");
-      setDate(getTodayString());
+      if (payoutAmount > availableFunds) {
+        throw new Error(
+          `Amount exceeds available fund of ${formatCurrency(availableFunds)}.`
+        );
+      }
+
+      const commonData = { amount: payoutAmount, date, paidTo, description };
+
+      if (mode === "edit" && onSave && initialData) {
+        onSave({ ...initialData, ...commonData });
+      } else if (mode === "add" && onAddDonationPayout) {
+        onAddDonationPayout(commonData);
+        resetForm();
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
+      setError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const isEditMode = mode === "edit";
-  const inputStyles =
-    "w-full rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 outline-none transition-all duration-200 focus:ring-2 focus:ring-green-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:ring-green-400 dark:[color-scheme:dark]";
-  const labelStyles =
-    "mb-1.5 block text-sm font-semibold text-slate-600 dark:text-slate-300";
 
   return (
-    <div
-      className={`transition-all duration-500 ease-in-out ${
-        isAnimating ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-      }`}
-    >
+    <div className="space-y-4">
       {!isEditMode && (
-        <div className="mb-4 rounded-lg border-l-4 border-green-500 bg-green-50 p-4 transition-transform hover:scale-[1.02] dark:border-green-400 dark:bg-green-900/50">
-          <h3 className="font-bold text-green-800 dark:text-green-300">
-            Available Fund
-          </h3>
-          <p className="text-2xl font-bold text-slate-800 dark:text-slate-50">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-900/20">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp
+              size={16}
+              className="text-emerald-600 dark:text-emerald-400"
+            />
+            <h3 className="font-medium text-emerald-800 dark:text-emerald-300">
+              Available Fund
+            </h3>
+          </div>
+          <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
             {formatCurrency(availableFunds)}
           </p>
         </div>
       )}
-      <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">
+
+      <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
         {isEditMode ? "Edit Payout" : "Record Donation Payout"}
       </h2>
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label htmlFor="don-date" className={labelStyles}>
-              Date
+            <label htmlFor="donation-date" className={LABEL_STYLES}>
+              Date *
             </label>
             <input
               type="date"
-              id="don-date"
+              id="donation-date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className={inputStyles}
+              className={INPUT_STYLES}
+              required
             />
           </div>
           <div>
-            <label htmlFor="don-amount" className={labelStyles}>
-              Amount (PKR)
+            <label htmlFor="donation-amount" className={LABEL_STYLES}>
+              Amount (PKR) *
             </label>
             <input
               type="number"
-              id="don-amount"
+              id="donation-amount"
               placeholder="e.g., 10000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className={inputStyles}
+              className={INPUT_STYLES}
+              max={availableFunds}
+              required
             />
           </div>
         </div>
+
         <div>
-          <label htmlFor="don-paidTo" className={labelStyles}>
-            Paid To (Organization/Cause)
+          <label htmlFor="donation-paid-to" className={LABEL_STYLES}>
+            Paid To (Organization/Cause) *
           </label>
           <input
             type="text"
-            id="don-paidTo"
+            id="donation-paid-to"
             placeholder="e.g., Edhi Foundation"
             value={paidTo}
             onChange={(e) => setPaidTo(e.target.value)}
-            className={inputStyles}
+            className={INPUT_STYLES}
+            required
           />
         </div>
+
         <div>
-          <label htmlFor="don-desc" className={labelStyles}>
-            Description (Optional)
+          <label htmlFor="donation-description" className={LABEL_STYLES}>
+            Description
           </label>
           <input
             type="text"
-            id="don-desc"
+            id="donation-description"
             placeholder="e.g., Monthly contribution"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className={inputStyles}
+            className={INPUT_STYLES}
           />
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-900/50 dark:text-red-300">
-            <AlertCircle size={20} />
+          <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:bg-red-900/20 dark:text-red-300">
+            <AlertCircle size={16} className="flex-shrink-0" />
             <p>{error}</p>
           </div>
         )}
 
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 p-3 font-bold text-white transition-all duration-200 ease-in-out hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 active:scale-95 dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-offset-slate-800"
+          disabled={isSubmitting || availableFunds <= 0}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-green-500 dark:hover:bg-green-600 dark:focus:ring-offset-slate-800"
         >
-          {isEditMode ? (
+          {isSubmitting ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : isEditMode ? (
             <>
-              <Save size={20} /> Save Changes
+              <Save size={16} /> Save Changes
             </>
           ) : (
             <>
-              <PlusCircle size={20} /> Record Payout
+              <PlusCircle size={16} /> Record Payout
             </>
           )}
         </button>
