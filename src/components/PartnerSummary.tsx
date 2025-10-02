@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -19,23 +19,32 @@ export const PartnerSummary: React.FC<PartnerSummaryProps> = ({
   partnerExpenses,
 }) => {
   const { activePartners } = usePartners();
-  const [isAnimating, setIsAnimating] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsAnimating(true), 10);
-    return () => clearTimeout(timer);
-  }, []);
+  if (activePartners.length === 0) {
+    return (
+      <div className="border-t border-slate-200 pt-4 dark:border-slate-700">
+        <h2 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
+          Partner Wallets
+        </h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          No active partners found.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`md:border-t border-slate-200 pt-6 transition-opacity duration-500 dark:border-slate-700 ${
-        isAnimating ? "opacity-100" : "opacity-0"
-      }`}
+    <section
+      className="border-t border-slate-200 pt-4 dark:border-slate-700"
+      aria-labelledby="partner-wallets-heading"
     >
-      <h2 className="mb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">
+      <h2
+        id="partner-wallets-heading"
+        className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100"
+      >
         Partner Wallets
       </h2>
-      <div className="space-y-4">
+      <div className="space-y-3" role="list">
         {activePartners.map((partner) => (
           <PartnerWalletCard
             key={partner.id}
@@ -45,7 +54,7 @@ export const PartnerSummary: React.FC<PartnerSummaryProps> = ({
           />
         ))}
       </div>
-    </div>
+    </section>
   );
 };
 
@@ -63,52 +72,75 @@ const PartnerWalletCard: React.FC<PartnerWalletCardProps> = ({
   const net = earnings - expenses;
   const isNegative = net < 0;
   const progressPercentage =
-    !isNegative && earnings > 0 ? (net / earnings) * 100 : 0;
+    earnings > 0 ? Math.min((net / earnings) * 100, 100) : 0;
+  const netStatus = isNegative ? "deficit" : "surplus";
 
   return (
-    <div className="transform rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-[1.03] hover:shadow-lg dark:border-slate-700 dark:bg-slate-800 dark:hover:shadow-black/30">
-      <div className="mb-3 flex items-start justify-between">
-        <h3 className="font-bold text-slate-800 dark:text-slate-50">
+    <article
+      className="rounded-lg border border-slate-200 bg-white p-3 transition-all duration-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-800"
+      role="listitem"
+      aria-labelledby={`partner-${partner.id}-name`}
+    >
+      <div className="mb-2 flex items-start justify-between">
+        <h3
+          id={`partner-${partner.id}-name`}
+          className="font-semibold text-slate-800 dark:text-slate-50"
+        >
           {partner.displayName}
         </h3>
 
         <div
-          className={`flex items-center gap-2 text-xl font-bold ${
+          className={`flex items-center gap-1.5 text-lg font-bold ${
             isNegative
               ? "text-red-500 dark:text-red-400"
               : "text-slate-700 dark:text-slate-200"
           }`}
+          aria-label={`Net balance: ${formatCurrency(net)} ${netStatus}`}
         >
-          {isNegative && <TrendingDown size={20} />}
+          {isNegative && <TrendingDown size={18} aria-hidden="true" />}
           <Wallet
-            size={20}
+            size={18}
             className={
               isNegative ? "text-red-400" : "text-slate-400 dark:text-slate-500"
             }
+            aria-hidden="true"
           />
           {formatCurrency(net)}
         </div>
       </div>
 
-      <div className="mb-3 h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700">
+      <div
+        className="mb-2 h-1 w-full rounded-full bg-slate-200 dark:bg-slate-700"
+        role="progressbar"
+        aria-valuenow={isNegative ? 100 : progressPercentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Financial health: ${
+          isNegative
+            ? "100% spent"
+            : `${progressPercentage.toFixed(1)}% remaining`
+        }`}
+      >
         <div
-          className={`h-1.5 rounded-full transition-all duration-700 ease-out ${
-            isNegative ? "bg-red-500" : "bg-green-500"
+          className={`h-1 rounded-full transition-all duration-500 ease-out ${
+            isNegative ? "bg-red-500" : "bg-emerald-500"
           }`}
-          style={{ width: isNegative ? "100%" : `${progressPercentage}%` }}
-        ></div>
+          style={{
+            width: isNegative ? "100%" : `${Math.max(progressPercentage, 2)}%`,
+          }}
+        />
       </div>
 
       <div className="flex justify-between text-sm">
-        <div className="flex items-center gap-1.5 font-medium text-green-600 dark:text-green-400">
-          <ArrowUpRight size={16} />
+        <div className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+          <ArrowUpRight size={14} aria-hidden="true" />
           <span>Earned: {formatCurrency(earnings)}</span>
         </div>
-        <div className="flex items-center gap-1.5 font-medium text-red-600 dark:text-red-400">
-          <ArrowDownRight size={16} />
+        <div className="flex items-center gap-1 font-medium text-red-600 dark:text-red-400">
+          <ArrowDownRight size={14} aria-hidden="true" />
           <span>Spent: {formatCurrency(expenses)}</span>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
