@@ -8,7 +8,7 @@ import {
   type TooltipProps,
 } from "recharts";
 import { Info, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Transaction } from "../types";
 import { ExpandableCard } from "./common/ExpandableCard";
 import { formatCurrency, formatCurrencyForAxis } from "../utils/format";
@@ -27,34 +27,38 @@ const CustomTooltip: React.FC<
     const grossProfit = netProfit + deductions;
 
     return (
-      <div className="animate-fade-in-up rounded-xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-        <p className="mb-2 font-bold text-slate-800 dark:text-slate-50">
+      <div className="animate-fade-in-up rounded-xl border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800 md:p-4 max-w-[280px] md:max-w-none">
+        <p className="mb-2 font-bold text-slate-800 dark:text-slate-50 text-sm md:text-base">
           {label}
         </p>
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <span className="mr-2 h-2.5 w-2.5 rounded-full bg-green-500" />
-              <p className="text-slate-500 dark:text-slate-400">Net Profit:</p>
+        <div className="space-y-1 text-xs md:text-sm">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center min-w-0 flex-1">
+              <span className="mr-2 h-2 w-2 md:h-2.5 md:w-2.5 rounded-full bg-green-500 flex-shrink-0" />
+              <p className="text-slate-500 dark:text-slate-400 truncate">
+                Net Profit:
+              </p>
             </div>
-            <p className="font-semibold text-slate-800 dark:text-slate-200">
+            <p className="font-semibold text-slate-800 dark:text-slate-200 text-right">
               {formatCurrency(netProfit)}
             </p>
           </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <span className="mr-2 h-2.5 w-2.5 rounded-full bg-slate-400" />
-              <p className="text-slate-500 dark:text-slate-400">Deductions:</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center min-w-0 flex-1">
+              <span className="mr-2 h-2 w-2 md:h-2.5 md:w-2.5 rounded-full bg-slate-400 flex-shrink-0" />
+              <p className="text-slate-500 dark:text-slate-400 truncate">
+                Deductions:
+              </p>
             </div>
-            <p className="font-semibold text-slate-800 dark:text-slate-200">
+            <p className="font-semibold text-slate-800 dark:text-slate-200 text-right">
               {formatCurrency(deductions)}
             </p>
           </div>
-          <div className="flex items-center justify-between border-t border-slate-200 pt-1 dark:border-slate-600">
-            <p className="font-medium text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-between gap-2 border-t border-slate-200 pt-1 dark:border-slate-600">
+            <p className="font-medium text-slate-500 dark:text-slate-400 min-w-0 flex-1 truncate">
               Gross Profit:
             </p>
-            <p className="font-bold text-slate-800 dark:text-slate-50">
+            <p className="font-bold text-slate-800 dark:text-slate-50 text-right">
               {formatCurrency(grossProfit)}
             </p>
           </div>
@@ -70,6 +74,19 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHorizontal, setIsHorizontal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const chartData = Object.values(
     transactions.reduce((acc, tx) => {
@@ -91,14 +108,36 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
         new Date(`1 ${a.month}`).getTime() - new Date(`1 ${b.month}`).getTime()
     );
 
+  // Mobile optimizations
+  const getMobileChartHeight = () => {
+    if (isMobile) {
+      return isExpanded ? "h-[60vh]" : "h-[35vh]";
+    }
+    return isExpanded
+      ? isHorizontal
+        ? "h-full md:h-[70vh]"
+        : "h-[70vh]"
+      : "h-[45vh]";
+  };
+
+  const getChartMargins = () => {
+    if (isMobile) {
+      return { top: 10, right: 15, left: 10, bottom: 10 };
+    }
+    return { top: 20, right: 30, left: 20, bottom: 0 };
+  };
+
   if (chartData.length === 0) {
     return (
-      <div className="flex h-96 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-6 text-center dark:border-slate-700 dark:bg-slate-800">
-        <Info size={40} className="mb-4 text-slate-400 dark:text-slate-500" />
-        <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+      <div className="flex h-64 md:h-96 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-4 md:p-6 text-center dark:border-slate-700 dark:bg-slate-800">
+        <Info
+          size={isMobile ? 32 : 40}
+          className="mb-3 md:mb-4 text-slate-400 dark:text-slate-500"
+        />
+        <h3 className="text-base md:text-lg font-semibold text-slate-700 dark:text-slate-200">
           No Income Data Available
         </h3>
-        <p className="text-slate-500 dark:text-slate-400">
+        <p className="text-sm md:text-base text-slate-500 dark:text-slate-400">
           Add an income entry to see the chart.
         </p>
       </div>
@@ -113,19 +152,24 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
         setIsExpanded(!isExpanded);
         if (isExpanded) {
           setIsHorizontal(false);
-        } else {
+        } else if (!isMobile) {
           setIsHorizontal(true);
         }
       }}
       actionBar={{
         position: "left",
-        content: isExpanded && (
+        content: isExpanded && !isMobile && (
           <button
             onClick={() => setIsHorizontal(!isHorizontal)}
-            className="flex items-center gap-2 text-sm text-green-600 hover:underline"
+            className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-green-600 hover:underline px-2 py-1 rounded-md hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
           >
-            <RotateCcw size={16} />
-            {isHorizontal ? "Vertical View" : "Horizontal View"}
+            <RotateCcw size={isMobile ? 14 : 16} />
+            <span className="hidden sm:inline">
+              {isHorizontal ? "Vertical View" : "Horizontal View"}
+            </span>
+            <span className="sm:hidden">
+              {isHorizontal ? "Vertical" : "Horizontal"}
+            </span>
           </button>
         ),
       }}
@@ -133,13 +177,7 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
       <div
         className={`
     relative w-full 
-    ${
-      isExpanded
-        ? isHorizontal
-          ? "h-full md:h-[70vh]"
-          : "h-[70vh]"
-        : "h-[45vh]"
-    }
+    ${getMobileChartHeight()}
     transition-all duration-500 ease-in-out
     rounded-xl bg-white dark:bg-slate-900
     overflow-hidden
@@ -148,8 +186,8 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}
-            layout={isHorizontal ? "vertical" : "horizontal"}
-            margin={{ top: 20, right: 30, left: 20, bottom: 0 }}
+            layout={isHorizontal && !isMobile ? "vertical" : "horizontal"}
+            margin={getChartMargins()}
           >
             <defs>
               <linearGradient id="colorNetProfit" x1="0" y1="0" x2="0" y2="1">
@@ -163,20 +201,21 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
             </defs>
 
             {/* Axis layout changes depending on orientation */}
-            {isHorizontal ? (
+            {isHorizontal && !isMobile ? (
               <>
                 <YAxis
                   type="category"
                   dataKey="month"
                   stroke="var(--chart-axis)"
-                  fontSize={12}
+                  fontSize={isMobile ? 10 : 12}
                   tickLine={false}
                   axisLine={false}
+                  width={isMobile ? 40 : 60}
                 />
                 <XAxis
                   type="number"
                   stroke="var(--chart-axis)"
-                  fontSize={12}
+                  fontSize={isMobile ? 10 : 12}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={formatCurrencyForAxis}
@@ -187,16 +226,21 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
                 <XAxis
                   dataKey="month"
                   stroke="var(--chart-axis)"
-                  fontSize={12}
+                  fontSize={isMobile ? 10 : 12}
                   tickLine={false}
                   axisLine={false}
+                  interval={isMobile && chartData.length > 6 ? 1 : 0}
+                  angle={isMobile ? -45 : 0}
+                  textAnchor={isMobile ? "end" : "middle"}
+                  height={isMobile ? 60 : 30}
                 />
                 <YAxis
                   stroke="var(--chart-axis)"
-                  fontSize={12}
+                  fontSize={isMobile ? 10 : 12}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={formatCurrencyForAxis}
+                  width={isMobile ? 40 : 60}
                 />
               </>
             )}
@@ -208,13 +252,15 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
                 strokeWidth: 1,
                 strokeDasharray: "3 3",
               }}
+              position={isMobile ? { x: 10, y: 10 } : undefined}
+              allowEscapeViewBox={{ x: false, y: true }}
             />
             <Area
               type="monotone"
               dataKey="deductions"
               stackId="1"
               stroke="#94a3b8"
-              strokeWidth={2}
+              strokeWidth={isMobile ? 1.5 : 2}
               fill="url(#colorDeductions)"
             />
             <Area
@@ -222,7 +268,7 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
               dataKey="netProfit"
               stackId="1"
               stroke="#22c55e"
-              strokeWidth={2}
+              strokeWidth={isMobile ? 1.5 : 2}
               fill="url(#colorNetProfit)"
             />
           </AreaChart>
