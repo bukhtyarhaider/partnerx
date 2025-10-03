@@ -1,29 +1,107 @@
 import type { Expense, Transaction } from "../types";
 import type { Financials } from "../hooks/useFinancials";
+import type { DateFilterValue } from "../components/DateFilter";
 
 export async function generateFinancialSummary({
   transactions,
   expenses,
   financials,
+  dateFilter,
 }: {
   transactions: Transaction[];
   expenses: Expense[];
   financials: Financials;
+  dateFilter: DateFilterValue;
 }): Promise<string> {
+  // Helper function to format date range
+  const formatDateRange = (filter: DateFilterValue): string => {
+    if (filter.type === "all-time") {
+      return "All Time";
+    }
+
+    if (
+      filter.type === "custom" &&
+      filter.range.startDate &&
+      filter.range.endDate
+    ) {
+      return `${filter.range.startDate.toLocaleDateString()} - ${filter.range.endDate.toLocaleDateString()}`;
+    }
+
+    // Default ranges
+    const dateLabels = {
+      "current-month": "Current Month",
+      "3-months": "Last 3 Months",
+      "6-months": "Last 6 Months",
+      "1-year": "Last 12 Months",
+    };
+
+    return (
+      dateLabels[filter.type as keyof typeof dateLabels] || "Selected Period"
+    );
+  };
+
+  // Helper function to format currency amounts
+  const formatUSD = (amount: number) => `$${amount.toLocaleString()}`;
+  const formatPKR = (amount: number) => `₨${amount.toLocaleString()}`;
+
+  const dateRangeText = formatDateRange(dateFilter);
   const systemPrompt =
-    "You are a helpful financial assistant. Analyze the provided financial data and generate a concise, insightful summary in 3-4 bullet points. Focus on key metrics like profitability, spending habits, and overall financial health. Use markdown for formatting (e.g., **bold** headers).";
+    "You are an expert financial analyst and advisor. Analyze the provided financial data and generate a comprehensive, well-structured summary. Use the following format for optimal readability:\n\n" +
+    `## Financial Overview for ${dateRangeText}\n` +
+    "Provide a high-level assessment of financial health for the specified time period.\n\n" +
+    "## Key Metrics Analysis\n" +
+    "### Revenue & Profitability (USD)\n" +
+    "- Highlight gross and net profit trends in USD currency\n" +
+    "- Use specific dollar amounts and percentages\n\n" +
+    "### Expense Management (PKR)\n" +
+    "- Analyze spending patterns and efficiency in PKR currency\n" +
+    "- Focus on cost optimization opportunities\n\n" +
+    "## Insights & Recommendations\n" +
+    "💡 Provide actionable insights using emoji prefixes:\n" +
+    "✅ Positive trends and achievements\n" +
+    "⚠️ Areas that need attention or improvement\n\n" +
+    "IMPORTANT: Use **bold** for emphasis. Show income/revenue in USD ($) and expenses/donations in PKR (₨). Always include the time period context in your analysis. Keep the tone professional yet accessible.";
 
   const userQuery = `
-    Here is the financial data for the period:
-    - Total Gross Profit: ${financials.totalGrossProfit}
-    - Total Net Profit: ${financials.totalNetProfit}
-    - Total Expenses: ${financials.totalExpenses}
-    - Company Capital: ${financials.companyCapital}
+    Please analyze my financial data for ${dateRangeText} and provide insights:
 
-    - All Transactions: ${JSON.stringify(transactions, null, 2)}
-    - All Expenses: ${JSON.stringify(expenses, null, 2)}
+    ## Current Financial Position for ${dateRangeText}
+    - **Total Gross Profit (USD)**: ${formatUSD(financials.totalGrossProfit)}
+    - **Total Net Profit (USD)**: ${formatUSD(financials.totalNetProfit)}
+    - **Total Expenses (PKR)**: ${formatPKR(financials.totalExpenses)}
+    - **Company Capital (PKR)**: ${formatPKR(financials.companyCapital)}
+    - **Profit Margin**: ${
+      financials.totalGrossProfit > 0
+        ? (
+            (financials.totalNetProfit / financials.totalGrossProfit) *
+            100
+          ).toFixed(1)
+        : 0
+    }%
 
-    Please provide a summary.
+    ## Transaction Summary (USD Income)
+    - **Total Transactions**: ${transactions.length}
+    - **Recent Income Activity**: ${transactions
+      .slice(-5)
+      .map((t) => `${t.sourceId}: ${formatUSD(t.amountUSD)}`)
+      .join(", ")}
+
+    ## Expense Breakdown (PKR Spending)
+    - **Total Expense Items**: ${expenses.length}
+    - **Recent Expenses**: ${expenses
+      .slice(-5)
+      .map((e) => `${e.description}: ${formatPKR(e.amount)}`)
+      .join(", ")}
+
+    ## Raw Data for Deep Analysis (${dateRangeText})
+    **Income Transactions (USD)**: ${JSON.stringify(
+      transactions.slice(-10),
+      null,
+      2
+    )}
+    **Local Expenses (PKR)**: ${JSON.stringify(expenses.slice(-10), null, 2)}
+
+    Please provide a comprehensive financial analysis following the structured format. Remember to clearly differentiate between USD income and PKR expenses, and focus on the ${dateRangeText} period.
   `;
 
   const apiKey = import.meta.env.VITE_GOOGLE_GEMINI_API_KEY;

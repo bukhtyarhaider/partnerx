@@ -31,7 +31,7 @@ import type {
   Expense,
   Transaction,
 } from "../types";
-import { FinancialSummary } from "../components/FinancialSummary";
+import { AIFinancialAssistant } from "../components/AIFinancialAssistant";
 import { AppInfoModal } from "../components/AppInfoModal";
 import { useAuth } from "../hooks/useAuth";
 import { useState } from "react";
@@ -187,19 +187,18 @@ export const DesktopLayout = ({
 
           <Stats financials={financials} />
 
-          {/* Financial Summary */}
-          <div className="mb-4 ">
-            <FinancialSummary
-              financials={financials}
-              transactions={sortedTransactions}
-              expenses={sortedExpenses}
-              summaries={appState.summaries}
-              onAddSummary={appState.handleAddSummary}
-              onDeleteSummary={appState.handleDeleteSummary}
-            />
-          </div>
-
           <IncomeChart transactions={sortedTransactions} />
+
+          {/* AI Financial Assistant - Floating */}
+          <AIFinancialAssistant
+            financials={financials}
+            transactions={sortedTransactions}
+            expenses={sortedExpenses}
+            dateFilter={dateFilter}
+            summaries={appState.summaries}
+            onAddSummary={appState.handleAddSummary}
+            onDeleteSummary={appState.handleDeleteSummary}
+          />
 
           {/* Transaction and Expense History */}
           <div className="mt-4 mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2">

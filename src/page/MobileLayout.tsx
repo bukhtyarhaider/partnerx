@@ -20,7 +20,7 @@ import type {
   Expense,
   Transaction,
 } from "../types";
-import { FinancialSummary } from "../components/FinancialSummary";
+import { MobileAIFinancialAssistant } from "../components/MobileAIFinancialAssistant";
 import { LiveRate } from "../components/LiveRate";
 import {
   Tabs,
@@ -66,18 +66,20 @@ export const MobileLayout = ({
 
             <Stats financials={financials} />
 
-            <FinancialSummary
+            <LiveRate />
+
+            <IncomeChart transactions={sortedTransactions} />
+
+            {/* AI Financial Assistant - Mobile-optimized inline card */}
+            <MobileAIFinancialAssistant
               transactions={sortedTransactions}
               expenses={sortedExpenses}
               financials={financials}
+              dateFilter={dateFilter}
               summaries={appState.summaries}
               onAddSummary={appState.handleAddSummary}
               onDeleteSummary={appState.handleDeleteSummary}
             />
-
-            <LiveRate />
-
-            <IncomeChart transactions={sortedTransactions} />
           </div>
         );
       case "history":
