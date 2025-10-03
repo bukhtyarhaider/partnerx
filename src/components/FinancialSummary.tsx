@@ -9,6 +9,7 @@ import {
 import { useState } from "react";
 import type { Expense, Transaction, FinancialSummaryRecord } from "../types";
 import type { Financials } from "../hooks/useFinancials";
+import type { DateFilterValue } from "./DateFilter";
 import { ConfirmationModal } from "./common/ConfirmationModal";
 import { generateFinancialSummary } from "../utils/generateFinancialSummary";
 import { useConfirmation } from "../hooks/useConfirmation";
@@ -18,6 +19,7 @@ export interface FinancialSummaryProps {
   expenses: Expense[];
   financials: Financials;
   summaries: FinancialSummaryRecord[];
+  dateFilter: DateFilterValue;
   onAddSummary: (text: string) => void;
   onDeleteSummary: (id: number) => void;
 }
@@ -27,6 +29,7 @@ export const FinancialSummary = ({
   expenses,
   financials,
   summaries = [],
+  dateFilter,
   onAddSummary = () => {},
   onDeleteSummary = () => {},
 }: FinancialSummaryProps) => {
@@ -59,6 +62,7 @@ export const FinancialSummary = ({
         transactions,
         expenses,
         financials,
+        dateFilter,
       });
       onAddSummary(text);
     } catch (err) {
