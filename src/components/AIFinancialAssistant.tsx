@@ -53,6 +53,9 @@ export const AIFinancialAssistant: React.FC<AIFinancialAssistantProps> = ({
   const { confirmation, showConfirmation, hideConfirmation } =
     useConfirmation();
 
+  // Check if there's any data to analyze
+  const hasDataToAnalyze = transactions.length > 0 || expenses.length > 0;
+
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
@@ -262,13 +265,15 @@ export const AIFinancialAssistant: React.FC<AIFinancialAssistantProps> = ({
                 <Sparkles className="h-5 w-5 text-indigo-500 mt-0.5" />
                 <div>
                   <p className="text-sm text-slate-700 dark:text-slate-300">
-                    Hello! I'm your AI financial assistant. I can analyze your
-                    transactions, expenses, and provide insights about your
-                    financial health.
+                    Hello! I'm your AI financial assistant.{" "}
+                    {hasDataToAnalyze
+                      ? "I can analyze your transactions, expenses, and provide insights about your financial health."
+                      : "Add some transactions or expenses first, then I can analyze your financial data and provide insights."}
                   </p>
                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                    Click the button below to get started with your first
-                    analysis.
+                    {hasDataToAnalyze
+                      ? "Click the button below to get started with your first analysis."
+                      : "Once you have financial data, click the analysis button to get AI-powered insights."}
                   </p>
                 </div>
               </div>
@@ -369,7 +374,7 @@ export const AIFinancialAssistant: React.FC<AIFinancialAssistantProps> = ({
         <div className="border-t border-slate-200 p-4 dark:border-slate-700">
           <button
             onClick={handleGenerateSummary}
-            disabled={isLoading}
+            disabled={isLoading || !hasDataToAnalyze}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 text-sm font-medium text-white transition-all hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
@@ -377,7 +382,11 @@ export const AIFinancialAssistant: React.FC<AIFinancialAssistantProps> = ({
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {isLoading ? "Analyzing..." : "Generate Financial Analysis"}
+            {isLoading
+              ? "Analyzing..."
+              : !hasDataToAnalyze
+              ? "No Data to Analyze"
+              : "Generate Financial Analysis"}
           </button>
         </div>
       </div>
@@ -442,11 +451,14 @@ export const AIFinancialAssistant: React.FC<AIFinancialAssistantProps> = ({
                       <Sparkles className="h-10 w-10 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <h3 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                      Ready to analyze your finances
+                      {hasDataToAnalyze
+                        ? "Ready to analyze your finances"
+                        : "No Financial Data Available"}
                     </h3>
                     <p className="text-slate-600 dark:text-slate-400 mb-6">
-                      Get AI-powered insights about your financial health,
-                      spending patterns, and recommendations for improvement.
+                      {hasDataToAnalyze
+                        ? "Get AI-powered insights about your financial health, spending patterns, and recommendations for improvement."
+                        : "Add some transactions or expenses to get started with AI-powered financial analysis and insights."}
                     </p>
                   </div>
                 </div>
@@ -568,7 +580,7 @@ export const AIFinancialAssistant: React.FC<AIFinancialAssistantProps> = ({
             <div className="border-t border-slate-200 p-6 dark:border-slate-700">
               <button
                 onClick={handleGenerateSummary}
-                disabled={isLoading}
+                disabled={isLoading || !hasDataToAnalyze}
                 className="flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-4 text-base font-medium text-white transition-all hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
@@ -578,6 +590,8 @@ export const AIFinancialAssistant: React.FC<AIFinancialAssistantProps> = ({
                 )}
                 {isLoading
                   ? "Analyzing Your Financial Data..."
+                  : !hasDataToAnalyze
+                  ? "No Data Available for Analysis"
                   : "Generate Comprehensive Financial Analysis"}
               </button>
             </div>

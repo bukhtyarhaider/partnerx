@@ -49,6 +49,8 @@ export const MobileAIFinancialAssistant: React.FC<
   const { confirmation, showConfirmation, hideConfirmation } =
     useConfirmation();
 
+  const hasDataToAnalyze = transactions.length > 0 || expenses.length > 0;
+
   const handleGenerateSummary = async () => {
     if (!isExpanded) {
       setIsExpanded(true);
@@ -184,7 +186,9 @@ export const MobileAIFinancialAssistant: React.FC<
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 {summaries.length > 0
                   ? `${summaries.length} analysis available`
-                  : "Get AI-powered financial insights"}
+                  : hasDataToAnalyze
+                  ? "Get AI-powered financial insights"
+                  : "Add financial data to get started"}
               </p>
             </div>
           </div>
@@ -211,7 +215,7 @@ export const MobileAIFinancialAssistant: React.FC<
         <div className="border-t border-slate-200 dark:border-slate-700/50 px-4 py-3">
           <button
             onClick={handleGenerateSummary}
-            disabled={isLoading}
+            disabled={isLoading || !hasDataToAnalyze}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-2.5 text-sm font-medium text-white transition-all hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
             {isLoading ? (
@@ -219,7 +223,11 @@ export const MobileAIFinancialAssistant: React.FC<
             ) : (
               <TrendingUp className="h-4 w-4" />
             )}
-            {isLoading ? "Analyzing..." : "Generate Analysis"}
+            {isLoading
+              ? "Analyzing..."
+              : !hasDataToAnalyze
+              ? "No Data"
+              : "Generate Analysis"}
           </button>
         </div>
       )}
@@ -261,7 +269,7 @@ export const MobileAIFinancialAssistant: React.FC<
         {/* Generate Button */}
         <button
           onClick={handleGenerateSummary}
-          disabled={isLoading}
+          disabled={isLoading || !hasDataToAnalyze}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 px-4 py-3 text-sm font-medium text-white transition-all hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
@@ -271,6 +279,8 @@ export const MobileAIFinancialAssistant: React.FC<
           )}
           {isLoading
             ? "Analyzing Your Financial Data..."
+            : !hasDataToAnalyze
+            ? "No Data Available for Analysis"
             : "Generate New Analysis"}
         </button>
 
@@ -401,11 +411,14 @@ export const MobileAIFinancialAssistant: React.FC<
               <Sparkles className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
             </div>
             <h4 className="mb-2 font-semibold text-slate-900 dark:text-slate-100">
-              Ready for AI Analysis
+              {hasDataToAnalyze
+                ? "Ready for AI Analysis"
+                : "No Financial Data Available"}
             </h4>
             <p className="text-sm text-slate-600 dark:text-slate-400 px-4">
-              Get AI-powered insights about your financial health, spending
-              patterns, and personalized recommendations.
+              {hasDataToAnalyze
+                ? "Get AI-powered insights about your financial health, spending patterns, and personalized recommendations."
+                : "Add some transactions or expenses to get started with AI-powered financial analysis and personalized insights."}
             </p>
           </div>
         )}
