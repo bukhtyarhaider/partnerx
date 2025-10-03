@@ -55,7 +55,7 @@ export const DateFilter = ({
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleFilterChange = (type: DateFilterType) => {
     if (type === "custom") {
