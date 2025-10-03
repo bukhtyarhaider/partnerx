@@ -29,6 +29,8 @@ import {
   TabsTrigger,
 } from "../components/ui/CustomTabs";
 import { AppInfoModal } from "../components/AppInfoModal";
+import { DateFilter } from "../components/DateFilter";
+import { useDateFilter } from "../hooks/useDateFilter";
 import { useAuth } from "../hooks/useAuth";
 
 type MobileTab = "overview" | "history" | "settings";
@@ -49,6 +51,7 @@ export const MobileLayout = ({
   sortedDonations,
 }: MobileLayoutProps) => {
   const { lockApp } = useAuth();
+  const { dateFilter, setDateFilter } = useDateFilter();
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>("overview");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -59,6 +62,8 @@ export const MobileLayout = ({
       case "overview":
         return (
           <div className="space-y-4">
+            <DateFilter value={dateFilter} onChange={setDateFilter} />
+
             <Stats financials={financials} />
 
             <FinancialSummary
@@ -164,7 +169,8 @@ export const MobileLayout = ({
           </button>
           <ThemeToggleButton />
         </div>
-      </header>{" "}
+      </header>
+
       <main className="flex-1 overflow-y-auto p-4 pb-28 mobile-safe-area">
         <div className="space-y-4">{renderContent()}</div>
       </main>

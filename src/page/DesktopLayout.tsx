@@ -13,6 +13,8 @@ import {
 import { PartnerSummary } from "../components/PartnerSummary";
 import { ImportExport } from "../components/ImportExport";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
+import { DateFilter } from "../components/DateFilter";
+import { useDateFilter } from "../hooks/useDateFilter";
 import { Stats } from "../components/Stats";
 import { IncomeChart } from "../components/IncomeChart";
 import { TransactionHistory } from "../components/TransactionHistory";
@@ -50,6 +52,7 @@ export const DesktopLayout = ({
   sortedDonations,
 }: DesktopLayoutProps) => {
   const { lockApp } = useAuth();
+  const { dateFilter, setDateFilter } = useDateFilter();
   const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
 
   const tabs = [
@@ -164,7 +167,7 @@ export const DesktopLayout = ({
             <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               Overview
             </h2>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-3">
               <button
                 onClick={lockApp}
                 className="rounded-lg p-1.5 text-slate-500 transition-all duration-200 hover:bg-white/50 hover:text-slate-700 hover:backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-300 dark:focus:ring-offset-slate-800"
@@ -176,6 +179,11 @@ export const DesktopLayout = ({
               <ThemeToggleButton />
             </div>
           </header>
+
+          {/* Date Filter */}
+          <div className="mb-6">
+            <DateFilter value={dateFilter} onChange={setDateFilter} />
+          </div>
 
           <Stats financials={financials} />
 

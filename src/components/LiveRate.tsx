@@ -1,10 +1,8 @@
 import { DollarSign, Loader2, WifiOff } from "lucide-react";
-import { useExchangeRate } from "../hooks/useExchangeRate";
+import { useSharedExchangeRate } from "../hooks/useSharedExchangeRate";
 
 export const LiveRate: React.FC = () => {
-  const { rate, status, lastUpdated, isJustUpdated } = useExchangeRate({
-    apiKey: import.meta.env.VITE_EXCHANGE_RATE_API_KEY,
-  });
+  const { rate, status, lastUpdated, isJustUpdated } = useSharedExchangeRate();
 
   const renderContent = () => {
     switch (status) {

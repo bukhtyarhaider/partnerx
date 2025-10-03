@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { PlusCircle, Save, AlertCircle } from "lucide-react";
+import { PlusCircle, Save, AlertCircle, RefreshCw, Zap } from "lucide-react";
 import type { NewTransactionEntry, Transaction } from "../../types";
 import { getTodayString } from "../../utils";
 import { useEnabledIncomeSources } from "../../hooks/useIncomeSources";
+import { useConversionRateAutoFill } from "../../hooks/useConversionRateAutoFill";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -24,6 +25,16 @@ export const TransactionForm: React.FC<FormProps> = ({
   onSave,
 }) => {
   const { sources: enabledSources } = useEnabledIncomeSources();
+  const {
+    currentRate,
+    fillLatestRate,
+    manualRefresh,
+    isFetching,
+    hasRate,
+    lastUpdated,
+    isCacheStale,
+  } = useConversionRateAutoFill();
+
   const [sourceId, setSourceId] = useState<string>("");
   const [amountUSD, setAmountUSD] = useState("");
   const [conversionRate, setConversionRate] = useState("");
@@ -33,12 +44,44 @@ export const TransactionForm: React.FC<FormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Auto-fill rate handler
+  const handleAutoFillRate = useCallback(async () => {
+    try {
+      const rate = await fillLatestRate();
+      if (rate) {
+        setConversionRate(rate.toFixed(2));
+      }
+    } catch (error) {
+      console.error("Failed to auto-fill conversion rate:", error);
+    }
+  }, [fillLatestRate]);
+
+  // Manual refresh handler
+  const handleManualRefresh = useCallback(async () => {
+    try {
+      const rate = await manualRefresh();
+      if (rate) {
+        setConversionRate(rate.toFixed(2));
+      }
+    } catch (error) {
+      console.error("Failed to refresh conversion rate:", error);
+      setError("Failed to fetch latest exchange rate");
+    }
+  }, [manualRefresh]);
+
   // Set default source when sources are loaded
   useEffect(() => {
     if (enabledSources.length > 0 && !sourceId && mode === "add") {
       setSourceId(enabledSources[0].id);
     }
   }, [enabledSources, sourceId, mode]);
+
+  // Auto-fill conversion rate on mount for new transactions
+  useEffect(() => {
+    if (mode === "add" && !conversionRate && hasRate) {
+      handleAutoFillRate();
+    }
+  }, [mode, conversionRate, hasRate, handleAutoFillRate]);
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -150,36 +193,78 @@ export const TransactionForm: React.FC<FormProps> = ({
           </select>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="transaction-amount" className={LABEL_STYLES}>
-              Amount (USD) *
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              id="transaction-amount"
-              placeholder="e.g., 1500"
-              value={amountUSD}
-              onChange={(e) => setAmountUSD(e.target.value)}
-              className={INPUT_STYLES}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="transaction-rate" className={LABEL_STYLES}>
-              Conversion Rate *
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              id="transaction-rate"
-              placeholder="e.g., 278.50"
-              value={conversionRate}
-              onChange={(e) => setConversionRate(e.target.value)}
-              className={INPUT_STYLES}
-              required
-            />
+        <div>
+          <label htmlFor="transaction-amount" className={LABEL_STYLES}>
+            Amount (USD) *
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            id="transaction-amount"
+            placeholder="e.g., 1500"
+            value={amountUSD}
+            onChange={(e) => setAmountUSD(e.target.value)}
+            className={INPUT_STYLES}
+            required
+          />
+        </div>
+
+        <div>
+          <label htmlFor="transaction-rate" className={LABEL_STYLES}>
+            Conversion Rate *
+          </label>
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.01"
+                id="transaction-rate"
+                placeholder="e.g., 278.50"
+                value={conversionRate}
+                onChange={(e) => setConversionRate(e.target.value)}
+                className={INPUT_STYLES}
+                required
+              />
+              <button
+                type="button"
+                onClick={handleAutoFillRate}
+                disabled={isFetching}
+                className="flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-green-300 dark:bg-green-900/20 dark:hover:bg-green-900/30 transition-colors whitespace-nowrap"
+                title="Auto-fill with cached rate"
+              >
+                <Zap size={14} />
+                Auto
+              </button>
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                disabled={isFetching}
+                className="flex items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-blue-300 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 transition-colors whitespace-nowrap"
+                title="Fetch latest rate from API"
+              >
+                {isFetching ? (
+                  <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
+                ) : (
+                  <RefreshCw size={14} />
+                )}
+                Refresh
+              </button>
+            </div>
+            <div className="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">
+              {currentRate && (
+                <span>Current rate: {currentRate.toFixed(2)} PKR/USD</span>
+              )}
+              {lastUpdated && (
+                <span>
+                  Updated: {lastUpdated.toLocaleTimeString()}
+                  {isCacheStale && (
+                    <span className="ml-1 text-amber-600 dark:text-amber-400">
+                      (Stale)
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
