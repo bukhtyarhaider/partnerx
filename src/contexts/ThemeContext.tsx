@@ -35,18 +35,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const updatePWAThemeColors = async (currentTheme: Theme) => {
     const colors = {
       light: "#ffffff", // White for light mode
-      dark: "#f8fafc",
+      dark: "#0f172b",
     };
 
-    // Remove existing theme-color meta tags
+    // Remove existing theme-color meta tags (including media query ones)
     const existingMetas = document.querySelectorAll('meta[name="theme-color"]');
     existingMetas.forEach((meta) => meta.remove());
 
-    // Create new theme-color meta tag
     const meta = document.createElement("meta");
     meta.name = "theme-color";
     meta.content = colors[currentTheme];
     document.head.appendChild(meta);
+
+    const androidMeta = document.createElement("meta");
+    androidMeta.name = "theme-color";
+    androidMeta.content = colors[currentTheme];
+    androidMeta.setAttribute("media", "(prefers-color-scheme: no-preference)");
+    document.head.appendChild(androidMeta);
 
     // Update msapplication-navbutton-color
     const navButtonMeta = document.querySelector(
