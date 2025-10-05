@@ -4,11 +4,13 @@ import { Settings } from "lucide-react";
 interface DonationSettingsButtonProps {
   onClick: () => void;
   className?: string;
+  showTitle?: boolean;
 }
 
 export const DonationSettingsButton: React.FC<DonationSettingsButtonProps> = ({
   onClick,
   className = "",
+  showTitle = false,
 }) => {
   return (
     <button
@@ -17,7 +19,7 @@ export const DonationSettingsButton: React.FC<DonationSettingsButtonProps> = ({
       title="Configure donation settings"
     >
       <Settings size={16} />
-      <span className="hidden sm:inline">Donation Settings</span>
+      {showTitle && <span className="hidden sm:inline">Donation Settings</span>}
     </button>
   );
 };
