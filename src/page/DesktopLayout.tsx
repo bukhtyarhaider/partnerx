@@ -22,6 +22,8 @@ import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
 import { DonationConfigModal } from "../components/DonationConfigModal";
 import { DonationSettingsButton } from "../components/DonationSettingsButton";
+import { IncomeSourceSettingsButton } from "../components/IncomeSourceSettingsButton";
+import { IncomeSourceSettingsModal } from "../components/IncomeSourceSettingsModal";
 import { LiveRate } from "../components/LiveRate";
 
 import type { Financials } from "../hooks/useFinancials";
@@ -54,6 +56,7 @@ export const DesktopLayout = ({
   const { lockApp } = useAuth();
   const { dateFilter, setDateFilter } = useDateFilter();
   const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
+  const [isIncomeSettingsOpen, setIsIncomeSettingsOpen] = useState(false);
 
   const tabs = [
     {
@@ -203,6 +206,11 @@ export const DesktopLayout = ({
           {/* Transaction and Expense History */}
           <div className="mt-4 mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
             <TransactionHistory
+              actionBtn={
+                <IncomeSourceSettingsButton
+                  onClick={() => setIsIncomeSettingsOpen(true)}
+                />
+              }
               transactions={sortedTransactions}
               onEdit={(tx) => appState.openEditModal(tx, "transaction")}
               onDelete={appState.handleDeleteTransaction}
@@ -240,6 +248,12 @@ export const DesktopLayout = ({
         onClose={() => setIsDonationConfigOpen(false)}
         config={appState.donationConfig}
         onUpdate={appState.handleUpdateDonationConfig}
+      />
+
+      {/* Income Source Settings Modal */}
+      <IncomeSourceSettingsModal
+        isOpen={isIncomeSettingsOpen}
+        onClose={() => setIsIncomeSettingsOpen(false)}
       />
     </div>
   );

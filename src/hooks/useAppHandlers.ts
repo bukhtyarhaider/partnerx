@@ -40,10 +40,26 @@ export function useAppHandlers(): AppHandlers {
     JSON.parse(localStorage.getItem("summaries") || "[]")
   );
   const [donationConfig, setDonationConfig] = useState<DonationConfig>(() => {
+    // Priority: 1. Existing saved config, 2. Onboarding config, 3. Default
     const saved = localStorage.getItem("donationConfig");
-    return saved
-      ? { ...DEFAULT_DONATION_CONFIG, ...JSON.parse(saved) }
-      : DEFAULT_DONATION_CONFIG;
+    if (saved) {
+      return { ...DEFAULT_DONATION_CONFIG, ...JSON.parse(saved) };
+    }
+
+    // Check for onboarding donation config
+    const onboardingConfig = localStorage.getItem("onboarding_donation_config");
+    if (onboardingConfig) {
+      try {
+        const config = JSON.parse(onboardingConfig);
+        // Save onboarding config as the main config
+        localStorage.setItem("donationConfig", JSON.stringify(config));
+        return { ...DEFAULT_DONATION_CONFIG, ...config };
+      } catch (error) {
+        console.warn("Failed to parse onboarding donation config:", error);
+      }
+    }
+
+    return DEFAULT_DONATION_CONFIG;
   });
   const [activeTab, setActiveTab] = useState<"income" | "expense" | "donation">(
     "income"
