@@ -245,6 +245,7 @@ class MockIncomeSourceService implements IncomeSourceService {
    */
   private loadConfig(): void {
     try {
+      // Priority: 1. Existing config, 2. Onboarding config, 3. Default
       const stored = localStorage.getItem("incomeSourceConfig");
       if (stored) {
         const parsedConfig = JSON.parse(stored);
@@ -254,7 +255,39 @@ class MockIncomeSourceService implements IncomeSourceService {
           ...parsedConfig,
           sources: parsedConfig.sources || defaultIncomeSourceConfig.sources,
         };
+        return;
       }
+
+      // Check for onboarding income sources
+      const onboardingSources = localStorage.getItem(
+        "onboarding_income_sources"
+      );
+      if (onboardingSources) {
+        const selectedSources: string[] = JSON.parse(onboardingSources);
+
+        // Filter default sources to only include selected ones
+        const filteredSources = defaultIncomeSourceConfig.sources.filter(
+          (source) => selectedSources.includes(source.id)
+        );
+
+        if (filteredSources.length > 0) {
+          this.config = {
+            ...defaultIncomeSourceConfig,
+            sources: filteredSources,
+            lastUpdated: new Date().toISOString(),
+          };
+
+          // Save the filtered config as the main config
+          localStorage.setItem(
+            "incomeSourceConfig",
+            JSON.stringify(this.config)
+          );
+          return;
+        }
+      }
+
+      // Fall back to default
+      this.config = { ...defaultIncomeSourceConfig };
     } catch (error) {
       console.warn(
         "Failed to load income source config from localStorage:",
