@@ -1,13 +1,25 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import type { BusinessInfo } from "../types/onboarding";
 
 export function AppInfoModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
+
+    const saved = localStorage.getItem("business_info");
+    if (saved) {
+      try {
+        setBusinessInfo(JSON.parse(saved));
+      } catch (error) {
+        console.warn("Failed to parse business info:", error);
+      }
+    }
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsOpen(false);
     };
@@ -43,7 +55,7 @@ export function AppInfoModal() {
           </h3>
           <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
             <li>
-              <strong>Name:</strong> PartnerX
+              <strong>Name:</strong> {businessInfo?.name || "PartnerWise"}
             </li>
             <li>
               <strong>Version:</strong> 1.0.0 (pre-release)
