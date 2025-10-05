@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Check } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
 import { BusinessInfoStep } from "./BusinessInfoStep";
 import { AddPartnersStep } from "./AddPartnersStep";
@@ -22,7 +22,6 @@ export const OnboardingFlow: React.FC = () => {
     businessInfo,
     goToNextStep,
     goToPreviousStep,
-    goToStep,
     completeOnboarding,
   } = useOnboarding();
 
@@ -63,97 +62,60 @@ export const OnboardingFlow: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="container mx-auto px-4 py-8">
         {/* Header with Progress */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="max-w-4xl mx-auto">
             {/* Progress Bar */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
+            <div className="mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200">
                   Welcome to {businessInfo?.name || "PartnerX"}
                 </h1>
-                <div className="text-sm text-slate-600 dark:text-slate-400">
+                <div className="text-sm text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
                   Step {progress.currentStepIndex + 1} of{" "}
                   {progress.steps.length}
                 </div>
               </div>
 
-              {/* Step Indicators */}
-              <div className="flex items-center justify-between relative">
-                {/* Progress Line */}
-                <div className="absolute top-4 left-0 w-full h-0.5 bg-slate-200 dark:bg-slate-700">
+              {/* Simple Progress Bar */}
+              <div className="relative mb-2">
+                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-emerald-500 transition-all duration-500 ease-out"
                     style={{
                       width: `${
-                        (progress.currentStepIndex /
-                          (progress.steps.length - 1)) *
+                        ((progress.currentStepIndex + 1) /
+                          progress.steps.length) *
                         100
                       }%`,
                     }}
                   />
                 </div>
-
-                {progress.steps.map((step, index) => {
-                  const isActive = index === progress.currentStepIndex;
-                  const isCompleted = step.completed;
-                  const isPast = index < progress.currentStepIndex;
-
-                  return (
-                    <button
-                      key={step.id}
-                      onClick={() => (isPast ? goToStep(index) : undefined)}
-                      className={`relative z-10 w-8 h-8 rounded-full border-2 transition-all duration-300 flex items-center justify-center ${
-                        isActive
-                          ? "border-emerald-500 bg-emerald-500 text-white shadow-lg scale-110"
-                          : isCompleted
-                          ? "border-emerald-500 bg-emerald-500 text-white"
-                          : isPast
-                          ? "border-emerald-300 bg-emerald-100 text-emerald-600 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 cursor-pointer hover:scale-105"
-                          : "border-slate-300 bg-white text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500"
-                      }`}
-                      disabled={!isPast}
-                    >
-                      {isCompleted ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <span className="text-xs font-semibold">
-                          {index + 1}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
               </div>
 
-              {/* Step Labels */}
-              <div className="flex items-start justify-between mt-4">
-                {progress.steps.map((step, index) => (
-                  <div
-                    key={step.id}
-                    className={`flex-1 text-center px-2 ${
-                      index === 0
-                        ? "text-left"
-                        : index === progress.steps.length - 1
-                        ? "text-right"
-                        : ""
-                    }`}
-                  >
-                    <div
-                      className={`text-sm font-medium transition-colors duration-300 ${
-                        index === progress.currentStepIndex
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : step.completed
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-slate-500 dark:text-slate-400"
-                      }`}
-                    >
-                      {step.title}
-                    </div>
-                    <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                      {step.description}
-                    </div>
+              {/* Current Step Info */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                    {currentStep.title}
                   </div>
-                ))}
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {currentStep.description}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {progress.steps.map((step, index) => (
+                    <div
+                      key={step.id}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        index === progress.currentStepIndex
+                          ? "bg-emerald-500 w-6"
+                          : step.completed
+                          ? "bg-emerald-300 dark:bg-emerald-700"
+                          : "bg-slate-300 dark:bg-slate-600"
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -175,43 +137,39 @@ export const OnboardingFlow: React.FC = () => {
         </div>
 
         {/* Navigation Footer */}
-        <div className="max-w-2xl mx-auto mt-8">
-          <div className="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-white/20 dark:border-slate-700/50">
+        <div className="max-w-2xl mx-auto mt-6 sm:mt-8">
+          <div className="flex items-center justify-between p-3 sm:p-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-lg border border-white/20 dark:border-slate-700/50">
             <button
               onClick={handlePrevious}
               disabled={isFirstStep}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+              className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all duration-200 text-sm sm:text-base ${
                 isFirstStep
-                  ? "text-slate-400 dark:text-slate-500 cursor-not-allowed"
-                  : "text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-700/50"
+                  ? "text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-50"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-700/50 hover:scale-105"
               }`}
             >
               <ChevronLeft className="w-4 h-4" />
-              Previous
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Back</span>
             </button>
 
             <div className="flex items-center gap-2">
               {currentStep.skippable && !isLastStep && (
                 <button
                   onClick={handleSkip}
-                  className="px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors duration-200"
+                  className="px-3 sm:px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors duration-200 hover:scale-105"
                 >
                   Skip
                 </button>
               )}
-            </div>
-
-            <div className="text-sm text-slate-500 dark:text-slate-400">
-              {progress.currentStepIndex + 1} / {progress.steps.length}
             </div>
           </div>
         </div>
 
         {/* Help Text */}
         <div className="max-w-2xl mx-auto mt-4 text-center">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Need help? You can always modify these settings later from the app
-            preferences.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            💡 You can modify these settings anytime from app preferences
           </p>
         </div>
       </div>

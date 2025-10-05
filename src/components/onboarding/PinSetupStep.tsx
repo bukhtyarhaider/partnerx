@@ -97,6 +97,29 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({ onNext }) => {
     if (currentPin.length !== 4 || isSettingPin) return;
 
     if (!isConfirming) {
+      // Validate PIN strength before confirming
+      const isWeak =
+        pin === "0000" ||
+        pin === "1111" ||
+        pin === "2222" ||
+        pin === "3333" ||
+        pin === "4444" ||
+        pin === "5555" ||
+        pin === "6666" ||
+        pin === "7777" ||
+        pin === "8888" ||
+        pin === "9999" ||
+        pin === "1234" ||
+        pin === "4321";
+
+      if (isWeak) {
+        setError(
+          "Please choose a more secure PIN. Avoid sequential or repeated digits."
+        );
+        setPin("");
+        return;
+      }
+
       // First PIN entry - move to confirmation
       setIsConfirming(true);
       setPrompt("Confirm Your PIN");
@@ -109,8 +132,18 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({ onNext }) => {
       setError("");
       setIsSettingPin(true);
 
-      // Save PIN to localStorage
-      localStorage.setItem(PIN_STORAGE_KEY, btoa(pin));
+      // Save PIN to localStorage (encoded)
+      try {
+        localStorage.setItem(PIN_STORAGE_KEY, btoa(pin));
+      } catch (error) {
+        console.error("Failed to save PIN:", error);
+        setError("Failed to save PIN. Please try again.");
+        setPin("");
+        setConfirmPin("");
+        setIsConfirming(false);
+        setIsSettingPin(false);
+        return;
+      }
 
       // Complete the onboarding step
       markStepCompleted("pin-setup");

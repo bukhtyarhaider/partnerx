@@ -1,24 +1,15 @@
 export interface BusinessInfo {
   name: string;
   type:
+    | "personal"
     | "sole-proprietorship"
     | "partnership"
     | "llc"
     | "corporation"
     | "non-profit"
     | "other";
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
   phone?: string;
   email?: string;
-  website?: string;
-  taxId?: string;
-  registrationNumber?: string;
   description?: string;
 }
 
@@ -69,46 +60,51 @@ export type OnboardingStepComponent =
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: "business-info",
-    title: "Business Information",
-    description: "Tell us about your business",
+    title: "Account Setup",
+    description: "Basic information",
     completed: false,
     skippable: false,
   },
   {
-    id: "add-partners",
-    title: "Add Partners",
-    description: "Set up your business partners",
+    id: "income-sources",
+    title: "Income Sources",
+    description: "Add your platforms",
     completed: false,
     skippable: true,
   },
   {
-    id: "income-sources",
-    title: "Income Sources",
-    description: "Configure your revenue streams",
+    id: "add-partners",
+    title: "Partners",
+    description: "Optional for businesses",
     completed: false,
     skippable: true,
   },
   {
     id: "donation-config",
-    title: "Donation Settings",
-    description: "Set up charitable giving preferences",
+    title: "Donations",
+    description: "Optional charitable giving",
     completed: false,
     skippable: true,
   },
   {
     id: "pin-setup",
-    title: "Security Setup",
-    description: "Create a secure PIN for your account",
+    title: "Security",
+    description: "Create your PIN",
     completed: false,
     skippable: false,
   },
 ];
 
 export const BUSINESS_TYPES = [
-  { value: "sole-proprietorship", label: "Sole Proprietorship" },
-  { value: "partnership", label: "Partnership" },
-  { value: "llc", label: "Limited Liability Company (LLC)" },
-  { value: "corporation", label: "Corporation" },
-  { value: "non-profit", label: "Non-Profit Organization" },
-  { value: "other", label: "Other" },
+  { value: "personal", label: "Personal Use", icon: "User" },
+  {
+    value: "sole-proprietorship",
+    label: "Sole Proprietorship",
+    icon: "Briefcase",
+  },
+  { value: "partnership", label: "Partnership", icon: "Users" },
+  { value: "llc", label: "LLC", icon: "Building2" },
+  { value: "corporation", label: "Corporation", icon: "Building" },
+  { value: "non-profit", label: "Non-Profit", icon: "Heart" },
+  { value: "other", label: "Other", icon: "MoreHorizontal" },
 ] as const;

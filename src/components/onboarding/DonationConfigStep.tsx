@@ -121,12 +121,50 @@ export const DonationConfigStep: React.FC<DonationConfigStepProps> = ({
           <Heart className="w-8 h-8 text-pink-600 dark:text-pink-400" />
         </div>
         <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-2">
-          Donation Settings
+          Charitable Giving
         </h2>
-        <p className="text-slate-600 dark:text-slate-400">
-          Configure automatic charitable giving from your business income
+        <p className="text-slate-600 dark:text-slate-400 mb-4">
+          Optional: Set up automatic donations from your income
         </p>
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <span className="text-sm text-blue-800 dark:text-blue-200">
+            💡 This is completely optional - skip if you prefer
+          </span>
+        </div>
       </div>
+
+      {/* Quick Skip Option */}
+      {!config.enabled && (
+        <div className="mb-6 p-6 bg-slate-50 dark:bg-slate-800 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600">
+          <div className="text-center">
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              Not interested in automatic donations? No problem!
+            </p>
+            <button
+              onClick={handleSkip}
+              className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-medium transition-all duration-200"
+            >
+              Skip Donations
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Or Configure Donations */}
+      {!config.enabled && (
+        <div className="text-center mb-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-300 dark:border-slate-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-500 dark:text-slate-400">
+                Or set up automatic donations
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Enable/Disable Toggle */}
       <div className="mb-8">

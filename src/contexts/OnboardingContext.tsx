@@ -61,12 +61,39 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   }, [progress]);
 
   // Navigation functions
-  const goToNextStep = () => {
+  const goToNextStep = useCallback(() => {
     setProgress((prev) => {
       if (prev.currentStepIndex < prev.steps.length - 1) {
+        let nextStepIndex = prev.currentStepIndex + 1;
+
+        // Skip the "add-partners" step if user chose "personal" account type
+        const isPersonalAccount = businessInfo?.type === "personal";
+        const nextStep = prev.steps[nextStepIndex];
+
+        if (isPersonalAccount && nextStep?.id === "add-partners") {
+          // Skip to the step after partners
+          nextStepIndex = Math.min(nextStepIndex + 1, prev.steps.length - 1);
+
+          // Auto-complete the partners step since we're skipping it
+          const updatedSteps = prev.steps.map((step) =>
+            step.id === "add-partners" ? { ...step, completed: true } : step
+          );
+
+          const newProgress = {
+            ...prev,
+            currentStepIndex: nextStepIndex,
+            steps: updatedSteps,
+          };
+          localStorage.setItem(
+            ONBOARDING_STORAGE_KEY,
+            JSON.stringify(newProgress)
+          );
+          return newProgress;
+        }
+
         const newProgress = {
           ...prev,
-          currentStepIndex: prev.currentStepIndex + 1,
+          currentStepIndex: nextStepIndex,
         };
         localStorage.setItem(
           ONBOARDING_STORAGE_KEY,
@@ -76,14 +103,25 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       }
       return prev;
     });
-  };
+  }, [businessInfo?.type]);
 
-  const goToPreviousStep = () => {
+  const goToPreviousStep = useCallback(() => {
     setProgress((prev) => {
       if (prev.currentStepIndex > 0) {
+        let previousStepIndex = prev.currentStepIndex - 1;
+
+        // Skip back over the "add-partners" step if user chose "personal" account type
+        const isPersonalAccount = businessInfo?.type === "personal";
+        const previousStep = prev.steps[previousStepIndex];
+
+        if (isPersonalAccount && previousStep?.id === "add-partners") {
+          // Skip to the step before partners
+          previousStepIndex = Math.max(previousStepIndex - 1, 0);
+        }
+
         const newProgress = {
           ...prev,
-          currentStepIndex: prev.currentStepIndex - 1,
+          currentStepIndex: previousStepIndex,
         };
         localStorage.setItem(
           ONBOARDING_STORAGE_KEY,
@@ -93,7 +131,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       }
       return prev;
     });
-  };
+  }, [businessInfo?.type]);
 
   const goToStep = (stepIndex: number) => {
     setProgress((prev) => {
@@ -146,42 +184,63 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   // Function to migrate onboarding data to main app storage
   const migrateOnboardingDataToMain = useCallback(() => {
     try {
-      // Migrate partners data
+      // Migrate partners data (only if partners were added)
       const onboardingPartners = localStorage.getItem("onboarding_partners");
-      if (onboardingPartners && !localStorage.getItem("partnerConfig")) {
-        const partners = JSON.parse(onboardingPartners);
-        const business = businessInfo;
+      if (onboardingPartners) {
+        try {
+          const partners = JSON.parse(onboardingPartners);
+          const business = businessInfo;
 
-        if (partners.length > 0) {
-          const partnerConfig = {
-            partners,
-            companyName: business?.name || "Your Business",
-            totalEquity: 1,
-            lastUpdated: new Date().toISOString(),
-          };
-          localStorage.setItem("partnerConfig", JSON.stringify(partnerConfig));
+          // Only create partner config if partners were actually added
+          if (Array.isArray(partners) && partners.length > 0) {
+            const partnerConfig = {
+              partners,
+              companyName: business?.name || "Your Business",
+              totalEquity: 1,
+              lastUpdated: new Date().toISOString(),
+            };
+            localStorage.setItem(
+              "partnerConfig",
+              JSON.stringify(partnerConfig)
+            );
+          }
+        } catch (error) {
+          console.warn("Failed to parse partner data:", error);
         }
       }
 
-      // Migrate donation config
+      // Migrate donation config (only if donations were enabled)
       const onboardingDonationConfig = localStorage.getItem(
         "onboarding_donation_config"
       );
-      if (onboardingDonationConfig && !localStorage.getItem("donationConfig")) {
-        localStorage.setItem("donationConfig", onboardingDonationConfig);
+      if (onboardingDonationConfig) {
+        try {
+          const donationConfig = JSON.parse(onboardingDonationConfig);
+          // Only migrate if donations were explicitly enabled
+          if (donationConfig && donationConfig.enabled) {
+            localStorage.setItem("donationConfig", onboardingDonationConfig);
+          }
+        } catch (error) {
+          console.warn("Failed to parse donation config:", error);
+        }
       }
 
-      // Migrate income sources
+      // Migrate income sources (only if sources were selected)
       const onboardingIncomeSources = localStorage.getItem(
         "onboarding_income_sources"
       );
-      if (
-        onboardingIncomeSources &&
-        !localStorage.getItem("incomeSourceConfig")
-      ) {
-        // The income source service will handle this migration automatically when it loads
-        // We just need to trigger a reload by clearing any cached instances
-        window.dispatchEvent(new CustomEvent("onboarding-data-migrated"));
+      if (onboardingIncomeSources) {
+        try {
+          const sources = JSON.parse(onboardingIncomeSources);
+          // Only migrate if sources were actually selected
+          if (Array.isArray(sources) && sources.length > 0) {
+            localStorage.setItem("incomeSourceConfig", onboardingIncomeSources);
+            // Trigger reload event for income source service
+            window.dispatchEvent(new CustomEvent("onboarding-data-migrated"));
+          }
+        } catch (error) {
+          console.warn("Failed to parse income sources:", error);
+        }
       }
     } catch (error) {
       console.warn("Failed to migrate onboarding data:", error);
@@ -243,6 +302,8 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       progress,
       businessInfo,
       isCompleted,
+      goToNextStep,
+      goToPreviousStep,
       canProceedToNextStep,
       completeOnboarding,
     ]

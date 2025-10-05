@@ -1,22 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Building2, CheckCircle, AlertCircle } from "lucide-react";
+import {
+  User,
+  Building2,
+  Users,
+  Briefcase,
+  Building,
+  Heart,
+  MoreHorizontal,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
 import type { BusinessInfo } from "../../types/onboarding";
 import { BUSINESS_TYPES } from "../../types/onboarding";
 
 const INPUT_STYLES =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 outline-none transition-colors duration-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20";
+  "w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-800 outline-none transition-colors duration-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20";
 
 const LABEL_STYLES =
-  "mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300";
-
-const SELECT_STYLES =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 outline-none transition-colors duration-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20";
+  "mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 interface BusinessInfoStepProps {
   onNext: () => void;
 }
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  User,
+  Building2,
+  Users,
+  Briefcase,
+  Building,
+  Heart,
+  MoreHorizontal,
+};
 
 export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
   onNext,
@@ -26,19 +43,9 @@ export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
 
   const [formData, setFormData] = useState<BusinessInfo>({
     name: "",
-    type: "sole-proprietorship",
-    address: {
-      street: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      country: "United States",
-    },
+    type: "personal",
     phone: "",
     email: "",
-    website: "",
-    taxId: "",
-    registrationNumber: "",
     description: "",
     ...businessInfo,
   });
@@ -53,32 +60,11 @@ export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
     const newErrors: Partial<Record<keyof BusinessInfo, string>> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "Business name is required";
-    }
-
-    if (!formData.address.street.trim()) {
-      newErrors.address = "Street address is required";
-    }
-
-    if (!formData.address.city.trim()) {
-      newErrors.address = newErrors.address || "City is required";
-    }
-
-    if (!formData.address.state.trim()) {
-      newErrors.address = newErrors.address || "State is required";
-    }
-
-    if (!formData.address.zipCode.trim()) {
-      newErrors.address = newErrors.address || "ZIP code is required";
+      newErrors.name = "Name is required";
     }
 
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
-    }
-
-    if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
-      newErrors.website =
-        "Please enter a valid website URL (include http:// or https://)";
     }
 
     setErrors(newErrors);
@@ -86,23 +72,9 @@ export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
   }, [formData]);
 
   const handleInputChange = (field: keyof BusinessInfo, value: string) => {
-    if (field === "address") return; // Handle address separately
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }));
-  };
-
-  const handleAddressChange = (
-    field: keyof BusinessInfo["address"],
-    value: string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      address: {
-        ...prev.address,
-        [field]: value,
-      },
     }));
   };
 
@@ -114,9 +86,7 @@ export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
     onNext();
   };
 
-  const handleSaveProgress = () => {
-    updateBusinessInfo(formData);
-  };
+  const isPersonal = formData.type === "personal";
 
   return (
     <motion.div
@@ -130,274 +100,158 @@ export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
           <Building2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>
         <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-2">
-          Tell us about your business
+          Welcome to PartnerX
         </h2>
         <p className="text-slate-600 dark:text-slate-400">
-          Help us set up your account with some basic business information
+          Let's get started with some basic information
         </p>
       </div>
 
       <div className="space-y-6">
-        {/* Business Name */}
+        {/* Account Type Selection */}
         <div>
-          <label htmlFor="businessName" className={LABEL_STYLES}>
-            Business Name *
+          <label className={LABEL_STYLES}>How will you use PartnerX? *</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {BUSINESS_TYPES.map((type) => {
+              const IconComponent = iconMap[type.icon] || Building2;
+              const isSelected = formData.type === type.value;
+
+              return (
+                <motion.button
+                  key={type.value}
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleInputChange("type", type.value)}
+                  className={`relative p-4 rounded-lg border-2 transition-all duration-200 text-left ${
+                    isSelected
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                      : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-lg ${
+                        isSelected
+                          ? "bg-emerald-100 dark:bg-emerald-900/40"
+                          : "bg-slate-100 dark:bg-slate-600"
+                      }`}
+                    >
+                      <IconComponent
+                        className={`w-5 h-5 ${
+                          isSelected
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-slate-600 dark:text-slate-300"
+                        }`}
+                      />
+                    </div>
+                    <span
+                      className={`font-medium ${
+                        isSelected
+                          ? "text-emerald-900 dark:text-emerald-100"
+                          : "text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      {type.label}
+                    </span>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle className="w-5 h-5 text-emerald-500" />
+                    </div>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Name Field */}
+        <div>
+          <label htmlFor="name" className={LABEL_STYLES}>
+            {isPersonal ? "Your Name" : "Business Name"} *
           </label>
           <input
-            id="businessName"
+            id="name"
             type="text"
             value={formData.name}
             onChange={(e) => handleInputChange("name", e.target.value)}
-            placeholder="Enter your business name"
+            placeholder={isPersonal ? "Enter your name" : "Enter business name"}
             className={INPUT_STYLES}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
               <AlertCircle className="w-4 h-4" />
               {errors.name}
             </p>
           )}
         </div>
 
-        {/* Business Type */}
+        {/* Email (Optional) */}
         <div>
-          <label htmlFor="businessType" className={LABEL_STYLES}>
-            Business Type *
+          <label htmlFor="email" className={LABEL_STYLES}>
+            Email Address <span className="text-slate-400">(optional)</span>
           </label>
-          <select
-            id="businessType"
-            value={formData.type}
-            onChange={(e) =>
-              handleInputChange("type", e.target.value as BusinessInfo["type"])
-            }
-            className={SELECT_STYLES}
-          >
-            {BUSINESS_TYPES.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
+          <input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleInputChange("email", e.target.value)}
+            placeholder="your@email.com"
+            className={INPUT_STYLES}
+          />
+          {errors.email && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4" />
+              {errors.email}
+            </p>
+          )}
         </div>
 
-        {/* Address Section */}
+        {/* Phone (Optional) */}
         <div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
-            Business Address
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="street" className={LABEL_STYLES}>
-                Street Address *
-              </label>
-              <input
-                id="street"
-                type="text"
-                value={formData.address.street}
-                onChange={(e) => handleAddressChange("street", e.target.value)}
-                placeholder="123 Main Street"
-                className={INPUT_STYLES}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="city" className={LABEL_STYLES}>
-                  City *
-                </label>
-                <input
-                  id="city"
-                  type="text"
-                  value={formData.address.city}
-                  onChange={(e) => handleAddressChange("city", e.target.value)}
-                  placeholder="City"
-                  className={INPUT_STYLES}
-                />
-              </div>
-              <div>
-                <label htmlFor="state" className={LABEL_STYLES}>
-                  State *
-                </label>
-                <input
-                  id="state"
-                  type="text"
-                  value={formData.address.state}
-                  onChange={(e) => handleAddressChange("state", e.target.value)}
-                  placeholder="State"
-                  className={INPUT_STYLES}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="zipCode" className={LABEL_STYLES}>
-                  ZIP Code *
-                </label>
-                <input
-                  id="zipCode"
-                  type="text"
-                  value={formData.address.zipCode}
-                  onChange={(e) =>
-                    handleAddressChange("zipCode", e.target.value)
-                  }
-                  placeholder="12345"
-                  className={INPUT_STYLES}
-                />
-              </div>
-              <div>
-                <label htmlFor="country" className={LABEL_STYLES}>
-                  Country
-                </label>
-                <input
-                  id="country"
-                  type="text"
-                  value={formData.address.country}
-                  onChange={(e) =>
-                    handleAddressChange("country", e.target.value)
-                  }
-                  placeholder="Country"
-                  className={INPUT_STYLES}
-                />
-              </div>
-            </div>
-
-            {errors.address && (
-              <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.address}
-              </p>
-            )}
-          </div>
+          <label htmlFor="phone" className={LABEL_STYLES}>
+            Phone Number <span className="text-slate-400">(optional)</span>
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => handleInputChange("phone", e.target.value)}
+            placeholder="(555) 123-4567"
+            className={INPUT_STYLES}
+          />
         </div>
 
-        {/* Contact Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
-            Contact Information (Optional)
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className={LABEL_STYLES}>
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="business@example.com"
-                className={INPUT_STYLES}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors.email}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="phone" className={LABEL_STYLES}>
-                Phone Number
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                placeholder="(555) 123-4567"
-                className={INPUT_STYLES}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="website" className={LABEL_STYLES}>
-                Website
-              </label>
-              <input
-                id="website"
-                type="url"
-                value={formData.website}
-                onChange={(e) => handleInputChange("website", e.target.value)}
-                placeholder="https://www.example.com"
-                className={INPUT_STYLES}
-              />
-              {errors.website && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {errors.website}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Tax Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
-            Tax Information (Optional)
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="taxId" className={LABEL_STYLES}>
-                Tax ID / EIN
-              </label>
-              <input
-                id="taxId"
-                type="text"
-                value={formData.taxId}
-                onChange={(e) => handleInputChange("taxId", e.target.value)}
-                placeholder="12-3456789"
-                className={INPUT_STYLES}
-              />
-            </div>
-            <div>
-              <label htmlFor="registrationNumber" className={LABEL_STYLES}>
-                Business Registration Number
-              </label>
-              <input
-                id="registrationNumber"
-                type="text"
-                value={formData.registrationNumber}
-                onChange={(e) =>
-                  handleInputChange("registrationNumber", e.target.value)
-                }
-                placeholder="Registration number"
-                className={INPUT_STYLES}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Description */}
+        {/* Description (Optional) */}
         <div>
           <label htmlFor="description" className={LABEL_STYLES}>
-            Business Description (Optional)
+            Description <span className="text-slate-400">(optional)</span>
           </label>
           <textarea
             id="description"
             value={formData.description}
             onChange={(e) => handleInputChange("description", e.target.value)}
-            placeholder="Brief description of your business..."
+            placeholder={
+              isPersonal
+                ? "Add any notes about how you'll use this app..."
+                : "Brief description of your business..."
+            }
             rows={3}
             className={INPUT_STYLES}
           />
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            This is for your reference only
+          </p>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 mt-8">
-        <button
-          onClick={handleSaveProgress}
-          className="flex-1 px-6 py-3 border border-emerald-200 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors duration-200"
-        >
-          Save Progress
-        </button>
+      {/* Action Button */}
+      <div className="mt-8">
         <button
           onClick={handleSubmit}
           disabled={!isValid}
-          className={`flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+          className={`w-full px-6 py-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
             isValid
               ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl"
               : "bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed"
@@ -406,18 +260,18 @@ export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
           {isValid ? (
             <>
               <CheckCircle className="w-5 h-5" />
-              Continue
+              Continue to Income Sources
             </>
           ) : (
-            "Complete Required Fields"
+            "Please complete required fields"
           )}
         </button>
       </div>
 
-      {/* Requirements Notice */}
+      {/* Help Text */}
       <div className="mt-6 text-center">
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          * Required fields must be completed to continue
+          Don't worry, you can update this information anytime
         </p>
       </div>
     </motion.div>
