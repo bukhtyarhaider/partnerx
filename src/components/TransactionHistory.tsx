@@ -12,9 +12,11 @@ interface TransactionHistoryProps {
   transactions: Transaction[];
   onEdit: (tx: Transaction) => void;
   onDelete: (id: number) => void;
+  actionBtn: React.ReactNode;
 }
 
 export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
+  actionBtn,
   transactions,
   onEdit,
   onDelete,
@@ -46,6 +48,10 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       title="Transaction History"
       isExpanded={isExpanded}
       onToggleExpand={handleToggleExpand}
+      actionBar={{
+        position: "right",
+        content: actionBtn,
+      }}
     >
       <div
         className={`dark:bg-slate-900/50 ${

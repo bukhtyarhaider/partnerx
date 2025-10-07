@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Save, AlertCircle, RefreshCw, Zap } from "lucide-react";
 import type { NewTransactionEntry, Transaction } from "../../types";
-import { getTodayString } from "../../utils";
+import { getTodayString, formatCurrency } from "../../utils";
 import { useEnabledIncomeSources } from "../../hooks/useIncomeSources";
 import { useConversionRateAutoFill } from "../../hooks/useConversionRateAutoFill";
+import { SuccessToast } from "../common/SuccessToast";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -43,6 +44,8 @@ export const TransactionForm: React.FC<FormProps> = ({
   const [date, setDate] = useState(getTodayString());
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successAmount, setSuccessAmount] = useState("");
 
   // Auto-fill rate handler
   const handleAutoFillRate = useCallback(async () => {
@@ -135,6 +138,12 @@ export const TransactionForm: React.FC<FormProps> = ({
         await onSave({ ...initialData, ...commonData });
       } else if (mode === "add" && onAddTransaction) {
         await onAddTransaction(commonData);
+
+        // Show success toast
+        const totalAmount = parseFloat(amountUSD) * parseFloat(conversionRate);
+        setSuccessAmount(formatCurrency(totalAmount));
+        setShowSuccessToast(true);
+
         resetForm();
       }
     } catch (err) {
@@ -324,6 +333,15 @@ export const TransactionForm: React.FC<FormProps> = ({
           )}
         </button>
       </form>
+
+      {/* Success Toast */}
+      <SuccessToast
+        isVisible={showSuccessToast}
+        onClose={() => setShowSuccessToast(false)}
+        type="income"
+        message="Income added successfully!"
+        amount={successAmount}
+      />
     </div>
   );
 };

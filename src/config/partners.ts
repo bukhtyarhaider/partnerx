@@ -2,7 +2,7 @@ import type { PartnerConfig } from "../types/partner";
 
 // Default partner configuration - this will be replaced by backend/database later
 export const defaultPartnerConfig: PartnerConfig = {
-  companyName: "PartnerX",
+  companyName: "PartnerWise",
   totalEquity: 1.0,
   lastUpdated: "2025-01-01T00:00:00.000Z",
   partners: [
@@ -36,7 +36,7 @@ export const defaultPartnerConfig: PartnerConfig = {
 
 // Example of how this could be extended for different scenarios
 export const exampleAlternativeConfig: PartnerConfig = {
-  companyName: "PartnerX",
+  companyName: "PartnerWise",
   totalEquity: 1.0,
   lastUpdated: "2025-01-01T00:00:00.000Z",
   partners: [

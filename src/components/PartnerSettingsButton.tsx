@@ -1,13 +1,13 @@
 import React from "react";
-import { Settings } from "lucide-react";
+import { Users } from "lucide-react";
 
-interface DonationSettingsButtonProps {
+interface PartnerSettingsButtonProps {
   onClick: () => void;
   className?: string;
   showTitle?: boolean;
 }
 
-export const DonationSettingsButton: React.FC<DonationSettingsButtonProps> = ({
+export const PartnerSettingsButton: React.FC<PartnerSettingsButtonProps> = ({
   onClick,
   className = "",
   showTitle = false,
@@ -16,10 +16,10 @@ export const DonationSettingsButton: React.FC<DonationSettingsButtonProps> = ({
     <button
       onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 ${className}`}
-      title="Configure donation settings"
+      title="Manage partners"
     >
-      <Settings size={16} />
-      {showTitle && <span className="hidden sm:inline">Donation Settings</span>}
+      <Users size={16} />
+      {showTitle && <span className="hidden sm:inline">Manage Partners</span>}
     </button>
   );
 };

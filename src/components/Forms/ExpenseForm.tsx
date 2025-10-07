@@ -10,6 +10,9 @@ import type { Financials } from "../../hooks/useFinancials";
 import { getTodayString } from "../../utils";
 import { usePartners } from "../../hooks/usePartners";
 import { formatCurrency } from "../../utils/format";
+import { SuccessToast } from "../common/SuccessToast";
+import { useConfirmation } from "../../hooks/useConfirmation";
+import { ConfirmationModal } from "../common/ConfirmationModal";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -33,6 +36,8 @@ export const ExpenseForm: React.FC<FormProps> = ({
   financials,
 }) => {
   const { activePartners } = usePartners();
+  const { confirmation, showConfirmation, hideConfirmation } =
+    useConfirmation();
 
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -46,6 +51,10 @@ export const ExpenseForm: React.FC<FormProps> = ({
   );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successAmount, setSuccessAmount] = useState("");
+  const [pendingExpenseData, setPendingExpenseData] =
+    useState<NewExpenseEntry | null>(null);
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -69,6 +78,28 @@ export const ExpenseForm: React.FC<FormProps> = ({
     }
   }, [activePartners]);
 
+  const addExpenseDirectly = useCallback(
+    (data: NewExpenseEntry) => {
+      if (onAddExpense) {
+        onAddExpense(data);
+
+        // Show success toast
+        setSuccessAmount(formatCurrency(data.amount));
+        setShowSuccessToast(true);
+
+        resetForm();
+        setPendingExpenseData(null);
+      }
+    },
+    [onAddExpense, resetForm]
+  );
+
+  const handleConfirmExpense = useCallback(() => {
+    if (pendingExpenseData) {
+      addExpenseDirectly(pendingExpenseData);
+    }
+  }, [pendingExpenseData, addExpenseDirectly]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -83,42 +114,6 @@ export const ExpenseForm: React.FC<FormProps> = ({
       const expenseType = type;
       const spendingPartner = byWhom;
 
-      // Validate spending limits for new expenses
-      if (mode === "add" && financials) {
-        const partner = activePartners.find((p) => p.name === spendingPartner);
-        if (partner) {
-          const currentEarnings = financials.partnerEarnings[partner.id] || 0;
-          const currentExpenses = financials.partnerExpenses[partner.id] || 0;
-          const currentBalance = currentEarnings - currentExpenses;
-
-          if (expenseType === "personal") {
-            // For personal expenses, check if partner has enough in their wallet
-            if (expenseAmount > currentBalance) {
-              throw new Error(
-                `Insufficient funds. ${
-                  partner.displayName
-                } has ${formatCurrency(
-                  currentBalance
-                )} available, but trying to spend ${formatCurrency(
-                  expenseAmount
-                )}. Available balance would be ${formatCurrency(
-                  currentBalance - expenseAmount
-                )} (deficit).`
-              );
-            }
-          } else if (expenseType === "company") {
-            // For company expenses, check if total company capital is sufficient
-            if (expenseAmount > financials.companyCapital) {
-              throw new Error(
-                `Insufficient company capital. Available: ${formatCurrency(
-                  financials.companyCapital
-                )}, Required: ${formatCurrency(expenseAmount)}.`
-              );
-            }
-          }
-        }
-      }
-
       const commonData = {
         amount: expenseAmount,
         description,
@@ -128,11 +123,132 @@ export const ExpenseForm: React.FC<FormProps> = ({
         byWhom,
       };
 
+      // Validate spending limits for new expenses
+      if (mode === "add" && financials) {
+        const partner = activePartners.find((p) => p.name === spendingPartner);
+        if (partner) {
+          const currentEarnings = financials.partnerEarnings[partner.id] || 0;
+          const currentExpenses = financials.partnerExpenses[partner.id] || 0;
+          const currentBalance = currentEarnings - currentExpenses;
+
+          if (expenseType === "personal") {
+            // For personal expenses, show confirmation if insufficient funds
+            if (expenseAmount > currentBalance) {
+              const deficit = expenseAmount - currentBalance;
+              setPendingExpenseData(commonData);
+
+              showConfirmation({
+                title: "⚠️ Insufficient Funds Warning",
+                message: `${partner.displayName} has ${formatCurrency(
+                  currentBalance
+                )} available but is trying to spend ${formatCurrency(
+                  expenseAmount
+                )}.\n\n💰 Deficit: ${formatCurrency(deficit)}\n\n${
+                  partner.displayName
+                } will owe ${formatCurrency(
+                  deficit
+                )} to the company.\n\nDo you want to proceed with this expense?`,
+                confirmText: "Yes, Add Expense",
+                variant: "warning",
+                onConfirm: handleConfirmExpense,
+              });
+
+              setIsSubmitting(false);
+              return;
+            }
+          } else if (expenseType === "company") {
+            // For company expenses, check each partner's ability to cover their share
+            const insufficientPartners: Array<{
+              name: string;
+              needed: number;
+              has: number;
+              deficit: number;
+            }> = [];
+
+            activePartners.forEach((p) => {
+              const partnerEarnings = financials.partnerEarnings[p.id] || 0;
+              const partnerExpenses = financials.partnerExpenses[p.id] || 0;
+              const partnerBalance = partnerEarnings - partnerExpenses;
+              const partnerShare = expenseAmount * p.equity;
+
+              if (partnerShare > partnerBalance) {
+                insufficientPartners.push({
+                  name: p.displayName,
+                  needed: partnerShare,
+                  has: partnerBalance,
+                  deficit: partnerShare - partnerBalance,
+                });
+              }
+            });
+
+            // Show confirmation if any partner has insufficient funds
+            if (insufficientPartners.length > 0) {
+              setPendingExpenseData(commonData);
+
+              const partnerDetails = insufficientPartners
+                .map(
+                  (p) =>
+                    `• ${p.name}:\n  Has: ${formatCurrency(
+                      p.has
+                    )}\n  Needs: ${formatCurrency(
+                      p.needed
+                    )}\n  Will owe: ${formatCurrency(p.deficit)}`
+                )
+                .join("\n\n");
+
+              const totalDeficit = insufficientPartners.reduce(
+                (sum, p) => sum + p.deficit,
+                0
+              );
+
+              showConfirmation({
+                title: "⚠️ Insufficient Funds Warning",
+                message: `This company expense will cause ${
+                  insufficientPartners.length
+                } partner(s) to have insufficient funds:\n\n${partnerDetails}\n\n💰 Total debt: ${formatCurrency(
+                  totalDeficit
+                )}\n\nThe partner(s) will owe this amount to the company.\n\nDo you want to proceed?`,
+                confirmText: "Yes, Add Expense",
+                variant: "warning",
+                onConfirm: handleConfirmExpense,
+              });
+
+              setIsSubmitting(false);
+              return;
+            }
+
+            // Also check if company capital would go negative
+            if (expenseAmount > financials.companyCapital) {
+              setPendingExpenseData(commonData);
+              const deficit = expenseAmount - financials.companyCapital;
+
+              showConfirmation({
+                title: "⚠️ Company Capital Warning",
+                message: `Company capital is ${formatCurrency(
+                  financials.companyCapital
+                )} but this expense is ${formatCurrency(
+                  expenseAmount
+                )}.\n\n💰 Capital deficit: ${formatCurrency(
+                  deficit
+                )}\n\nCompany capital will become negative: ${formatCurrency(
+                  financials.companyCapital - expenseAmount
+                )}\n\nDo you want to proceed?`,
+                confirmText: "Yes, Add Expense",
+                variant: "warning",
+                onConfirm: handleConfirmExpense,
+              });
+
+              setIsSubmitting(false);
+              return;
+            }
+          }
+        }
+      }
+
       if (mode === "edit" && onSave && initialData) {
         onSave({ ...initialData, ...commonData });
       } else if (mode === "add" && onAddExpense) {
-        onAddExpense(commonData);
-        resetForm();
+        addExpenseDirectly(commonData);
       }
     } catch (err) {
       const errorMessage =
@@ -287,8 +403,8 @@ export const ExpenseForm: React.FC<FormProps> = ({
             {type === "company" && (
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 Company expenses will be split according to partner equity
-                (50/50). The person who paid will receive credit for the other
-                partner's share.
+                percentages. Each partner's share will be deducted from their
+                wallet balance.
               </p>
             )}
           </div>
@@ -319,6 +435,27 @@ export const ExpenseForm: React.FC<FormProps> = ({
           )}
         </button>
       </form>
+
+      {/* Success Toast */}
+      <SuccessToast
+        isVisible={showSuccessToast}
+        onClose={() => setShowSuccessToast(false)}
+        type="expense"
+        message="Expense added successfully!"
+        amount={successAmount}
+      />
+
+      {/* Confirmation Modal for Insufficient Funds */}
+      <ConfirmationModal
+        isOpen={confirmation.isOpen}
+        onClose={hideConfirmation}
+        onConfirm={confirmation.onConfirm}
+        title={confirmation.title}
+        message={confirmation.message}
+        variant={confirmation.variant}
+        confirmText={confirmation.confirmText}
+        cancelText="Cancel"
+      />
     </div>
   );
 };

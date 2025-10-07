@@ -18,10 +18,13 @@ import { DateFilterProvider } from "./contexts/DateFilterContext";
 import { ExchangeRateProvider } from "./contexts/ExchangeRateContext";
 import { PinLock } from "./components/PinLock";
 import { AuthProvider } from "./contexts/AuthContext";
+import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useAuth } from "./hooks/useAuth";
+import { useOnboarding } from "./hooks/useOnboarding";
 import InstallPrompt from "./components/InstallPrompt";
 import PerformanceMonitor from "./components/PerformanceMonitor";
+import { OnboardingFlow } from "./components/onboarding/OnboardingFlow";
 import type {
   AppHandlers,
   DonationPayout,
@@ -47,23 +50,25 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <PartnerProvider>
-          <DateFilterProvider>
-            <ExchangeRateProvider>
-              <ErrorBoundary>
-                <PerformanceMonitor />
-                <InnerApp
-                  appState={appState}
-                  sortedTransactions={sortedTransactions}
-                  sortedExpenses={sortedExpenses}
-                  sortedDonations={sortedDonations}
-                />
-              </ErrorBoundary>
-            </ExchangeRateProvider>
-          </DateFilterProvider>
-        </PartnerProvider>
-      </ThemeProvider>
+      <OnboardingProvider>
+        <ThemeProvider>
+          <PartnerProvider>
+            <DateFilterProvider>
+              <ExchangeRateProvider>
+                <ErrorBoundary>
+                  <PerformanceMonitor />
+                  <InnerApp
+                    appState={appState}
+                    sortedTransactions={sortedTransactions}
+                    sortedExpenses={sortedExpenses}
+                    sortedDonations={sortedDonations}
+                  />
+                </ErrorBoundary>
+              </ExchangeRateProvider>
+            </DateFilterProvider>
+          </PartnerProvider>
+        </ThemeProvider>
+      </OnboardingProvider>
     </AuthProvider>
   );
 }
@@ -77,6 +82,7 @@ interface InnerAppProps {
 
 function InnerApp(props: InnerAppProps) {
   const { isUnlocked } = useAuth();
+  const { isCompleted } = useOnboarding();
 
   // Get filtered data based on the selected date range
   const { filteredTransactions, filteredExpenses, filteredDonationPayouts } =
@@ -95,7 +101,9 @@ function InnerApp(props: InnerAppProps) {
 
   return (
     <AnimatePresence mode="wait">
-      {isUnlocked ? (
+      {!isCompleted ? (
+        <OnboardingFlow key="onboarding" />
+      ) : isUnlocked ? (
         <>
           <DashboardPage
             key="dashboard"
