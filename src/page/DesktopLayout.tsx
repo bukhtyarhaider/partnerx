@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   TrendingDown,
   Lock,
+  Settings,
 } from "lucide-react";
 import {
   DonationForm,
@@ -16,6 +17,7 @@ import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import { DateFilter } from "../components/DateFilter";
 import { useDateFilter } from "../hooks/useDateFilter";
 import { Stats } from "../components/Stats";
+import { DesktopSettingsModal } from "../components/DesktopSettingsModal";
 import { IncomeChart } from "../components/IncomeChart";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ExpenseHistory } from "../components/ExpenseHistory";
@@ -62,6 +64,7 @@ export const DesktopLayout = ({
   const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
   const [isIncomeSettingsOpen, setIsIncomeSettingsOpen] = useState(false);
   const [isPartnerSettingsOpen, setIsPartnerSettingsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const tabs = [
     {
@@ -83,17 +86,21 @@ export const DesktopLayout = ({
         />
       ),
     },
-    {
-      id: "donation" as const,
-      label: "Donation",
-      icon: HeartHandshake,
-      component: (
-        <DonationForm
-          onAddDonationPayout={appState.handleAddDonationPayout}
-          availableFunds={financials.availableDonationsFund}
-        />
-      ),
-    },
+    ...(appState.donationConfig.enabled
+      ? [
+          {
+            id: "donation" as const,
+            label: "Donation",
+            icon: HeartHandshake,
+            component: (
+              <DonationForm
+                onAddDonationPayout={appState.handleAddDonationPayout}
+                availableFunds={financials.availableDonationsFund}
+              />
+            ),
+          },
+        ]
+      : []),
   ];
 
   const activeTab = tabs.find((tab) => tab.id === appState.activeTab);
@@ -188,6 +195,14 @@ export const DesktopLayout = ({
             </h2>
             <div className="flex items-center gap-3">
               <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="rounded-lg p-1.5 text-slate-500 transition-all duration-200 hover:bg-white/50 hover:text-slate-700 hover:backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-300 dark:focus:ring-offset-slate-800"
+                title="Settings"
+                aria-label="Open settings"
+              >
+                <Settings size={16} />
+              </button>
+              <button
                 onClick={lockApp}
                 className="rounded-lg p-1.5 text-slate-500 transition-all duration-200 hover:bg-white/50 hover:text-slate-700 hover:backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-300 dark:focus:ring-offset-slate-800"
                 title="Lock App"
@@ -204,7 +219,10 @@ export const DesktopLayout = ({
             <DateFilter value={dateFilter} onChange={setDateFilter} />
           </div>
 
-          <Stats financials={financials} />
+          <Stats
+            financials={financials}
+            donationEnabled={appState.donationConfig.enabled}
+          />
 
           <IncomeChart transactions={sortedTransactions} />
 
@@ -239,22 +257,24 @@ export const DesktopLayout = ({
             />
           </div>
 
-          {/* Donation History */}
-          <div className="rounded-xl bg-white/20 p-4 backdrop-blur-sm dark:bg-slate-800/20">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Donation Payout History
-              </h3>
-              <DonationSettingsButton
-                onClick={() => setIsDonationConfigOpen(true)}
+          {/* Donation History - Only show if donations are enabled */}
+          {appState.donationConfig.enabled && (
+            <div className="rounded-xl bg-white/20 p-4 backdrop-blur-sm dark:bg-slate-800/20">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  Donation Payout History
+                </h3>
+                <DonationSettingsButton
+                  onClick={() => setIsDonationConfigOpen(true)}
+                />
+              </div>
+              <DonationHistory
+                donations={sortedDonations}
+                onEdit={(dp) => appState.openEditModal(dp, "donation")}
+                onDelete={appState.handleDeleteDonationPayout}
               />
             </div>
-            <DonationHistory
-              donations={sortedDonations}
-              onEdit={(dp) => appState.openEditModal(dp, "donation")}
-              onDelete={appState.handleDeleteDonationPayout}
-            />
-          </div>
+          )}
         </div>
       </main>
 
@@ -279,6 +299,13 @@ export const DesktopLayout = ({
           onClose={() => setIsPartnerSettingsOpen(false)}
         />
       )}
+
+      {/* Settings Modal */}
+      <DesktopSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        appState={appState}
+      />
     </div>
   );
 };

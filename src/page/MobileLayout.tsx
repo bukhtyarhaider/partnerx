@@ -8,14 +8,12 @@ import { DonationConfigModal } from "../components/DonationConfigModal";
 import { DonationSettingsButton } from "../components/DonationSettingsButton";
 import { IncomeSourceSettingsButton } from "../components/IncomeSourceSettingsButton";
 import { IncomeSourceSettingsModal } from "../components/IncomeSourceSettingsModal";
-import { PartnerSummary } from "../components/PartnerSummary";
-import { PartnerSettingsModal } from "../components/PartnerSettingsModal";
-import { PartnerSettingsButton } from "../components/PartnerSettingsButton";
-import { ImportExport } from "../components/ImportExport";
 import { LayoutDashboard, Lock } from "lucide-react";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import { BottomNavBar } from "../components/mobile-specific/BottomNavBar";
 import { AddEntryModal } from "../components/mobile-specific/AddEntryModal";
+import { MobileSettingsScreen } from "../components/mobile-specific/MobileSettingsScreen";
+import { MobileWalletScreen } from "../components/mobile-specific/MobileWalletScreen";
 
 import type { Financials } from "../hooks/useFinancials";
 import type {
@@ -32,13 +30,11 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/CustomTabs";
-import { AppInfoModal } from "../components/AppInfoModal";
 import { DateFilter } from "../components/DateFilter";
 import { useDateFilter } from "../hooks/useDateFilter";
 import { useAuth } from "../hooks/useAuth";
-import { useBusinessInfo } from "../hooks/useBusinessInfo";
 
-type MobileTab = "overview" | "history" | "settings";
+type MobileTab = "overview" | "history" | "wallet" | "settings";
 
 export interface MobileLayoutProps {
   appState: AppHandlers;
@@ -57,13 +53,11 @@ export const MobileLayout = ({
 }: MobileLayoutProps) => {
   const { lockApp } = useAuth();
   const { dateFilter, setDateFilter } = useDateFilter();
-  const { isPersonalMode } = useBusinessInfo();
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>("overview");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
   const [isIncomeSettingsOpen, setIsIncomeSettingsOpen] = useState(false);
-  const [isPartnerSettingsOpen, setIsPartnerSettingsOpen] = useState(false);
 
   const renderContent = () => {
     switch (activeMobileTab) {
@@ -72,7 +66,10 @@ export const MobileLayout = ({
           <div className="space-y-4">
             <DateFilter value={dateFilter} onChange={setDateFilter} />
 
-            <Stats financials={financials} />
+            <Stats
+              financials={financials}
+              donationEnabled={appState.donationConfig.enabled}
+            />
 
             <LiveRate />
 
@@ -96,7 +93,9 @@ export const MobileLayout = ({
             <TabsList>
               <TabsTrigger value="transactions">Transactions</TabsTrigger>
               <TabsTrigger value="expenses">Expenses</TabsTrigger>
-              <TabsTrigger value="donations">Donations</TabsTrigger>
+              {appState.donationConfig.enabled && (
+                <TabsTrigger value="donations">Donations</TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="transactions">
@@ -122,53 +121,35 @@ export const MobileLayout = ({
               />
             </TabsContent>
 
-            <TabsContent value="donations">
-              <div className="space-y-4">
-                <div className="flex justify-end">
-                  <DonationSettingsButton
-                    onClick={() => setIsDonationConfigOpen(true)}
+            {appState.donationConfig.enabled && (
+              <TabsContent value="donations">
+                <div className="space-y-4">
+                  <div className="flex justify-end">
+                    <DonationSettingsButton
+                      onClick={() => setIsDonationConfigOpen(true)}
+                    />
+                  </div>
+                  <DonationHistory
+                    donations={sortedDonations}
+                    onEdit={(dp) => appState.openEditModal(dp, "donation")}
+                    onDelete={appState.handleDeleteDonationPayout}
                   />
                 </div>
-                <DonationHistory
-                  donations={sortedDonations}
-                  onEdit={(dp) => appState.openEditModal(dp, "donation")}
-                  onDelete={appState.handleDeleteDonationPayout}
-                />
-              </div>
-            </TabsContent>
+              </TabsContent>
+            )}
           </Tabs>
         );
-      case "settings":
+      case "wallet":
         return (
-          <div className="space-y-4">
-            {!isPersonalMode && (
-              <>
-                <PartnerSummary
-                  partnerEarnings={financials.partnerEarnings}
-                  partnerExpenses={financials.partnerExpenses}
-                />
-                <div className="rounded-lg bg-white dark:bg-slate-800 p-4">
-                  <PartnerSettingsButton
-                    onClick={() => setIsPartnerSettingsOpen(true)}
-                    showTitle={true}
-                    className="w-full justify-center"
-                  />
-                </div>
-              </>
-            )}
-
-            <ImportExport
-              transactions={appState.transactions}
-              expenses={appState.expenses}
-              donationPayouts={appState.donationPayouts}
-              onImport={appState.handleImport}
-              summaries={appState.summaries}
-              donationConfig={appState.donationConfig}
-            />
-
-            <AppInfoModal />
-          </div>
+          <MobileWalletScreen
+            financials={financials}
+            transactions={sortedTransactions}
+            expenses={sortedExpenses}
+            donationEnabled={appState.donationConfig.enabled}
+          />
         );
+      case "settings":
+        return <MobileSettingsScreen appState={appState} />;
       default:
         return null;
     }
@@ -218,6 +199,7 @@ export const MobileLayout = ({
         }}
         appState={appState}
         financials={financials}
+        donationEnabled={appState.donationConfig.enabled}
       />
       {/* Donation Configuration Modal */}
       <DonationConfigModal
@@ -231,13 +213,6 @@ export const MobileLayout = ({
         isOpen={isIncomeSettingsOpen}
         onClose={() => setIsIncomeSettingsOpen(false)}
       />
-      {/* Partner Settings Modal */}
-      {!isPersonalMode && (
-        <PartnerSettingsModal
-          isOpen={isPartnerSettingsOpen}
-          onClose={() => setIsPartnerSettingsOpen(false)}
-        />
-      )}
     </div>
   );
 };
