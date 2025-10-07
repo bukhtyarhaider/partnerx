@@ -242,7 +242,7 @@ export const TransactionForm: React.FC<FormProps> = ({
                 title="Auto-fill with cached rate"
               >
                 <Zap size={14} />
-                Auto
+                <p className="hidden md:block">Auto</p>
               </button>
               <button
                 type="button"
@@ -256,7 +256,7 @@ export const TransactionForm: React.FC<FormProps> = ({
                 ) : (
                   <RefreshCw size={14} />
                 )}
-                Refresh
+                <p className="hidden md:block">Refresh</p>
               </button>
             </div>
             <div className="flex flex-col gap-1 text-xs text-slate-500 dark:text-slate-400">

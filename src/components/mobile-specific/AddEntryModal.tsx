@@ -10,6 +10,7 @@ export interface AddEntryModalProps {
   onClose: () => void;
   appState: AppHandlers;
   financials: Financials;
+  donationEnabled: boolean;
 }
 
 export const AddEntryModal = ({
@@ -17,11 +18,14 @@ export const AddEntryModal = ({
   onClose,
   appState,
   financials,
+  donationEnabled,
 }: AddEntryModalProps) => {
   const tabs = [
     { key: "income", label: "Income" },
     { key: "expense", label: "Expense" },
-    { key: "donation", label: "Donation" },
+    ...(donationEnabled
+      ? [{ key: "donation" as const, label: "Donation" }]
+      : []),
   ] as const;
 
   return (
@@ -90,7 +94,7 @@ export const AddEntryModal = ({
                     financials={financials}
                   />
                 )}
-                {appState.activeTab === "donation" && (
+                {donationEnabled && appState.activeTab === "donation" && (
                   <DonationForm
                     onAddDonationPayout={appState.handleAddDonationPayout}
                     availableFunds={financials.availableDonationsFund}
