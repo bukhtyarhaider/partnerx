@@ -14,6 +14,7 @@ export interface Financials {
   companyCapital: number;
   availableDonationsFund: number;
   loan: { amount: number; owedBy: string | null };
+  deficitPartners: Array<{ partnerId: string; amount: number }>;
   partnerEarnings: PartnerRecord<number>;
   partnerExpenses: PartnerRecord<number>;
 }
@@ -55,7 +56,8 @@ export function useFinancials(
     const availableDonationsFund =
       totalDonationsAccrued - totalDonationsPaidOut;
 
-    let totalExpenses = 0;
+    let totalPersonalExpenses = 0;
+    let totalCompanyExpenses = 0;
 
     // Initialize partner expenses for all active partners
     const partnerExpenses: PartnerRecord<number> = {};
@@ -64,8 +66,6 @@ export function useFinancials(
     });
 
     for (const ex of expenses) {
-      totalExpenses += ex.amount;
-
       // Find partner by name for backward compatibility
       const partner = activePartners.find((p) => p.name === ex.byWhom);
       if (partner) {
@@ -74,55 +74,76 @@ export function useFinancials(
 
         if (expenseType === "personal") {
           // Personal expenses: deduct from the partner who spent it
+          totalPersonalExpenses += ex.amount;
           partnerExpenses[partner.id] =
             (partnerExpenses[partner.id] || 0) + ex.amount;
         } else if (expenseType === "company") {
-          // Company expenses: split according to equity, but track who paid
+          // Company expenses: split according to equity among ALL partners
+          //
+          // Logic for company expenses:
+          // - Each partner is responsible for their equity share of the expense
+          // - Each partner's wallet balance decreases by their share
+          // - The system tracks who owes whom through the loan calculation
+          //
+          // Example: 10,000 PKR expense, 50/50 equity, P1 pays
+          // - P1's expenses: +5,000 (his 50% share)
+          // - P2's expenses: +5,000 (his 50% share)
+          //
+          // Final wallets:
+          // - P1: earnings - 5,000 = reduced by his share
+          // - P2: earnings - 5,000 = reduced by his share
+          //
+          // The fact that P1 physically paid is handled by the partner
+          // having sufficient funds. If partners don't have enough, they will
+          // show a negative balance (loan) which is tracked separately.
+
+          totalCompanyExpenses += ex.amount;
           const shares = calculateShares(ex.amount);
 
-          // Each partner should be charged their equity share
+          // Charge each partner their equity share
+          // Each partner pays their fair share
           Object.entries(shares).forEach(([partnerId, share]) => {
             partnerExpenses[partnerId] =
               (partnerExpenses[partnerId] || 0) + share;
           });
-
-          // But since one partner actually paid, give them credit for the difference
-          const paidByShare = shares[partner.id] || 0;
-          const actualPaid = ex.amount;
-          const overpayment = actualPaid - paidByShare;
-
-          // The person who paid gets credited for what others should have paid
-          if (overpayment > 0) {
-            partnerExpenses[partner.id] -= overpayment;
-          }
         }
       }
     }
 
-    const companyCapital = totalNetProfit - totalExpenses;
+    // Company capital calculation:
+    // - Start with net profit (income after donations)
+    // - Subtract ONLY company expenses (personal expenses don't affect company capital)
+    // - Personal expenses are already deducted from individual partner wallets
+    const companyCapital = totalNetProfit - totalCompanyExpenses;
+    const totalExpenses = totalPersonalExpenses + totalCompanyExpenses;
 
     // Calculate loan based on actual deficit (when a partner spends more than they earned)
-    // This is the correct logic: only show imbalance if someone has negative wallet balance
+    // Track all partners with deficits (negative balance)
     let loan = { amount: 0, owedBy: null as string | null };
-    let maxDeficit = 0;
-    let deficitPartnerId: string | null = null;
+    const deficitPartners: Array<{ partnerId: string; amount: number }> = [];
 
-    // Find the partner with the largest deficit (negative balance)
+    // Find all partners with negative balances
     Object.keys(partnerEarnings).forEach((partnerId) => {
       const earnings = partnerEarnings[partnerId] || 0;
       const expenses = partnerExpenses[partnerId] || 0;
       const balance = earnings - expenses;
 
-      if (balance < 0 && Math.abs(balance) > maxDeficit) {
-        maxDeficit = Math.abs(balance);
-        deficitPartnerId = partnerId;
+      if (balance < 0) {
+        deficitPartners.push({
+          partnerId,
+          amount: Math.abs(balance),
+        });
       }
     });
 
-    if (deficitPartnerId && maxDeficit > 0) {
+    // For backward compatibility, set the largest deficit in the loan object
+    if (deficitPartners.length > 0) {
+      const maxDeficitPartner = deficitPartners.reduce((max, current) =>
+        current.amount > max.amount ? current : max
+      );
       loan = {
-        amount: maxDeficit,
-        owedBy: deficitPartnerId,
+        amount: maxDeficitPartner.amount,
+        owedBy: maxDeficitPartner.partnerId,
       };
     }
 
@@ -134,6 +155,7 @@ export function useFinancials(
       partnerEarnings,
       partnerExpenses,
       loan,
+      deficitPartners,
       availableDonationsFund,
     };
   }, [

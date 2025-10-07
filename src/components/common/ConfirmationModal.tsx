@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { AlertTriangle, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -51,22 +52,23 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   const currentVariant = variantStyles[variant];
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={onClose}
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-800"
+            className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl dark:bg-slate-800 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-start gap-4">
               <div
@@ -75,15 +77,15 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 <AlertTriangle size={24} />
               </div>
 
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h3
                   className={`text-lg font-semibold ${currentVariant.titleColor}`}
                 >
                   {title}
                 </h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                <div className="mt-3 text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line break-words">
                   {message}
-                </p>
+                </div>
               </div>
 
               <button
@@ -97,13 +99,13 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             <div className="mt-6 flex gap-3 justify-end">
               <button
                 onClick={onClose}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 dark:focus:ring-offset-slate-800"
+                className="rounded-lg border-2 border-slate-300 bg-white px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 dark:focus:ring-offset-slate-800"
               >
                 {cancelText}
               </button>
               <button
                 onClick={handleConfirm}
-                className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${currentVariant.confirmButtonColor}`}
+                className={`rounded-lg px-6 py-2.5 text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${currentVariant.confirmButtonColor}`}
               >
                 {confirmText}
               </button>
@@ -113,4 +115,9 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       )}
     </AnimatePresence>
   );
+
+  // Render modal to document.body to escape any parent stacking contexts
+  return typeof document !== "undefined"
+    ? createPortal(modalContent, document.body)
+    : null;
 };

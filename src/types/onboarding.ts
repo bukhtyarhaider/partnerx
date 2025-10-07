@@ -97,14 +97,5 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 
 export const BUSINESS_TYPES = [
   { value: "personal", label: "Personal Use", icon: "User" },
-  {
-    value: "sole-proprietorship",
-    label: "Sole Proprietorship",
-    icon: "Briefcase",
-  },
   { value: "partnership", label: "Partnership", icon: "Users" },
-  { value: "llc", label: "LLC", icon: "Building2" },
-  { value: "corporation", label: "Corporation", icon: "Building" },
-  { value: "non-profit", label: "Non-Profit", icon: "Heart" },
-  { value: "other", label: "Other", icon: "MoreHorizontal" },
 ] as const;

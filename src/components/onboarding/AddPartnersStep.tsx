@@ -17,6 +17,9 @@ const PARTNERS_STORAGE_KEY = "onboarding_partners";
 interface AddPartnersStepProps {
   onNext: () => void;
   onSkip: () => void;
+  onPrevious?: () => void;
+  canGoBack?: boolean;
+  isLastStep?: boolean;
 }
 
 interface PartnerFormData {
@@ -27,6 +30,8 @@ interface PartnerFormData {
 export const AddPartnersStep: React.FC<AddPartnersStepProps> = ({
   onNext,
   onSkip,
+  onPrevious,
+  canGoBack = false,
 }) => {
   const { markStepCompleted } = useOnboarding();
 
@@ -77,15 +82,19 @@ export const AddPartnersStep: React.FC<AddPartnersStepProps> = ({
     }
 
     const equityValue = parseFloat(formData.equity);
+    const availableEquityPercent = availableEquity * 100;
+    // Add small epsilon for floating-point comparison tolerance
+    const EPSILON = 0.01;
+
     if (!formData.equity || isNaN(equityValue)) {
       errors.push("Please enter a valid equity percentage");
     } else if (equityValue <= 0) {
       errors.push("Equity must be greater than 0%");
     } else if (equityValue > 100) {
       errors.push("Equity cannot exceed 100%");
-    } else if (equityValue > availableEquity * 100) {
+    } else if (equityValue > availableEquityPercent + EPSILON) {
       errors.push(
-        `Only ${(availableEquity * 100).toFixed(1)}% equity is available`
+        `Only ${availableEquityPercent.toFixed(1)}% equity is available`
       );
     }
 
@@ -154,12 +163,17 @@ export const AddPartnersStep: React.FC<AddPartnersStepProps> = ({
     onSkip();
   };
 
+  // Form validation with floating-point tolerance
+  const equityValue = parseFloat(formData.equity);
+  const availableEquityPercent = availableEquity * 100;
+  const EPSILON = 0.01; // Small tolerance for floating-point precision
+
   const isFormValid =
     formData.name.trim() &&
     formData.equity &&
-    !isNaN(parseFloat(formData.equity)) &&
-    parseFloat(formData.equity) > 0 &&
-    parseFloat(formData.equity) <= availableEquity * 100;
+    !isNaN(equityValue) &&
+    equityValue > 0 &&
+    equityValue <= availableEquityPercent + EPSILON;
 
   return (
     <motion.div
@@ -425,13 +439,23 @@ export const AddPartnersStep: React.FC<AddPartnersStepProps> = ({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 mt-8">
+        {canGoBack && onPrevious && (
+          <motion.button
+            onClick={onPrevious}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 sm:flex-none sm:px-8 px-6 py-4 border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-all duration-200 font-medium"
+          >
+            Previous
+          </motion.button>
+        )}
         <motion.button
           onClick={handleSkip}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="flex-1 px-6 py-4 border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-all duration-200 font-medium"
         >
-          Skip This Step
+          Skip
         </motion.button>
         <motion.button
           onClick={handleContinue}
@@ -441,7 +465,7 @@ export const AddPartnersStep: React.FC<AddPartnersStepProps> = ({
           className={`flex-1 px-6 py-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
             totalEquity > 1
               ? "bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl"
+              : "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-lg hover:shadow-xl"
           }`}
         >
           <CheckCircle className="w-5 h-5" />

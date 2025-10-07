@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LockKeyhole, UnlockKeyhole, Delete, ShieldAlert } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { SuccessToast } from "./common/SuccessToast";
 
 const PIN_STORAGE_KEY = "app_pin_code";
 
@@ -67,6 +68,8 @@ export const PinLock = () => {
   const [prompt, setPrompt] = useState("Enter Your PIN");
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     const storedPin = localStorage.getItem(PIN_STORAGE_KEY);
@@ -96,7 +99,10 @@ export const PinLock = () => {
       setIsPinSet(true);
       setPrompt("Enter Your 4-Digit PIN");
       setPin("");
-      setError("PIN set! Now enter it to unlock.");
+
+      // Show success toast for PIN creation
+      setToastMessage("PIN created successfully!");
+      setShowSuccessToast(true);
       return;
     }
 
@@ -331,6 +337,15 @@ export const PinLock = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Success Toast */}
+      <SuccessToast
+        isVisible={showSuccessToast}
+        onClose={() => setShowSuccessToast(false)}
+        type="income"
+        message={toastMessage}
+        duration={2000}
+      />
     </motion.div>
   );
 };

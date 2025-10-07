@@ -23,6 +23,10 @@ const LABEL_STYLES =
 
 interface BusinessInfoStepProps {
   onNext: () => void;
+  onPrevious?: () => void;
+  canGoBack?: boolean;
+  isLastStep?: boolean;
+  onSkip?: () => void;
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -37,6 +41,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
   onNext,
+  onPrevious,
+  canGoBack = false,
 }) => {
   const { businessInfo, updateBusinessInfo, markStepCompleted } =
     useOnboarding();
@@ -100,17 +106,23 @@ export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
           <Building2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>
         <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-200 mb-2">
-          Welcome to PartnerX
+          {isPersonal
+            ? "Welcome to Your Personal Ledger"
+            : "Welcome to PartnerWise"}
         </h2>
         <p className="text-slate-600 dark:text-slate-400">
-          Let's get started with some basic information
+          {isPersonal
+            ? "Let's set up your personal finance tracking"
+            : "Let's get started with your business information"}
         </p>
       </div>
 
       <div className="space-y-6">
         {/* Account Type Selection */}
         <div>
-          <label className={LABEL_STYLES}>How will you use PartnerX? *</label>
+          <label className={LABEL_STYLES}>
+            How will you use PartnerWise? *
+          </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {BUSINESS_TYPES.map((type) => {
               const IconComponent = iconMap[type.icon] || Building2;
@@ -246,12 +258,22 @@ export const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
         </div>
       </div>
 
-      {/* Action Button */}
-      <div className="mt-8">
+      {/* Action Buttons */}
+      <div className="mt-8 flex flex-col sm:flex-row gap-4">
+        {canGoBack && onPrevious && (
+          <motion.button
+            onClick={onPrevious}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 sm:flex-none sm:px-8 px-6 py-4 border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-all duration-200 font-medium"
+          >
+            Previous
+          </motion.button>
+        )}
         <button
           onClick={handleSubmit}
           disabled={!isValid}
-          className={`w-full px-6 py-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+          className={`flex-1 px-6 py-4 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
             isValid
               ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl"
               : "bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed"

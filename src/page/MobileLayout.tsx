@@ -9,6 +9,8 @@ import { DonationSettingsButton } from "../components/DonationSettingsButton";
 import { IncomeSourceSettingsButton } from "../components/IncomeSourceSettingsButton";
 import { IncomeSourceSettingsModal } from "../components/IncomeSourceSettingsModal";
 import { PartnerSummary } from "../components/PartnerSummary";
+import { PartnerSettingsModal } from "../components/PartnerSettingsModal";
+import { PartnerSettingsButton } from "../components/PartnerSettingsButton";
 import { ImportExport } from "../components/ImportExport";
 import { LayoutDashboard, Lock } from "lucide-react";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
@@ -34,6 +36,7 @@ import { AppInfoModal } from "../components/AppInfoModal";
 import { DateFilter } from "../components/DateFilter";
 import { useDateFilter } from "../hooks/useDateFilter";
 import { useAuth } from "../hooks/useAuth";
+import { useBusinessInfo } from "../hooks/useBusinessInfo";
 
 type MobileTab = "overview" | "history" | "settings";
 
@@ -54,11 +57,13 @@ export const MobileLayout = ({
 }: MobileLayoutProps) => {
   const { lockApp } = useAuth();
   const { dateFilter, setDateFilter } = useDateFilter();
+  const { isPersonalMode } = useBusinessInfo();
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab>("overview");
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
   const [isIncomeSettingsOpen, setIsIncomeSettingsOpen] = useState(false);
+  const [isPartnerSettingsOpen, setIsPartnerSettingsOpen] = useState(false);
 
   const renderContent = () => {
     switch (activeMobileTab) {
@@ -136,10 +141,21 @@ export const MobileLayout = ({
       case "settings":
         return (
           <div className="space-y-4">
-            <PartnerSummary
-              partnerEarnings={financials.partnerEarnings}
-              partnerExpenses={financials.partnerExpenses}
-            />
+            {!isPersonalMode && (
+              <>
+                <PartnerSummary
+                  partnerEarnings={financials.partnerEarnings}
+                  partnerExpenses={financials.partnerExpenses}
+                />
+                <div className="rounded-lg bg-white dark:bg-slate-800 p-4">
+                  <PartnerSettingsButton
+                    onClick={() => setIsPartnerSettingsOpen(true)}
+                    showTitle={true}
+                    className="w-full justify-center"
+                  />
+                </div>
+              </>
+            )}
 
             <ImportExport
               transactions={appState.transactions}
@@ -215,6 +231,13 @@ export const MobileLayout = ({
         isOpen={isIncomeSettingsOpen}
         onClose={() => setIsIncomeSettingsOpen(false)}
       />
+      {/* Partner Settings Modal */}
+      {!isPersonalMode && (
+        <PartnerSettingsModal
+          isOpen={isPartnerSettingsOpen}
+          onClose={() => setIsPartnerSettingsOpen(false)}
+        />
+      )}
     </div>
   );
 };

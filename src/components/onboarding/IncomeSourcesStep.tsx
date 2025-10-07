@@ -10,15 +10,23 @@ import {
   Tv,
   Smartphone,
   Globe,
+  Briefcase,
+  Laptop,
+  TrendingUp,
+  Store,
+  Home,
 } from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
-import { defaultIncomeSources } from "../../config/incomeSources";
+import { getIncomeSourcesForAccountType } from "../../config/incomeSources";
 
 const INCOME_SOURCES_STORAGE_KEY = "onboarding_income_sources";
 
 interface IncomeSourcesStepProps {
   onNext: () => void;
   onSkip: () => void;
+  onPrevious?: () => void;
+  canGoBack?: boolean;
+  isLastStep?: boolean;
 }
 
 // Icon mapping for known platforms
@@ -30,6 +38,12 @@ const getIconComponent = (iconValue: string) => {
     Tv,
     Smartphone,
     Globe,
+    Briefcase,
+    Laptop,
+    TrendingUp,
+    Store,
+    Home,
+    DollarSign,
   };
 
   return iconMap[iconValue] || Globe;
@@ -38,6 +52,8 @@ const getIconComponent = (iconValue: string) => {
 export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
   onNext,
   onSkip,
+  onPrevious,
+  canGoBack = false,
 }) => {
   const { markStepCompleted, businessInfo } = useOnboarding();
   const isPersonal = businessInfo?.type === "personal";
@@ -78,10 +94,11 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
     onSkip();
   };
 
-  // Show only TikTok and YouTube by default
-  const defaultSources = defaultIncomeSources.filter(
-    (source) => source.id === "tiktok" || source.id === "youtube"
-  );
+  // Get income sources based on account type
+  const allSources = getIncomeSourcesForAccountType(isPersonal);
+
+  // Show default enabled sources (first 3 for personal, first 2 for business)
+  const defaultSources = allSources.filter((source) => source.enabled);
 
   const [showCustom, setShowCustom] = useState(false);
 
@@ -106,7 +123,9 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
           Income Sources
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          Select the platforms and services you use to generate revenue
+          {isPersonal
+            ? "Select the types of income you want to track in your personal ledger"
+            : "Select the platforms and services you use to generate revenue"}
         </p>
       </div>
 
@@ -151,11 +170,11 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
         </div>
       </div>
 
-      {/* Default Income Sources (TikTok & YouTube) */}
+      {/* Income Sources Grid */}
       <div className="space-y-6">
         <div>
           <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4">
-            Select Your Platforms
+            {isPersonal ? "Select Your Income Types" : "Select Your Platforms"}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {defaultSources.map((source) => {
@@ -280,7 +299,9 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
               <span className="text-2xl">+</span>
             </div>
             <span className="font-semibold text-base">
-              Need a Custom Income Source?
+              {isPersonal
+                ? "Need a Different Income Type?"
+                : "Need a Custom Income Source?"}
             </span>
           </div>
         </motion.button>
@@ -305,9 +326,9 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
                   from the app settings.
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-500">
-                  Custom sources allow you to track income from{" "}
-                  <strong>any platform or service</strong> not listed here -
-                  freelancing, consulting, e-commerce, and more!
+                  {isPersonal
+                    ? "Custom sources allow you to track income from any source not listed here - gig work, gifts, bonuses, and more!"
+                    : "Custom sources allow you to track income from any platform or service not listed here - freelancing, consulting, e-commerce, and more!"}
                 </p>
               </div>
             </div>
@@ -317,13 +338,23 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 mt-10">
+        {canGoBack && onPrevious && (
+          <motion.button
+            onClick={onPrevious}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 sm:flex-none sm:px-8 px-6 py-4 border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-all duration-200 font-medium"
+          >
+            Previous
+          </motion.button>
+        )}
         <motion.button
           onClick={handleSkip}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="flex-1 px-6 py-4 border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-all duration-200 font-medium"
         >
-          Skip This Step
+          Skip
         </motion.button>
         <motion.button
           onClick={handleContinue}

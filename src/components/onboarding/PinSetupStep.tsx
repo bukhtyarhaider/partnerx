@@ -2,11 +2,16 @@ import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LockKeyhole, UnlockKeyhole, Delete } from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
+import { SuccessToast } from "../common/SuccessToast";
 
 const PIN_STORAGE_KEY = "app_pin_code";
 
 interface PinSetupStepProps {
   onNext: () => void;
+  onSkip?: () => void;
+  onPrevious?: () => void;
+  canGoBack?: boolean;
+  isLastStep?: boolean;
 }
 
 const PinDigit = ({ digit }: { digit: string | null }) => (
@@ -63,7 +68,11 @@ const KeypadButton = ({
   );
 };
 
-export const PinSetupStep: React.FC<PinSetupStepProps> = ({ onNext }) => {
+export const PinSetupStep: React.FC<PinSetupStepProps> = ({
+  onNext,
+  onPrevious,
+  canGoBack = false,
+}) => {
   const { markStepCompleted } = useOnboarding();
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -71,6 +80,8 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({ onNext }) => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSettingPin, setIsSettingPin] = useState(false);
   const [prompt, setPrompt] = useState("Create a 4-Digit PIN");
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const handleKeyClick = useCallback(
     (key: string) => {
@@ -148,10 +159,14 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({ onNext }) => {
       // Complete the onboarding step
       markStepCompleted("pin-setup");
 
-      // Small delay for visual feedback then proceed
+      // Show success toast
+      setToastMessage("PIN created successfully!");
+      setShowSuccessToast(true);
+
+      // Delay for toast visibility then proceed
       setTimeout(() => {
         onNext();
-      }, 500);
+      }, 1000);
     } else {
       setError("PINs don't match. Please try again.");
       setPin("");
@@ -316,9 +331,30 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({ onNext }) => {
                 )}
               </AnimatePresence>
             </motion.button>
+
+            {/* Previous Button */}
+            {canGoBack && onPrevious && (
+              <motion.button
+                onClick={onPrevious}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full max-w-xs mt-4 px-6 py-3 border-2 border-slate-600 text-slate-400 rounded-xl hover:bg-slate-700/50 hover:border-slate-500 transition-all duration-200 font-medium"
+              >
+                Previous
+              </motion.button>
+            )}
           </div>
         </div>
       </motion.div>
+
+      {/* Success Toast */}
+      <SuccessToast
+        isVisible={showSuccessToast}
+        onClose={() => setShowSuccessToast(false)}
+        type="income"
+        message={toastMessage}
+        duration={2000}
+      />
     </motion.div>
   );
 };

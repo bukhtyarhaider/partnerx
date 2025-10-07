@@ -18,11 +18,16 @@ const DONATION_CONFIG_STORAGE_KEY = "onboarding_donation_config";
 interface DonationConfigStepProps {
   onNext: () => void;
   onSkip: () => void;
+  onPrevious?: () => void;
+  canGoBack?: boolean;
+  isLastStep?: boolean;
 }
 
 export const DonationConfigStep: React.FC<DonationConfigStepProps> = ({
   onNext,
   onSkip,
+  onPrevious,
+  canGoBack = false,
 }) => {
   const { markStepCompleted } = useOnboarding();
 
@@ -392,11 +397,19 @@ export const DonationConfigStep: React.FC<DonationConfigStepProps> = ({
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-3 mt-8">
+        {canGoBack && onPrevious && (
+          <button
+            onClick={onPrevious}
+            className="flex-1 sm:flex-none sm:px-8 px-6 py-3 border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-all duration-200 font-medium"
+          >
+            Previous
+          </button>
+        )}
         <button
           onClick={handleSkip}
           className="flex-1 px-6 py-3 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
         >
-          Skip This Step
+          Skip
         </button>
         <button
           onClick={handleContinue}

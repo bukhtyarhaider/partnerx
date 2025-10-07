@@ -24,6 +24,8 @@ import { DonationConfigModal } from "../components/DonationConfigModal";
 import { DonationSettingsButton } from "../components/DonationSettingsButton";
 import { IncomeSourceSettingsButton } from "../components/IncomeSourceSettingsButton";
 import { IncomeSourceSettingsModal } from "../components/IncomeSourceSettingsModal";
+import { PartnerSettingsModal } from "../components/PartnerSettingsModal";
+import { PartnerSettingsButton } from "../components/PartnerSettingsButton";
 import { LiveRate } from "../components/LiveRate";
 
 import type { Financials } from "../hooks/useFinancials";
@@ -36,6 +38,7 @@ import type {
 import { AIFinancialAssistant } from "../components/AIFinancialAssistant";
 import { AppInfoModal } from "../components/AppInfoModal";
 import { useAuth } from "../hooks/useAuth";
+import { useBusinessInfo } from "../hooks/useBusinessInfo";
 import { useState } from "react";
 
 export interface DesktopLayoutProps {
@@ -55,8 +58,10 @@ export const DesktopLayout = ({
 }: DesktopLayoutProps) => {
   const { lockApp } = useAuth();
   const { dateFilter, setDateFilter } = useDateFilter();
+  const { isPersonalMode } = useBusinessInfo();
   const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
   const [isIncomeSettingsOpen, setIsIncomeSettingsOpen] = useState(false);
+  const [isPartnerSettingsOpen, setIsPartnerSettingsOpen] = useState(false);
 
   const tabs = [
     {
@@ -146,10 +151,21 @@ export const DesktopLayout = ({
 
         {/* Footer Content */}
         <div className="space-y-3 bg-white/20 p-3 backdrop-blur-sm dark:bg-slate-800/20">
-          <PartnerSummary
-            partnerEarnings={financials.partnerEarnings}
-            partnerExpenses={financials.partnerExpenses}
-          />
+          {!isPersonalMode && (
+            <>
+              <PartnerSummary
+                partnerEarnings={financials.partnerEarnings}
+                partnerExpenses={financials.partnerExpenses}
+              />
+              <div className="border-t border-slate-200 pt-3 dark:border-slate-700">
+                <PartnerSettingsButton
+                  onClick={() => setIsPartnerSettingsOpen(true)}
+                  showTitle={true}
+                  className="w-full justify-center"
+                />
+              </div>
+            </>
+          )}
           <ImportExport
             transactions={appState.transactions}
             expenses={appState.expenses}
@@ -255,6 +271,14 @@ export const DesktopLayout = ({
         isOpen={isIncomeSettingsOpen}
         onClose={() => setIsIncomeSettingsOpen(false)}
       />
+
+      {/* Partner Settings Modal */}
+      {!isPersonalMode && (
+        <PartnerSettingsModal
+          isOpen={isPartnerSettingsOpen}
+          onClose={() => setIsPartnerSettingsOpen(false)}
+        />
+      )}
     </div>
   );
 };
