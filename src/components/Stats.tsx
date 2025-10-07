@@ -26,9 +26,13 @@ type Financials = {
 
 interface StatsProps {
   financials: Financials;
+  donationEnabled?: boolean;
 }
 
-export const Stats: React.FC<StatsProps> = ({ financials }) => {
+export const Stats: React.FC<StatsProps> = ({
+  financials,
+  donationEnabled = true,
+}) => {
   const {
     totalGrossProfit,
     totalNetProfit,
@@ -145,19 +149,21 @@ export const Stats: React.FC<StatsProps> = ({ financials }) => {
         emptyMessage={`No ${capitalTrend.toLowerCase()} available`}
         infoText={capitalInfo}
       />
-      <StatCard
-        title={isPersonalMode ? "Charity Fund" : "Donations Fund"}
-        value={formatCurrency(availableDonationsFund)}
-        icon={<HeartHandshake className="text-white w-full h-full" />}
-        variant={availableDonationsFund > 0 ? "pink" : "gray"}
-        subtitle={isPersonalMode ? "For charity" : "For donations"}
-        trend={getTrend(availableDonationsFund)}
-        trendValue={
-          availableDonationsFund > 0 ? "Funds available" : "No donation funds"
-        }
-        emptyMessage="No donation funds available"
-        infoText={donationInfo}
-      />
+      {donationEnabled && (
+        <StatCard
+          title={isPersonalMode ? "Charity Fund" : "Donations Fund"}
+          value={formatCurrency(availableDonationsFund)}
+          icon={<HeartHandshake className="text-white w-full h-full" />}
+          variant={availableDonationsFund > 0 ? "pink" : "gray"}
+          subtitle={isPersonalMode ? "For charity" : "For donations"}
+          trend={getTrend(availableDonationsFund)}
+          trendValue={
+            availableDonationsFund > 0 ? "Funds available" : "No donation funds"
+          }
+          emptyMessage="No donation funds available"
+          infoText={donationInfo}
+        />
+      )}
       <LoanCard
         loan={loan}
         deficitPartners={deficitPartners}
