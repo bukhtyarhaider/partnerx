@@ -1,9 +1,18 @@
-import { BarChart2, Cog, List, Plus, type LucideIcon } from "lucide-react";
+import {
+  BarChart2,
+  Cog,
+  List,
+  Plus,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import type { Dispatch, JSX, SetStateAction, ComponentType } from "react";
 
 export interface BottomNavBarProps {
-  activeTab: "overview" | "history" | "settings";
-  onTabChange: Dispatch<SetStateAction<"overview" | "history" | "settings">>;
+  activeTab: "overview" | "history" | "wallet" | "settings";
+  onTabChange: Dispatch<
+    SetStateAction<"overview" | "history" | "wallet" | "settings">
+  >;
   onAddClick: () => void;
   isAddOpen: boolean;
 }
@@ -21,6 +30,7 @@ export const BottomNavBar = ({
   }[] = [
     { id: "overview", label: "Overview", icon: BarChart2 },
     { id: "history", label: "History", icon: List },
+    { id: "wallet", label: "Wallet", icon: Wallet },
     { id: "settings", label: "Settings", icon: Cog },
   ];
 
