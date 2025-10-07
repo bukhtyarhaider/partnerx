@@ -42,7 +42,7 @@ export const BottomNavBar = ({
         <button
           type="button"
           onClick={onAddClick}
-          className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 transform rounded-full bg-gradient-to-r from-emerald-500 to-green-600 p-3.5 text-white shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:scale-105 hover:shadow-emerald-500/30 active:scale-95 focus:outline-none focus:ring-4 focus:ring-emerald-400/30"
+          className="fixed bottom-20 left-1/2 z-30 -translate-x-1/2 transform rounded-full bg-gradient-to-r from-emerald-500 to-green-600 p-3.5 text-white shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:scale-105 hover:shadow-emerald-500/30 active:scale-95 focus:outline-none focus:ring-4 focus:ring-emerald-400/30"
           aria-label="Add new entry"
         >
           <Plus
@@ -53,7 +53,7 @@ export const BottomNavBar = ({
       )}
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white/70 backdrop-blur-2xl dark:bg-slate-900/70"
+        className="fixed bottom-0 left-0 right-0 z-20 bg-white/70 backdrop-blur-2xl dark:bg-slate-900/70"
         role="navigation"
         aria-label="Bottom Navigation"
       >

@@ -168,9 +168,14 @@ export const PinLock = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 p-4 backdrop-blur-lg"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 p-4 backdrop-blur-lg select-none"
       role="dialog"
       aria-labelledby="pin-lock-title"
+      style={{
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        touchAction: "none",
+      }}
     >
       <motion.div
         initial={{ y: 20, opacity: 0, scale: 0.95 }}
