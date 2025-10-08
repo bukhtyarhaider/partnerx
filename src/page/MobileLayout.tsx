@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Stats } from "../components/Stats";
 import { IncomeChart } from "../components/IncomeChart";
+import { ExpenseAnalytics } from "../components/ExpenseAnalytics";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
@@ -74,6 +75,8 @@ export const MobileLayout = ({
             <LiveRate />
 
             <IncomeChart transactions={sortedTransactions} />
+
+            <ExpenseAnalytics expenses={sortedExpenses} />
 
             {/* AI Financial Assistant - Mobile-optimized inline card */}
             <MobileAIFinancialAssistant

@@ -18,7 +18,7 @@ import { DateFilter } from "../components/DateFilter";
 import { useDateFilter } from "../hooks/useDateFilter";
 import { Stats } from "../components/Stats";
 import { DesktopSettingsModal } from "../components/DesktopSettingsModal";
-import { IncomeChart } from "../components/IncomeChart";
+import { DesktopFinancialAnalytics } from "../components/DesktopFinancialAnalytics";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { ExpenseHistory } from "../components/ExpenseHistory";
 import { DonationHistory } from "../components/DonationHistory";
@@ -224,7 +224,10 @@ export const DesktopLayout = ({
             donationEnabled={appState.donationConfig.enabled}
           />
 
-          <IncomeChart transactions={sortedTransactions} />
+          <DesktopFinancialAnalytics
+            transactions={sortedTransactions}
+            expenses={sortedExpenses}
+          />
 
           {/* AI Financial Assistant - Floating */}
           <AIFinancialAssistant

@@ -63,15 +63,15 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
     >
       <motion.div
         layout
-        className="mb-3  flex flex-wrap items-center justify-between gap-2 md:gap-0"
+        className="mb-3 flex flex-wrap items-center justify-between gap-2 md:gap-0"
       >
-        <h2 className="flex items-center text-lg px-2  md:text-xl font-semibold text-slate-800 dark:text-slate-50">
+        <h2 className="flex items-center text-lg px-2 md:text-xl font-semibold text-slate-800 dark:text-slate-50 flex-shrink-0">
           {icon && <span className="mr-2 md:mr-3">{icon}</span>}
           {title}
         </h2>
 
         <div
-          className={`flex flex-1 items-center ${getJustifyClass()} mt-1 md:mt-0`}
+          className={`flex items-center ${getJustifyClass()} mt-1 md:mt-0 w-full md:w-auto md:flex-1 min-w-0 order-3 md:order-none`}
         >
           {actionBar && actionBar.content}
         </div>
