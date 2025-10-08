@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LockKeyhole, UnlockKeyhole, Delete, ShieldAlert } from "lucide-react";
+import {
+  LockKeyhole,
+  UnlockKeyhole,
+  Delete,
+  ShieldAlert,
+  Fingerprint,
+} from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { useBiometric } from "../hooks/useBiometric";
 import { SuccessToast } from "./common/SuccessToast";
 
 const PIN_STORAGE_KEY = "app_pin_code";
@@ -62,6 +69,15 @@ const KeypadButton = ({
 
 export const PinLock = () => {
   const { unlockApp } = useAuth();
+  const {
+    isAvailable: isBiometricAvailable,
+    isEnabled: isBiometricEnabled,
+    isChecking: isBiometricChecking,
+    enableBiometric,
+    disableBiometric,
+    authenticateWithBiometric,
+  } = useBiometric();
+
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [isPinSet, setIsPinSet] = useState(false);
@@ -70,17 +86,37 @@ export const PinLock = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [showBiometricSetup, setShowBiometricSetup] = useState(false);
+  const [showBiometricSettings, setShowBiometricSettings] = useState(false);
+
+  const handleBiometricAuth = useCallback(async () => {
+    if (!isBiometricEnabled || isUnlocking) return;
+
+    const result = await authenticateWithBiometric();
+    if (result.success) {
+      setError("");
+      setIsUnlocking(true);
+      setTimeout(() => unlockApp(), 500);
+    } else {
+      setError(result.error || "Biometric authentication failed");
+    }
+  }, [isBiometricEnabled, isUnlocking, authenticateWithBiometric, unlockApp]);
 
   useEffect(() => {
     const storedPin = localStorage.getItem(PIN_STORAGE_KEY);
     if (storedPin) {
       setIsPinSet(true);
       setPrompt("Enter Your 4-Digit PIN");
+
+      // Auto-trigger biometric if available and enabled
+      if (isBiometricEnabled && !isBiometricChecking) {
+        handleBiometricAuth();
+      }
     } else {
       setIsPinSet(false);
       setPrompt("Create a 4-Digit PIN");
     }
-  }, []);
+  }, [isBiometricEnabled, isBiometricChecking, handleBiometricAuth]);
 
   const handleKeyClick = useCallback(
     (key: string) => {
@@ -103,6 +139,11 @@ export const PinLock = () => {
       // Show success toast for PIN creation
       setToastMessage("PIN created successfully!");
       setShowSuccessToast(true);
+
+      // Offer biometric setup if available and not already enabled
+      if (isBiometricAvailable && !isBiometricEnabled) {
+        setShowBiometricSetup(true);
+      }
       return;
     }
 
@@ -115,7 +156,45 @@ export const PinLock = () => {
       setError("Incorrect PIN. Please try again.");
       setPin("");
     }
-  }, [isPinSet, isUnlocking, pin, unlockApp]);
+  }, [
+    isPinSet,
+    isUnlocking,
+    pin,
+    unlockApp,
+    isBiometricAvailable,
+    isBiometricEnabled,
+  ]);
+
+  const handleBiometricSetup = useCallback(async () => {
+    const result = await enableBiometric();
+    if (result.success) {
+      setToastMessage("Biometric authentication enabled!");
+      setShowSuccessToast(true);
+      setShowBiometricSetup(false);
+    } else {
+      setError(result.error || "Failed to enable biometric authentication");
+    }
+  }, [enableBiometric]);
+
+  const handleToggleBiometric = useCallback(async () => {
+    if (isBiometricEnabled) {
+      // Disable biometric
+      disableBiometric();
+      setToastMessage("Biometric authentication disabled");
+      setShowSuccessToast(true);
+      setShowBiometricSettings(false);
+    } else {
+      // Enable biometric
+      const result = await enableBiometric();
+      if (result.success) {
+        setToastMessage("Biometric authentication enabled!");
+        setShowSuccessToast(true);
+        setShowBiometricSettings(false);
+      } else {
+        setError(result.error || "Failed to enable biometric authentication");
+      }
+    }
+  }, [isBiometricEnabled, enableBiometric, disableBiometric]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -250,14 +329,41 @@ export const PinLock = () => {
               className="mt-8 grid grid-cols-3 gap-4"
               aria-label="PIN keypad"
             >
-              {keypadKeys.map((key) => (
-                <KeypadButton
-                  key={key}
-                  value={key}
-                  onClick={handleKeyClick}
-                  disabled={isUnlocking}
-                />
-              ))}
+              {keypadKeys.map((key, index) => {
+                // Replace empty string with biometric button if available
+                if (
+                  key === "" &&
+                  isPinSet &&
+                  isBiometricAvailable &&
+                  isBiometricEnabled
+                ) {
+                  return (
+                    <motion.button
+                      key="biometric"
+                      whileTap={{ scale: 0.9 }}
+                      whileHover={{
+                        scale: 1.05,
+                        backgroundColor: "rgba(16, 185, 129, 0.2)",
+                      }}
+                      onClick={handleBiometricAuth}
+                      disabled={isUnlocking}
+                      className="flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold transition-colors duration-200 bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 hover:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                      aria-label="Unlock with biometric"
+                    >
+                      <Fingerprint className="h-6 w-6" />
+                    </motion.button>
+                  );
+                }
+
+                return (
+                  <KeypadButton
+                    key={key || `empty-${index}`}
+                    value={key}
+                    onClick={handleKeyClick}
+                    disabled={isUnlocking}
+                  />
+                );
+              })}
             </div>
 
             <motion.button
@@ -289,12 +395,23 @@ export const PinLock = () => {
             </motion.button>
 
             {isPinSet && !isUnlocking && (
-              <button
-                onClick={() => setShowResetConfirm(true)}
-                className="mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                Forgot PIN? Reset App
-              </button>
+              <div className="mt-6 flex flex-col gap-2 items-center">
+                {isBiometricAvailable && (
+                  <button
+                    onClick={() => setShowBiometricSettings(true)}
+                    className="text-sm text-emerald-500 hover:text-emerald-400 transition-colors flex items-center gap-2"
+                  >
+                    <Fingerprint className="h-4 w-4" />
+                    {isBiometricEnabled ? "Manage" : "Enable"} Biometric
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowResetConfirm(true)}
+                  className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  Forgot PIN? Reset App
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -336,6 +453,145 @@ export const PinLock = () => {
                   className="flex-1 rounded-xl bg-red-600 py-3 text-white font-semibold hover:bg-red-700 transition-colors"
                 >
                   Reset Data
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Biometric Setup Dialog */}
+      <AnimatePresence>
+        {showBiometricSetup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-10 flex items-center justify-center bg-black/80"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-3xl bg-slate-800 border border-emerald-500/30 p-8 text-center"
+            >
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-400/30">
+                <Fingerprint className="h-8 w-8 text-emerald-400" />
+              </div>
+              <h3 className="mt-5 text-2xl font-bold text-white">
+                Enable Biometric Authentication?
+              </h3>
+              <p className="mt-3 text-base text-slate-300">
+                Use Face ID or fingerprint to unlock the app quickly and
+                securely. Your PIN will still work as a backup.
+              </p>
+              <div className="mt-8 flex gap-4">
+                <button
+                  onClick={() => setShowBiometricSetup(false)}
+                  className="flex-1 rounded-xl bg-slate-700 py-3 text-white font-semibold hover:bg-slate-600 transition-colors"
+                >
+                  Not Now
+                </button>
+                <button
+                  onClick={handleBiometricSetup}
+                  className="flex-1 rounded-xl bg-emerald-600 py-3 text-white font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Fingerprint className="h-5 w-5" />
+                  Enable
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Biometric Settings Dialog */}
+      <AnimatePresence>
+        {showBiometricSettings && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-10 flex m-4 items-center justify-center bg-black/80"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-3xl bg-slate-800 border border-emerald-500/30 p-4"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-400/30">
+                    <Fingerprint className="h-6 w-6 text-emerald-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">
+                    Biometric Settings
+                  </h3>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-xl bg-slate-700/50 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-base font-semibold text-white">
+                        {isBiometricEnabled
+                          ? "Biometric Enabled"
+                          : "Enable Biometric"}
+                      </h4>
+                      <p className="text-sm text-slate-400 mt-1">
+                        {isBiometricEnabled
+                          ? "Quick unlock with Face ID or fingerprint"
+                          : "Use Face ID or fingerprint for quick unlock"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleToggleBiometric}
+                      aria-label="Toggle biometric authentication"
+                      className={`relative inline-flex h-8 w-16 items-center rounded-full transition-all duration-300 ${
+                        isBiometricEnabled ? "bg-emerald-500" : "bg-slate-600"
+                      } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-400`}
+                    >
+                      <span
+                        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                          isBiometricEnabled ? "translate-x-8" : "translate-x-1"
+                        }`}
+                      />
+                      <span
+                        className={`absolute left-1/2 transform -translate-x-1/2 text-xs font-medium text-white ${
+                          isBiometricEnabled ? "opacity-0" : "opacity-100"
+                        } transition-opacity duration-300`}
+                      >
+                        Off
+                      </span>
+                      <span
+                        className={`absolute left-1/2 transform -translate-x-1/2 text-xs font-medium text-white ${
+                          isBiometricEnabled ? "opacity-100" : "opacity-0"
+                        } transition-opacity duration-300`}
+                      >
+                        On
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-slate-700/30 p-4">
+                  <p className="text-sm text-slate-400">
+                    <strong className="text-slate-300">Note:</strong> Your PIN
+                    will always work as a backup method. Biometric
+                    authentication uses your device's built-in security
+                    features.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setShowBiometricSettings(false)}
+                  className="flex-1 rounded-xl bg-slate-700 py-3 text-white font-semibold hover:bg-slate-600 transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </motion.div>
