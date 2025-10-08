@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useBiometric } from "../hooks/useBiometric";
+import { useHaptics } from "../hooks/useHaptics";
 import { SuccessToast } from "./common/SuccessToast";
 
 const PIN_STORAGE_KEY = "app_pin_code";
@@ -77,6 +78,7 @@ export const PinLock = () => {
     disableBiometric,
     authenticateWithBiometric,
   } = useBiometric();
+  const { triggerHaptic } = useHaptics();
 
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
@@ -121,16 +123,18 @@ export const PinLock = () => {
   const handleKeyClick = useCallback(
     (key: string) => {
       if (isUnlocking || (pin.length >= 4 && key !== "del")) return;
+      triggerHaptic(key === "del" ? "light" : "selection");
       setError("");
       setPin((prev) => (key === "del" ? prev.slice(0, -1) : prev + key));
     },
-    [isUnlocking, pin.length]
+    [isUnlocking, pin.length, triggerHaptic]
   );
 
   const handleSubmit = useCallback(() => {
     if (pin.length !== 4 || isUnlocking) return;
 
     if (!isPinSet) {
+      triggerHaptic("success");
       localStorage.setItem(PIN_STORAGE_KEY, btoa(pin));
       setIsPinSet(true);
       setPrompt("Enter Your 4-Digit PIN");
@@ -149,10 +153,12 @@ export const PinLock = () => {
 
     const storedPin = atob(localStorage.getItem(PIN_STORAGE_KEY)!);
     if (pin === storedPin) {
+      triggerHaptic("success");
       setError("");
       setIsUnlocking(true);
       setTimeout(() => unlockApp(), 500);
     } else {
+      triggerHaptic("error");
       setError("Incorrect PIN. Please try again.");
       setPin("");
     }
@@ -163,6 +169,7 @@ export const PinLock = () => {
     unlockApp,
     isBiometricAvailable,
     isBiometricEnabled,
+    triggerHaptic,
   ]);
 
   const handleBiometricSetup = useCallback(async () => {
@@ -177,9 +184,11 @@ export const PinLock = () => {
   }, [enableBiometric]);
 
   const handleToggleBiometric = useCallback(async () => {
+    triggerHaptic("medium");
     if (isBiometricEnabled) {
       // Disable biometric
       disableBiometric();
+      triggerHaptic("success");
       setToastMessage("Biometric authentication disabled");
       setShowSuccessToast(true);
       setShowBiometricSettings(false);
@@ -187,14 +196,16 @@ export const PinLock = () => {
       // Enable biometric
       const result = await enableBiometric();
       if (result.success) {
+        triggerHaptic("success");
         setToastMessage("Biometric authentication enabled!");
         setShowSuccessToast(true);
         setShowBiometricSettings(false);
       } else {
+        triggerHaptic("error");
         setError(result.error || "Failed to enable biometric authentication");
       }
     }
-  }, [isBiometricEnabled, enableBiometric, disableBiometric]);
+  }, [isBiometricEnabled, enableBiometric, disableBiometric, triggerHaptic]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

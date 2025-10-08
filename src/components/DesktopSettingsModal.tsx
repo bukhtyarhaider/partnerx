@@ -8,6 +8,7 @@ import {
   Sun,
   LockKeyhole,
   X,
+  Vibrate,
 } from "lucide-react";
 import { DonationConfigModal } from "./DonationConfigModal";
 import { IncomeSourceSettingsModal } from "./IncomeSourceSettingsModal";
@@ -16,6 +17,7 @@ import { PinSettingsModal } from "./PinSettingsModal";
 import { ImportExport } from "./ImportExport";
 import { useTheme } from "../hooks/useTheme";
 import { useBusinessInfo } from "../hooks/useBusinessInfo";
+import { useHaptics } from "../hooks/useHaptics";
 import type { AppHandlers } from "../types";
 
 interface DesktopSettingsModalProps {
@@ -31,6 +33,11 @@ export const DesktopSettingsModal = ({
 }: DesktopSettingsModalProps) => {
   const { theme, toggleTheme } = useTheme();
   const { isPersonalMode } = useBusinessInfo();
+  const {
+    isEnabled: isHapticsEnabled,
+    toggleHaptics,
+    triggerHaptic,
+  } = useHaptics();
 
   const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
   const [isIncomeSettingsOpen, setIsIncomeSettingsOpen] = useState(false);
@@ -127,7 +134,10 @@ export const DesktopSettingsModal = ({
               {/* Theme Toggle Card */}
               <div className="rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
                 <button
-                  onClick={toggleTheme}
+                  onClick={() => {
+                    triggerHaptic("medium");
+                    toggleTheme();
+                  }}
                   className="w-full flex items-center justify-between p-4 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-xl"
                 >
                   <div className="flex items-center gap-4">
@@ -155,12 +165,45 @@ export const DesktopSettingsModal = ({
                 </button>
               </div>
 
+              {/* Haptics Toggle Card */}
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+                <button
+                  onClick={() => {
+                    triggerHaptic("medium");
+                    toggleHaptics();
+                  }}
+                  className="w-full flex items-center justify-between p-4 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-xl"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="rounded-full bg-purple-100 dark:bg-purple-900/30 p-3">
+                      <Vibrate className="size-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-slate-800 dark:text-slate-100">
+                        Haptic Feedback
+                      </h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {isHapticsEnabled ? "Enabled" : "Disabled"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                      {isHapticsEnabled ? "On" : "Off"}
+                    </span>
+                  </div>
+                </button>
+              </div>
+
               {/* Settings Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {settingsItems.map((item) => (
                   <button
                     key={item.id}
-                    onClick={item.onClick}
+                    onClick={() => {
+                      triggerHaptic("light");
+                      item.onClick();
+                    }}
                     className="rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 p-4 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 hover:shadow-md active:scale-[0.98]"
                   >
                     <div className="flex items-center gap-3">

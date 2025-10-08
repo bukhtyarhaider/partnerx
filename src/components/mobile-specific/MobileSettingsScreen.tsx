@@ -8,6 +8,7 @@ import {
   Moon,
   Sun,
   LockKeyhole,
+  Vibrate,
 } from "lucide-react";
 import { DonationConfigModal } from "../DonationConfigModal";
 import { IncomeSourceSettingsModal } from "../IncomeSourceSettingsModal";
@@ -16,6 +17,7 @@ import { PinSettingsModal } from "../PinSettingsModal";
 import { ImportExport } from "../ImportExport";
 import { useTheme } from "../../hooks/useTheme";
 import { useBusinessInfo } from "../../hooks/useBusinessInfo";
+import { useHaptics } from "../../hooks/useHaptics";
 import type { AppHandlers } from "../../types";
 
 interface MobileSettingsScreenProps {
@@ -27,6 +29,11 @@ export const MobileSettingsScreen = ({
 }: MobileSettingsScreenProps) => {
   const { theme, toggleTheme } = useTheme();
   const { isPersonalMode } = useBusinessInfo();
+  const {
+    isEnabled: isHapticsEnabled,
+    toggleHaptics,
+    triggerHaptic,
+  } = useHaptics();
 
   const [isDonationConfigOpen, setIsDonationConfigOpen] = useState(false);
   const [isIncomeSettingsOpen, setIsIncomeSettingsOpen] = useState(false);
@@ -102,7 +109,10 @@ export const MobileSettingsScreen = ({
       {/* Theme Toggle Card */}
       <div className="rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700">
         <button
-          onClick={toggleTheme}
+          onClick={() => {
+            triggerHaptic("medium");
+            toggleTheme();
+          }}
           className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors rounded-xl"
         >
           <div className="flex items-center gap-4">
@@ -130,12 +140,45 @@ export const MobileSettingsScreen = ({
         </button>
       </div>
 
+      {/* Haptics Toggle Card */}
+      <div className="rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700">
+        <button
+          onClick={() => {
+            triggerHaptic("medium");
+            toggleHaptics();
+          }}
+          className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors rounded-xl"
+        >
+          <div className="flex items-center gap-4">
+            <div className="rounded-full bg-purple-100 dark:bg-purple-900/30 p-3">
+              <Vibrate className="size-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-semibold text-slate-800 dark:text-slate-100">
+                Haptic Feedback
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {isHapticsEnabled ? "Enabled" : "Disabled"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              {isHapticsEnabled ? "On" : "Off"}
+            </span>
+          </div>
+        </button>
+      </div>
+
       {/* Settings List */}
       <div className="space-y-2">
         {settingsItems.map((item) => (
           <button
             key={item.id}
-            onClick={item.onClick}
+            onClick={() => {
+              triggerHaptic("light");
+              item.onClick();
+            }}
             className="w-full rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all duration-200 active:scale-[0.98]"
           >
             <div className="flex items-center justify-between">

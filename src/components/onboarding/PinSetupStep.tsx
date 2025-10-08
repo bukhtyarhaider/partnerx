@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LockKeyhole, UnlockKeyhole, Delete, Fingerprint } from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
 import { useBiometric } from "../../hooks/useBiometric";
+import { useHaptics } from "../../hooks/useHaptics";
 import { SuccessToast } from "../common/SuccessToast";
 
 const PIN_STORAGE_KEY = "app_pin_code";
@@ -76,6 +77,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
 }) => {
   const { markStepCompleted } = useOnboarding();
   const { isAvailable: isBiometricAvailable, enableBiometric } = useBiometric();
+  const { triggerHaptic } = useHaptics();
 
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -95,6 +97,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
         ((isConfirming ? confirmPin : pin).length >= 4 && key !== "del")
       )
         return;
+      triggerHaptic(key === "del" ? "light" : "selection");
       setError("");
 
       if (isConfirming) {
@@ -105,7 +108,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
         setPin((prev) => (key === "del" ? prev.slice(0, -1) : prev + key));
       }
     },
-    [isSettingPin, isConfirming, pin, confirmPin]
+    [isSettingPin, isConfirming, pin, confirmPin, triggerHaptic]
   );
 
   const handleSubmit = useCallback(() => {
@@ -129,6 +132,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
         pin === "4321";
 
       if (isWeak) {
+        triggerHaptic("warning");
         setError(
           "Please choose a more secure PIN. Avoid sequential or repeated digits."
         );
@@ -137,6 +141,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
       }
 
       // First PIN entry - move to confirmation
+      triggerHaptic("medium");
       setIsConfirming(true);
       setPrompt("Confirm Your PIN");
       setConfirmPin("");
@@ -145,6 +150,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
 
     // Confirming PIN
     if (pin === confirmPin) {
+      triggerHaptic("success");
       setError("");
       setIsSettingPin(true);
 
@@ -153,6 +159,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
         localStorage.setItem(PIN_STORAGE_KEY, btoa(pin));
       } catch (error) {
         console.error("Failed to save PIN:", error);
+        triggerHaptic("error");
         setError("Failed to save PIN. Please try again.");
         setPin("");
         setConfirmPin("");
@@ -181,6 +188,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
         }, 1000);
       }
     } else {
+      triggerHaptic("error");
       setError("PINs don't match. Please try again.");
       setPin("");
       setConfirmPin("");
@@ -195,11 +203,13 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
     markStepCompleted,
     onNext,
     isBiometricAvailable,
+    triggerHaptic,
   ]);
 
   const handleEnableBiometric = useCallback(async () => {
     const result = await enableBiometric();
     if (result.success) {
+      triggerHaptic("success");
       setToastMessage("Biometric authentication enabled!");
       setShowSuccessToast(true);
       setTimeout(() => {
@@ -207,18 +217,20 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
         onNext();
       }, 1000);
     } else {
+      triggerHaptic("error");
       setError(result.error || "Failed to enable biometric");
       setTimeout(() => {
         setShowBiometricSetup(false);
         onNext();
       }, 2000);
     }
-  }, [enableBiometric, onNext]);
+  }, [enableBiometric, onNext, triggerHaptic]);
 
   const handleSkipBiometric = useCallback(() => {
+    triggerHaptic("light");
     setShowBiometricSetup(false);
     onNext();
-  }, [onNext]);
+  }, [onNext, triggerHaptic]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
