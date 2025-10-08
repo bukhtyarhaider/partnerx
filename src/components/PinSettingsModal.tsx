@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LockKeyhole, X, Delete, CheckCircle } from "lucide-react";
+import { LockKeyhole, X, Delete, CheckCircle, Fingerprint } from "lucide-react";
+import { useBiometric } from "../hooks/useBiometric";
 
 const PIN_STORAGE_KEY = "app_pin_code";
 
@@ -67,12 +68,20 @@ export const PinSettingsModal: React.FC<PinSettingsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const {
+    isAvailable: isBiometricAvailable,
+    isEnabled: isBiometricEnabled,
+    enableBiometric,
+    disableBiometric,
+  } = useBiometric();
+
   const [currentPin, setCurrentPin] = useState("");
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [step, setStep] = useState<"current" | "new" | "confirm">("current");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [biometricMessage, setBiometricMessage] = useState("");
 
   const storedPin = localStorage.getItem(PIN_STORAGE_KEY);
   const hasExistingPin = !!storedPin;
@@ -90,6 +99,23 @@ export const PinSettingsModal: React.FC<PinSettingsModalProps> = ({
     resetForm();
     onClose();
   }, [resetForm, onClose]);
+
+  const handleToggleBiometric = useCallback(async () => {
+    setBiometricMessage("");
+    if (isBiometricEnabled) {
+      // Disable biometric
+      disableBiometric();
+      setBiometricMessage("Biometric authentication disabled");
+    } else {
+      // Enable biometric
+      const result = await enableBiometric();
+      if (result.success) {
+        setBiometricMessage("Biometric authentication enabled!");
+      } else {
+        setBiometricMessage(result.error || "Failed to enable biometric");
+      }
+    }
+  }, [isBiometricEnabled, enableBiometric, disableBiometric]);
 
   const handleKeyClick = useCallback(
     (key: string) => {
@@ -321,6 +347,72 @@ export const PinSettingsModal: React.FC<PinSettingsModalProps> = ({
                 />
               ))}
             </div>
+
+            {/* Biometric Settings Section */}
+            {isBiometricAvailable && hasExistingPin && (
+              <div className="mt-8 w-full max-w-xs">
+                <div className="rounded-xl bg-slate-700/50 p-4 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-400/30">
+                        <Fingerprint className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-white">
+                          Biometric Auth
+                        </h4>
+                        <p className="text-xs text-slate-400">
+                          {isBiometricEnabled ? "Enabled" : "Disabled"}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleToggleBiometric}
+                      disabled={success}
+                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                        isBiometricEnabled ? "bg-emerald-500" : "bg-slate-600"
+                      } ${success ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                          isBiometricEnabled ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <AnimatePresence>
+                    {biometricMessage && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                        animate={{
+                          height: "auto",
+                          opacity: 1,
+                          marginTop: "0.75rem",
+                        }}
+                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <p
+                          className={`text-xs ${
+                            biometricMessage.includes("enabled") ||
+                            biometricMessage.includes("disabled")
+                              ? "text-emerald-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {biometricMessage}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <p className="mt-2 text-xs text-slate-500 text-center">
+                  Use Face ID or fingerprint for quick unlock
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>

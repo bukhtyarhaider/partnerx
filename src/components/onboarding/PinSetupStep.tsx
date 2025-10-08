@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LockKeyhole, UnlockKeyhole, Delete } from "lucide-react";
+import { LockKeyhole, UnlockKeyhole, Delete, Fingerprint } from "lucide-react";
 import { useOnboarding } from "../../hooks/useOnboarding";
+import { useBiometric } from "../../hooks/useBiometric";
 import { SuccessToast } from "../common/SuccessToast";
 
 const PIN_STORAGE_KEY = "app_pin_code";
@@ -74,6 +75,8 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
   canGoBack = false,
 }) => {
   const { markStepCompleted } = useOnboarding();
+  const { isAvailable: isBiometricAvailable, enableBiometric } = useBiometric();
+
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
@@ -82,6 +85,8 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
   const [prompt, setPrompt] = useState("Create a 4-Digit PIN");
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [showBiometricSetup, setShowBiometricSetup] = useState(false);
+  const [pinCreated, setPinCreated] = useState(false);
 
   const handleKeyClick = useCallback(
     (key: string) => {
@@ -162,11 +167,19 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
       // Show success toast
       setToastMessage("PIN created successfully!");
       setShowSuccessToast(true);
+      setPinCreated(true);
 
-      // Delay for toast visibility then proceed
-      setTimeout(() => {
-        onNext();
-      }, 1000);
+      // Check if biometric is available, if so show setup dialog
+      if (isBiometricAvailable) {
+        setTimeout(() => {
+          setShowBiometricSetup(true);
+        }, 1000);
+      } else {
+        // If no biometric available, proceed to next step
+        setTimeout(() => {
+          onNext();
+        }, 1000);
+      }
     } else {
       setError("PINs don't match. Please try again.");
       setPin("");
@@ -174,10 +187,42 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
       setIsConfirming(false);
       setPrompt("Create a 4-Digit PIN");
     }
-  }, [isConfirming, isSettingPin, pin, confirmPin, markStepCompleted, onNext]);
+  }, [
+    isConfirming,
+    isSettingPin,
+    pin,
+    confirmPin,
+    markStepCompleted,
+    onNext,
+    isBiometricAvailable,
+  ]);
+
+  const handleEnableBiometric = useCallback(async () => {
+    const result = await enableBiometric();
+    if (result.success) {
+      setToastMessage("Biometric authentication enabled!");
+      setShowSuccessToast(true);
+      setTimeout(() => {
+        setShowBiometricSetup(false);
+        onNext();
+      }, 1000);
+    } else {
+      setError(result.error || "Failed to enable biometric");
+      setTimeout(() => {
+        setShowBiometricSetup(false);
+        onNext();
+      }, 2000);
+    }
+  }, [enableBiometric, onNext]);
+
+  const handleSkipBiometric = useCallback(() => {
+    setShowBiometricSetup(false);
+    onNext();
+  }, [onNext]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (showBiometricSetup) return; // Don't handle keys when biometric dialog is open
       if (event.key >= "0" && event.key <= "9") handleKeyClick(event.key);
       else if (event.key === "Backspace") handleKeyClick("del");
       else if (event.key === "Enter") {
@@ -187,7 +232,7 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleKeyClick, handleSubmit]);
+  }, [handleKeyClick, handleSubmit, showBiometricSetup]);
 
   const keypadKeys = [
     "1",
@@ -346,6 +391,85 @@ export const PinSetupStep: React.FC<PinSetupStepProps> = ({
           </div>
         </div>
       </motion.div>
+
+      {/* Biometric Setup Dialog */}
+      <AnimatePresence>
+        {showBiometricSetup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="w-full max-w-md mx-4 rounded-3xl bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 p-8 shadow-2xl"
+            >
+              <div className="text-center">
+                {/* Icon */}
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500/20 to-green-500/20 border-2 border-emerald-400/30 mb-6">
+                  <Fingerprint className="h-10 w-10 text-emerald-400" />
+                </div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-white mb-3">
+                  Enable Biometric Authentication?
+                </h3>
+
+                {/* Description */}
+                <p className="text-base text-slate-300 mb-2">
+                  Use Face ID or fingerprint to unlock the app quickly and
+                  securely.
+                </p>
+                <p className="text-sm text-slate-400 mb-8">
+                  Your PIN will still work as a backup method.
+                </p>
+
+                {/* Buttons */}
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleEnableBiometric}
+                    className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 py-4 text-white font-semibold hover:from-emerald-700 hover:to-green-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <Fingerprint className="h-5 w-5" />
+                    Enable Biometric
+                  </button>
+                  <button
+                    onClick={handleSkipBiometric}
+                    className="w-full rounded-xl bg-slate-700 py-4 text-slate-300 font-semibold hover:bg-slate-600 transition-colors duration-200"
+                  >
+                    Skip for Now
+                  </button>
+                </div>
+
+                {/* Error display */}
+                <AnimatePresence>
+                  {error && !pinCreated && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                      animate={{
+                        height: "auto",
+                        opacity: 1,
+                        marginTop: "1rem",
+                      }}
+                      exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="rounded-xl bg-red-500/10 p-3 text-center border border-red-500/20">
+                        <p className="text-sm font-medium text-red-400">
+                          {error}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Success Toast */}
       <SuccessToast
