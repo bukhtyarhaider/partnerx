@@ -491,7 +491,7 @@ export const TransactionForm: React.FC<FormProps> = ({
                 </label>
                 <input
                   type="number"
-                  disabled={!amount}
+                  disabled={currency === "PKR" ? !amount : !amountUSD}
                   step="0.01"
                   id="transaction-tax-value"
                   placeholder={
