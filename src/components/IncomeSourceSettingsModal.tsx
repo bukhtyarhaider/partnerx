@@ -19,6 +19,7 @@ export const IncomeSourceSettingsModal: React.FC<
   const [saving, setSaving] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newSourceName, setNewSourceName] = useState("");
+  const [editingSourceId, setEditingSourceId] = useState<string | null>(null);
 
   // Initialize modified sources when modal opens
   useEffect(() => {
@@ -34,6 +35,18 @@ export const IncomeSourceSettingsModal: React.FC<
         source.id === sourceId
           ? { ...source, enabled: !source.enabled }
           : source
+      )
+    );
+    setHasChanges(true);
+  };
+
+  const handleUpdateSourceSettings = (
+    sourceId: string,
+    updates: Partial<IncomeSource>
+  ) => {
+    setModifiedSources((prev) =>
+      prev.map((source) =>
+        source.id === sourceId ? { ...source, ...updates } : source
       )
     );
     setHasChanges(true);
@@ -55,6 +68,20 @@ export const IncomeSourceSettingsModal: React.FC<
             type: "lucide",
             value: "DollarSign",
             color: "#10b981",
+          },
+          fees: {
+            fixedFeeUSD: 0,
+            method: "fixed",
+          },
+          settings: {
+            defaultTaxRate: 0,
+            commissionRate: 0,
+            defaultCurrency: "USD",
+            tax: {
+              enabled: false,
+              type: "percentage",
+              value: 0,
+            },
           },
           display: {
             description: "Custom income source",
@@ -87,15 +114,25 @@ export const IncomeSourceSettingsModal: React.FC<
       // Update each modified source
       for (const source of modifiedSources) {
         const originalSource = sources.find((s) => s.id === source.id);
-        if (originalSource && originalSource.enabled !== source.enabled) {
-          await incomeSourceService.updateSource(source.id, {
-            enabled: source.enabled,
-          });
+        if (originalSource) {
+          // Check if any changes were made
+          const hasEnabledChange = originalSource.enabled !== source.enabled;
+          const hasMetadataChange =
+            JSON.stringify(originalSource.metadata) !==
+            JSON.stringify(source.metadata);
+
+          if (hasEnabledChange || hasMetadataChange) {
+            await incomeSourceService.updateSource(source.id, {
+              enabled: source.enabled,
+              metadata: source.metadata,
+            });
+          }
         }
       }
 
       await refresh();
       setHasChanges(false);
+      setEditingSourceId(null);
     } catch (error) {
       console.error("Failed to save income source settings:", error);
     } finally {
@@ -209,47 +246,265 @@ export const IncomeSourceSettingsModal: React.FC<
                 )}
 
                 {/* Income Sources List */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {modifiedSources.map((source) => (
                     <div
                       key={source.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-200 p-4 dark:border-slate-700"
+                      className="rounded-lg border border-slate-200 dark:border-slate-700"
                     >
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => handleToggleSource(source.id)}
-                          className={`rounded-lg p-2 transition-colors ${
-                            source.enabled
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-                              : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
-                          }`}
-                        >
-                          {source.enabled ? (
-                            <Eye size={16} />
-                          ) : (
-                            <EyeOff size={16} />
-                          )}
-                        </button>
-                        <div>
-                          <h3 className="font-medium text-slate-900 dark:text-slate-100">
-                            {source.name}
-                          </h3>
-                          {source.metadata?.display?.description && (
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {source.metadata.display.description}
-                            </p>
+                      <div className="flex items-center justify-between p-4">
+                        <div className="flex items-center gap-3 flex-1">
+                          <button
+                            onClick={() => handleToggleSource(source.id)}
+                            className={`rounded-lg p-2 transition-colors ${
+                              source.enabled
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                                : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                            }`}
+                          >
+                            {source.enabled ? (
+                              <Eye size={16} />
+                            ) : (
+                              <EyeOff size={16} />
+                            )}
+                          </button>
+                          <div className="flex-1">
+                            <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                              {source.name}
+                            </h3>
+                            <div className="flex gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                              <span>
+                                💱{" "}
+                                {source.metadata?.settings?.defaultCurrency ||
+                                  "USD"}
+                              </span>
+                              {source.metadata?.fees?.fixedFeeUSD !==
+                                undefined &&
+                                source.metadata.fees.fixedFeeUSD > 0 && (
+                                  <span>
+                                    💰 ${source.metadata.fees.fixedFeeUSD} fee
+                                  </span>
+                                )}
+                              {source.metadata?.settings?.tax?.enabled && (
+                                <span>
+                                  📋 Tax:{" "}
+                                  {source.metadata.settings.tax.type ===
+                                  "percentage"
+                                    ? `${source.metadata.settings.tax.value}%`
+                                    : `₨${source.metadata.settings.tax.value}`}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              setEditingSourceId(
+                                editingSourceId === source.id ? null : source.id
+                              )
+                            }
+                            className="rounded-lg p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                            title="Edit settings"
+                          >
+                            <Save size={16} />
+                          </button>
+                          {source.metadata?.display?.category === "custom" && (
+                            <button
+                              onClick={() => handleRemoveSource(source.id)}
+                              className="rounded-lg p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                              title="Remove custom source"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           )}
                         </div>
                       </div>
 
-                      {source.metadata?.display?.category === "custom" && (
-                        <button
-                          onClick={() => handleRemoveSource(source.id)}
-                          className="rounded-lg p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                          title="Remove custom source"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                      {/* Expanded Edit Panel */}
+                      {editingSourceId === source.id && (
+                        <div className="border-t border-slate-200 p-4 space-y-4 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/30">
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* Default Currency */}
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Default Currency
+                              </label>
+                              <select
+                                value={
+                                  source.metadata?.settings?.defaultCurrency ||
+                                  "USD"
+                                }
+                                onChange={(e) =>
+                                  handleUpdateSourceSettings(source.id, {
+                                    metadata: {
+                                      ...source.metadata,
+                                      settings: {
+                                        ...source.metadata?.settings,
+                                        defaultCurrency: e.target.value as
+                                          | "PKR"
+                                          | "USD",
+                                      },
+                                    },
+                                  })
+                                }
+                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+                              >
+                                <option value="USD">USD</option>
+                                <option value="PKR">PKR</option>
+                              </select>
+                            </div>
+
+                            {/* Fixed Fee */}
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                Fixed Fee (USD)
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={source.metadata?.fees?.fixedFeeUSD || 0}
+                                onChange={(e) =>
+                                  handleUpdateSourceSettings(source.id, {
+                                    metadata: {
+                                      ...source.metadata,
+                                      fees: {
+                                        ...source.metadata?.fees,
+                                        fixedFeeUSD: parseFloat(e.target.value),
+                                        method: "fixed",
+                                      },
+                                    },
+                                  })
+                                }
+                                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+                                placeholder="0.00"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Tax Configuration */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id={`tax-${source.id}`}
+                                checked={
+                                  source.metadata?.settings?.tax?.enabled ||
+                                  false
+                                }
+                                onChange={(e) =>
+                                  handleUpdateSourceSettings(source.id, {
+                                    metadata: {
+                                      ...source.metadata,
+                                      settings: {
+                                        ...source.metadata?.settings,
+                                        tax: {
+                                          enabled: e.target.checked,
+                                          type:
+                                            source.metadata?.settings?.tax
+                                              ?.type || "percentage",
+                                          value:
+                                            source.metadata?.settings?.tax
+                                              ?.value || 0,
+                                        },
+                                      },
+                                    },
+                                  })
+                                }
+                                className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500"
+                              />
+                              <label
+                                htmlFor={`tax-${source.id}`}
+                                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                              >
+                                Enable Default Tax
+                              </label>
+                            </div>
+
+                            {source.metadata?.settings?.tax?.enabled && (
+                              <div className="grid grid-cols-2 gap-4 pl-6">
+                                <div>
+                                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Tax Type
+                                  </label>
+                                  <select
+                                    value={
+                                      source.metadata.settings.tax.type ||
+                                      "percentage"
+                                    }
+                                    onChange={(e) =>
+                                      handleUpdateSourceSettings(source.id, {
+                                        metadata: {
+                                          ...source.metadata,
+                                          settings: {
+                                            ...source.metadata?.settings,
+                                            tax: {
+                                              enabled:
+                                                source.metadata?.settings?.tax
+                                                  ?.enabled || true,
+                                              type: e.target.value as
+                                                | "percentage"
+                                                | "fixed",
+                                              value:
+                                                source.metadata?.settings?.tax
+                                                  ?.value || 0,
+                                            },
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+                                  >
+                                    <option value="percentage">
+                                      Percentage (%)
+                                    </option>
+                                    <option value="fixed">Fixed (PKR)</option>
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                                    Tax Value
+                                  </label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={
+                                      source.metadata.settings.tax.value || 0
+                                    }
+                                    onChange={(e) =>
+                                      handleUpdateSourceSettings(source.id, {
+                                        metadata: {
+                                          ...source.metadata,
+                                          settings: {
+                                            ...source.metadata?.settings,
+                                            tax: {
+                                              enabled:
+                                                source.metadata?.settings?.tax
+                                                  ?.enabled || true,
+                                              type:
+                                                source.metadata?.settings?.tax
+                                                  ?.type || "percentage",
+                                              value: parseFloat(e.target.value),
+                                            },
+                                          },
+                                        },
+                                      })
+                                    }
+                                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
+                                    placeholder={
+                                      source.metadata.settings.tax.type ===
+                                      "percentage"
+                                        ? "2.5"
+                                        : "5000"
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
                   ))}

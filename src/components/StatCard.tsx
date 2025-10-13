@@ -71,7 +71,9 @@ export const StatCard: React.FC<StatCardProps> = ({
   infoText,
 }) => {
   const [showInfo, setShowInfo] = useState(false);
-  const [longPressTimer, setLongPressTimer] = useState<number | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   // Handle zero or empty values
   const isZeroValue =

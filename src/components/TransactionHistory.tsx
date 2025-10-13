@@ -102,46 +102,67 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6 lg:pl-8">
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-2">
                         {(() => {
                           const source = getSourceById(tx.sourceId);
-                          return source ? (
-                            <IncomeSourceDisplay
-                              source={source}
-                              className=""
-                              date={new Date(tx.date).toLocaleDateString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
+                          return (
+                            <>
+                              {source ? (
+                                <IncomeSourceDisplay
+                                  source={source}
+                                  className=""
+                                  date={new Date(tx.date).toLocaleDateString(
+                                    "en-GB",
+                                    {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    }
+                                  )}
+                                />
+                              ) : (
+                                <div className="flex items-center">
+                                  <div className="mr-1 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+                                    <span className="text-slate-500 dark:text-slate-400 text-xs">
+                                      ?
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-slate-900 dark:text-slate-50">
+                                      Unknown Source
+                                    </div>
+                                    <div className="text-sm text-red-500 dark:text-red-400">
+                                      Source ID: {tx.sourceId}
+                                    </div>
+                                  </div>
+                                </div>
                               )}
-                            />
-                          ) : (
-                            <div className="flex items-center">
-                              <div className="mr-1 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
-                                <span className="text-slate-500 dark:text-slate-400 text-xs">
-                                  ?
+                              {/* Currency Badge */}
+                              {tx.currency === "PKR" && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                  PKR
                                 </span>
-                              </div>
-                              <div>
-                                <div className="font-medium text-slate-900 dark:text-slate-50">
-                                  Unknown Source
-                                </div>
-                                <div className="text-sm text-red-500 dark:text-red-400">
-                                  Source ID: {tx.sourceId}
-                                </div>
-                              </div>
-                            </div>
+                              )}
+                            </>
                           );
                         })()}
                       </div>
                     </td>
                     <td className="hidden whitespace-nowrap px-3 py-4 text-sm text-slate-500 sm:table-cell">
                       <div className="font-medium text-slate-700 dark:text-slate-300">
-                        {usdFormatter.format(tx.amountUSD)} @{" "}
-                        {tx.conversionRate}
+                        {tx.currency === "PKR" && tx.amount ? (
+                          // PKR transaction
+                          <span>
+                            {pkrFormatter.format(tx.amount)}{" "}
+                            <span className="text-xs text-slate-400">PKR</span>
+                          </span>
+                        ) : (
+                          // USD transaction
+                          <span>
+                            {usdFormatter.format(tx.amountUSD)} @{" "}
+                            {tx.conversionRate}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                         <Landmark size={14} /> {tx.bank}
@@ -154,11 +175,20 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                           <div className="font-medium text-slate-700 dark:text-slate-300">
                             {pkrFormatter.format(tx.calculations.taxAmount)}
                           </div>
-                          <div className="text-xs text-slate-400 dark:text-slate-500">
-                            {usdFormatter.format(
-                              tx.calculations.taxAmount / tx.conversionRate
-                            )}
-                          </div>
+                          {tx.currency !== "PKR" && tx.conversionRate > 1 && (
+                            <div className="text-xs text-slate-400 dark:text-slate-500">
+                              {usdFormatter.format(
+                                tx.calculations.taxAmount / tx.conversionRate
+                              )}
+                            </div>
+                          )}
+                          {tx.taxConfig && (
+                            <div className="text-xs text-blue-500 dark:text-blue-400">
+                              {tx.taxConfig.type === "percentage"
+                                ? `${tx.taxConfig.value}%`
+                                : `₨${tx.taxConfig.value} fixed`}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -166,11 +196,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                       <div className="font-bold text-green-600 dark:text-green-400">
                         {pkrFormatter.format(tx.calculations.netProfit)}
                       </div>
-                      <div className="text-xs text-slate-400 dark:text-slate-500">
-                        {usdFormatter.format(
-                          tx.calculations.netProfit / tx.conversionRate
-                        )}
-                      </div>
+                      {tx.currency !== "PKR" && tx.conversionRate > 1 && (
+                        <div className="text-xs text-slate-400 dark:text-slate-500">
+                          {usdFormatter.format(
+                            tx.calculations.netProfit / tx.conversionRate
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6 lg:pr-8">
                       <div className="flex items-center justify-end gap-3">

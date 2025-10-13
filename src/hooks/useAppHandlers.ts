@@ -92,37 +92,67 @@ export function useAppHandlers(): AppHandlers {
     entry: NewTransactionEntry | Transaction,
     configOverride?: DonationConfig
   ): Promise<TransactionCalculations> => {
-    const { amountUSD, conversionRate, sourceId, taxRate } = entry;
+    const {
+      amountUSD,
+      conversionRate,
+      sourceId,
+      taxRate,
+      currency,
+      amount,
+      taxConfig,
+    } = entry;
     const activeConfig = configOverride || donationConfig;
 
-    // Get the income source to determine fees
-    let feeUSD = 0;
-    try {
-      const source = await incomeSourceService.getSource(sourceId);
-      if (source?.metadata?.fees) {
-        const fees = source.metadata.fees;
-        if (fees.method === "fixed") {
-          feeUSD = fees.fixedFeeUSD || 0;
-        } else if (fees.method === "percentage") {
-          feeUSD = amountUSD * ((fees.percentageFee || 0) / 100);
-        } else if (fees.method === "hybrid") {
-          feeUSD =
-            (fees.fixedFeeUSD || 0) +
-            amountUSD * ((fees.percentageFee || 0) / 100);
+    // Determine the actual amounts based on currency
+    let actualAmountUSD: number;
+    let actualConversionRate: number;
+    let actualGrossPKR: number;
+
+    if (currency === "PKR" && amount) {
+      // PKR transaction - amount is already in PKR
+      actualGrossPKR = amount;
+      actualAmountUSD = 0; // Not applicable
+      actualConversionRate = 1; // Marker
+    } else {
+      // USD transaction (default)
+      actualAmountUSD = amountUSD;
+      actualConversionRate = conversionRate;
+
+      // Get the income source to determine fees
+      let feeUSD = 0;
+      try {
+        const source = await incomeSourceService.getSource(sourceId);
+        if (source?.metadata?.fees) {
+          const fees = source.metadata.fees;
+          if (fees.method === "fixed") {
+            feeUSD = fees.fixedFeeUSD || 0;
+          } else if (fees.method === "percentage") {
+            feeUSD = actualAmountUSD * ((fees.percentageFee || 0) / 100);
+          } else if (fees.method === "hybrid") {
+            feeUSD =
+              (fees.fixedFeeUSD || 0) +
+              actualAmountUSD * ((fees.percentageFee || 0) / 100);
+          }
         }
+      } catch (error) {
+        console.warn(
+          `Failed to get fee information for source ${sourceId}:`,
+          error
+        );
+        // Fall back to legacy behavior for backward compatibility
+        feeUSD = sourceId === "tiktok" ? 5.0 : 0;
       }
-    } catch (error) {
-      console.warn(
-        `Failed to get fee information for source ${sourceId}:`,
-        error
-      );
-      // Fall back to legacy behavior for backward compatibility
-      feeUSD = sourceId === "tiktok" ? 5.0 : 0;
+
+      const amountAfterFeesUSD = actualAmountUSD - feeUSD;
+      actualGrossPKR = amountAfterFeesUSD * actualConversionRate;
     }
 
-    const feePKR = feeUSD * conversionRate;
-    const amountAfterFeesUSD = amountUSD - feeUSD;
-    const grossPKR = amountAfterFeesUSD * conversionRate;
+    const feePKR =
+      currency === "PKR"
+        ? 0
+        : (actualAmountUSD - actualGrossPKR / actualConversionRate) *
+          actualConversionRate;
+    const grossPKR = actualGrossPKR;
 
     let charityAmount = 0;
     let taxableAmount = grossPKR;
@@ -155,10 +185,25 @@ export function useAppHandlers(): AppHandlers {
       }
     }
 
-    const taxAmount =
-      activeConfig.taxPreference === "before-tax"
-        ? taxableAmount * (taxRate / 100)
-        : grossPKR * (taxRate / 100);
+    // Calculate tax amount based on taxConfig if available, otherwise use legacy taxRate
+    let taxAmount = 0;
+    if (taxConfig?.enabled) {
+      if (taxConfig.type === "percentage") {
+        taxAmount =
+          activeConfig.taxPreference === "before-tax"
+            ? taxableAmount * (taxConfig.value / 100)
+            : grossPKR * (taxConfig.value / 100);
+      } else {
+        // Fixed amount in PKR
+        taxAmount = taxConfig.value;
+      }
+    } else if (taxRate > 0) {
+      // Legacy behavior - use taxRate as percentage
+      taxAmount =
+        activeConfig.taxPreference === "before-tax"
+          ? taxableAmount * (taxRate / 100)
+          : grossPKR * (taxRate / 100);
+    }
 
     const netProfit =
       activeConfig.taxPreference === "before-tax"

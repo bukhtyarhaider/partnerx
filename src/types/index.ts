@@ -41,6 +41,13 @@ export interface Transaction {
   bank: string;
   calculations: TransactionCalculations;
   donationConfigSnapshot?: DonationConfig; // Store the donation config used for this transaction
+  currency?: "PKR" | "USD"; // Currency of the transaction (default: USD for backward compatibility)
+  amount?: number; // Amount in the specified currency (for PKR transactions)
+  taxConfig?: {
+    enabled: boolean;
+    type: "percentage" | "fixed";
+    value: number;
+  };
 }
 
 export type NewTransactionEntry = Omit<Transaction, "id" | "calculations">;

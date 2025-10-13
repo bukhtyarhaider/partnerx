@@ -45,6 +45,17 @@ export interface IncomeSourceMetadata {
       authType?: "oauth" | "apikey" | "none";
       requiredScopes?: string[];
     };
+    /** Tax configuration */
+    tax?: {
+      /** Whether tax is enabled for this income source */
+      enabled: boolean;
+      /** Tax calculation method - percentage or fixed amount */
+      type: "percentage" | "fixed";
+      /** Tax value (percentage 0-100 or fixed amount in PKR) */
+      value: number;
+    };
+    /** Default currency for this income source */
+    defaultCurrency?: "PKR" | "USD";
   };
 
   /** Display configuration */

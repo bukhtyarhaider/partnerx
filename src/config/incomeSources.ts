@@ -7,7 +7,7 @@ export const personalIncomeSources: IncomeSource[] = [
   {
     id: "salary",
     name: "Salary",
-    enabled: true,
+    enabled: false, // Changed to false - users select during onboarding
     metadata: {
       icon: {
         type: "lucide",
@@ -26,6 +26,12 @@ export const personalIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 0,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
       },
       display: {
         description: "Regular employment income and wages",
@@ -39,7 +45,7 @@ export const personalIncomeSources: IncomeSource[] = [
   {
     id: "freelance",
     name: "Freelance",
-    enabled: true,
+    enabled: false, // Changed to false - users select during onboarding
     metadata: {
       icon: {
         type: "lucide",
@@ -58,6 +64,12 @@ export const personalIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 0,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
       },
       display: {
         description: "Income from freelance work and consulting",
@@ -71,7 +83,7 @@ export const personalIncomeSources: IncomeSource[] = [
   {
     id: "investments",
     name: "Investments",
-    enabled: true,
+    enabled: false, // Changed to false - users select during onboarding
     metadata: {
       icon: {
         type: "lucide",
@@ -90,6 +102,12 @@ export const personalIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 0,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
       },
       display: {
         description: "Dividends, interest, and capital gains",
@@ -122,6 +140,12 @@ export const personalIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 0,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
       },
       display: {
         description: "Income from side businesses and ventures",
@@ -154,6 +178,12 @@ export const personalIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 0,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
       },
       display: {
         description: "Income from property rentals",
@@ -186,6 +216,12 @@ export const personalIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 0,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
       },
       display: {
         description: "Miscellaneous income sources",
@@ -205,7 +241,7 @@ export const businessIncomeSources: IncomeSource[] = [
   {
     id: "youtube",
     name: "YouTube",
-    enabled: true,
+    enabled: false, // Changed to false - users select during onboarding
     metadata: {
       icon: {
         type: "lucide",
@@ -224,6 +260,12 @@ export const businessIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 0,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
         analyticsUrl:
           "https://studio.youtube.com/channel/{channelId}/analytics",
         apiConfig: {
@@ -244,7 +286,7 @@ export const businessIncomeSources: IncomeSource[] = [
   {
     id: "tiktok",
     name: "TikTok",
-    enabled: true,
+    enabled: false, // Changed to false - users select during onboarding
     metadata: {
       icon: {
         type: "image",
@@ -261,6 +303,12 @@ export const businessIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 0,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
         analyticsUrl: "https://business.tiktok.com/analytics",
         apiConfig: {
           baseUrl: "https://business-api.tiktok.com",
@@ -281,7 +329,7 @@ export const businessIncomeSources: IncomeSource[] = [
   {
     id: "instagram",
     name: "Instagram",
-    enabled: false, // Disabled by default - can be enabled during onboarding
+    enabled: false,
     metadata: {
       icon: {
         type: "lucide",
@@ -300,6 +348,12 @@ export const businessIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 15,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
         analyticsUrl: "https://business.instagram.com/insights",
         apiConfig: {
           baseUrl: "https://graph.instagram.com",
@@ -340,6 +394,12 @@ export const businessIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 15,
         commissionRate: 50, // Revenue split with Twitch
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
         analyticsUrl: "https://dashboard.twitch.tv/analytics/revenue",
         apiConfig: {
           baseUrl: "https://api.twitch.tv/helix",
@@ -379,6 +439,12 @@ export const businessIncomeSources: IncomeSource[] = [
       settings: {
         defaultTaxRate: 15,
         commissionRate: 0,
+        tax: {
+          enabled: false,
+          type: "percentage",
+          value: 0,
+        },
+        defaultCurrency: "USD",
         analyticsUrl: "https://www.patreon.com/portal/analytics",
         apiConfig: {
           baseUrl: "https://www.patreon.com/api/oauth2/v2",
@@ -421,23 +487,25 @@ export const getDefaultSourceId = (isPersonalMode: boolean): string => {
 
 /**
  * Default income source configuration (business mode)
+ * NOTE: All sources are disabled by default - users select during onboarding
  */
 export const defaultIncomeSourceConfig: IncomeSourceConfig = {
   sources: businessIncomeSources,
-  defaultSourceId: "youtube",
+  defaultSourceId: undefined, // No default - user must select
   version: "1.0.0",
   lastUpdated: new Date().toISOString(),
 };
 
 /**
  * Get income source configuration based on account type
+ * NOTE: All sources are disabled by default - users select during onboarding
  */
 export const getIncomeSourceConfig = (
   isPersonalMode: boolean
 ): IncomeSourceConfig => {
   return {
     sources: getIncomeSourcesForAccountType(isPersonalMode),
-    defaultSourceId: getDefaultSourceId(isPersonalMode),
+    defaultSourceId: undefined, // No default - user must select
     version: "1.0.0",
     lastUpdated: new Date().toISOString(),
   };
