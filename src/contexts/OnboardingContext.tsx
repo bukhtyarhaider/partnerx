@@ -182,7 +182,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   }, [progress.steps, progress.currentStepIndex]);
 
   // Function to migrate onboarding data to main app storage
-  const migrateOnboardingDataToMain = useCallback(() => {
+  const migrateOnboardingDataToMain = useCallback(async () => {
     try {
       // Migrate partners data (only if partners were added)
       const onboardingPartners = localStorage.getItem("onboarding_partners");
@@ -225,21 +225,108 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      // Migrate income sources (only if sources were selected)
+      // Migrate income sources (selected templates + custom sources)
       const onboardingIncomeSources = localStorage.getItem(
         "onboarding_income_sources"
       );
+      const onboardingCustomSources = localStorage.getItem(
+        "onboarding_custom_sources"
+      );
+
+      // Get selected template IDs
+      let selectedSourceIds: string[] = [];
       if (onboardingIncomeSources) {
         try {
-          const sources = JSON.parse(onboardingIncomeSources);
-          // Only migrate if sources were actually selected
-          if (Array.isArray(sources) && sources.length > 0) {
-            localStorage.setItem("incomeSourceConfig", onboardingIncomeSources);
-            // Trigger reload event for income source service
-            window.dispatchEvent(new CustomEvent("onboarding-data-migrated"));
+          const parsed = JSON.parse(onboardingIncomeSources);
+          if (Array.isArray(parsed)) {
+            selectedSourceIds = parsed;
           }
         } catch (error) {
           console.warn("Failed to parse income sources:", error);
+        }
+      }
+
+      // Get custom sources
+      let customSources: unknown[] = [];
+      if (onboardingCustomSources) {
+        try {
+          const parsed = JSON.parse(onboardingCustomSources);
+          if (Array.isArray(parsed)) {
+            customSources = parsed;
+          }
+        } catch (error) {
+          console.warn("Failed to parse custom sources:", error);
+        }
+      }
+
+      // Only migrate if there are selected sources or custom sources
+      if (selectedSourceIds.length > 0 || customSources.length > 0) {
+        try {
+          // Import the necessary functions
+          const { getIncomeSourcesForAccountType } = await import(
+            "../config/incomeSources"
+          );
+
+          // Get all available template sources based on account type
+          const isPersonal = businessInfo?.type === "personal";
+          const allTemplateSources = getIncomeSourcesForAccountType(isPersonal);
+
+          // Create proper IncomeSourceConfig with enabled template sources
+          const enabledTemplateSources = allTemplateSources.map((source) => ({
+            ...source,
+            enabled: selectedSourceIds.includes(source.id),
+            updatedAt: new Date().toISOString(),
+          }));
+
+          // Custom sources should be enabled and validated
+          // Ensure they have the proper structure and enabled flag
+          const enabledCustomSources = customSources.map((source) => {
+            const typedSource = source as Record<string, unknown>;
+            return {
+              ...typedSource,
+              enabled: true, // Custom sources are always enabled when created
+              updatedAt: new Date().toISOString(),
+            };
+          });
+
+          const allSources = [
+            ...enabledTemplateSources,
+            ...enabledCustomSources,
+          ];
+
+          // Determine default source ID
+          const firstCustomSourceId =
+            enabledCustomSources.length > 0 &&
+            typeof enabledCustomSources[0] === "object" &&
+            enabledCustomSources[0] !== null &&
+            "id" in enabledCustomSources[0]
+              ? String(enabledCustomSources[0].id)
+              : undefined;
+          const firstSourceId =
+            allSources.length > 0 &&
+            typeof allSources[0] === "object" &&
+            allSources[0] !== null &&
+            "id" in allSources[0]
+              ? String(allSources[0].id)
+              : undefined;
+
+          const incomeSourceConfig = {
+            sources: allSources,
+            defaultSourceId:
+              selectedSourceIds[0] || firstCustomSourceId || firstSourceId, // Use first selected or custom as default
+            version: "1.0.0",
+            lastUpdated: new Date().toISOString(),
+          };
+
+          localStorage.setItem(
+            "incomeSourceConfig",
+            JSON.stringify(incomeSourceConfig)
+          );
+
+          // Trigger reload event for income source service
+          window.dispatchEvent(new CustomEvent("onboarding-data-migrated"));
+        } catch (error) {
+          console.warn("Failed to migrate income sources:", error);
         }
       }
     } catch (error) {
@@ -248,9 +335,9 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   }, [businessInfo]);
 
   // Completion management
-  const completeOnboarding = useCallback(() => {
+  const completeOnboarding = useCallback(async () => {
     // First, migrate onboarding data to main app storage
-    migrateOnboardingDataToMain();
+    await migrateOnboardingDataToMain();
 
     setProgress((prev) => {
       const newProgress = {

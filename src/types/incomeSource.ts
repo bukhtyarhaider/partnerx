@@ -144,6 +144,9 @@ export interface IncomeSourceService {
 
   /** Check if source ID is unique */
   isSourceIdUnique(id: string, excludeId?: string): Promise<boolean>;
+
+  /** Reload configuration from storage */
+  reload(): Promise<void>;
 }
 
 /**

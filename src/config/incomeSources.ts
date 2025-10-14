@@ -235,9 +235,921 @@ export const personalIncomeSources: IncomeSource[] = [
 ];
 
 /**
- * Business income sources - content creator and business platforms
+ * Additional income sources for various business types
  */
-export const businessIncomeSources: IncomeSource[] = [
+const additionalIncomeSources: IncomeSource[] = [
+  // Content Creator sources
+  {
+    id: "sponsorships",
+    name: "Sponsorships",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Handshake",
+        color: "#0ea5e9",
+        backgroundColor: "#f0f9ff",
+        darkMode: {
+          color: "#38bdf8",
+          backgroundColor: "rgba(14, 165, 233, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Brand sponsorships and partnerships",
+        category: "Content Creator",
+        sortOrder: 10,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "affiliate-marketing",
+    name: "Affiliate Marketing",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Link",
+        color: "#8b5cf6",
+        backgroundColor: "#f5f3ff",
+        darkMode: {
+          color: "#a78bfa",
+          backgroundColor: "rgba(139, 92, 246, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Commissions from affiliate links and referrals",
+        category: "Content Creator",
+        sortOrder: 11,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "merchandise",
+    name: "Merchandise Sales",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "ShoppingBag",
+        color: "#ec4899",
+        backgroundColor: "#fdf2f8",
+        darkMode: {
+          color: "#f472b6",
+          backgroundColor: "rgba(236, 72, 153, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Income from selling branded merchandise",
+        category: "Content Creator",
+        sortOrder: 12,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "digital-products",
+    name: "Digital Products",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Package",
+        color: "#14b8a6",
+        backgroundColor: "#f0fdfa",
+        darkMode: {
+          color: "#2dd4bf",
+          backgroundColor: "rgba(20, 184, 166, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Courses, ebooks, templates, and digital downloads",
+        category: "Content Creator",
+        sortOrder: 13,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  // Service Provider sources
+  {
+    id: "client-retainers",
+    name: "Client Retainers",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "CalendarCheck",
+        color: "#3b82f6",
+        backgroundColor: "#eff6ff",
+        darkMode: {
+          color: "#60a5fa",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Monthly recurring retainer agreements",
+        category: "Service Provider",
+        sortOrder: 20,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "project-work",
+    name: "Project-Based Work",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "FolderKanban",
+        color: "#6366f1",
+        backgroundColor: "#eef2ff",
+        darkMode: {
+          color: "#818cf8",
+          backgroundColor: "rgba(99, 102, 241, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "One-time project payments",
+        category: "Service Provider",
+        sortOrder: 21,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "maintenance-contracts",
+    name: "Maintenance Contracts",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Wrench",
+        color: "#f59e0b",
+        backgroundColor: "#fffbeb",
+        darkMode: {
+          color: "#fbbf24",
+          backgroundColor: "rgba(245, 158, 11, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Ongoing maintenance and support agreements",
+        category: "Service Provider",
+        sortOrder: 22,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "consulting-fees",
+    name: "Consulting Fees",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "UserCheck",
+        color: "#10b981",
+        backgroundColor: "#ecfdf5",
+        darkMode: {
+          color: "#34d399",
+          backgroundColor: "rgba(16, 185, 129, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Consulting and advisory services",
+        category: "Service Provider",
+        sortOrder: 23,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "hourly-billing",
+    name: "Hourly Billing",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Clock",
+        color: "#06b6d4",
+        backgroundColor: "#ecfeff",
+        darkMode: {
+          color: "#22d3ee",
+          backgroundColor: "rgba(6, 182, 212, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Time-based billing for services",
+        category: "Service Provider",
+        sortOrder: 24,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  // E-commerce sources
+  {
+    id: "online-store",
+    name: "Online Store",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Store",
+        color: "#8b5cf6",
+        backgroundColor: "#f5f3ff",
+        darkMode: {
+          color: "#a78bfa",
+          backgroundColor: "rgba(139, 92, 246, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Direct sales from your online store",
+        category: "E-commerce",
+        sortOrder: 30,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "amazon-sales",
+    name: "Amazon Sales",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "ShoppingCart",
+        color: "#f97316",
+        backgroundColor: "#fff7ed",
+        darkMode: {
+          color: "#fb923c",
+          backgroundColor: "rgba(249, 115, 22, 0.1)",
+        },
+      },
+      fees: { percentageFee: 15, method: "percentage" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Sales through Amazon marketplace",
+        category: "E-commerce",
+        sortOrder: 31,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "wholesale",
+    name: "Wholesale",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Package2",
+        color: "#0ea5e9",
+        backgroundColor: "#f0f9ff",
+        darkMode: {
+          color: "#38bdf8",
+          backgroundColor: "rgba(14, 165, 233, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Bulk wholesale orders",
+        category: "E-commerce",
+        sortOrder: 32,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "subscription-revenue",
+    name: "Subscription Revenue",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "RefreshCw",
+        color: "#10b981",
+        backgroundColor: "#ecfdf5",
+        darkMode: {
+          color: "#34d399",
+          backgroundColor: "rgba(16, 185, 129, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Recurring subscription payments",
+        category: "E-commerce",
+        sortOrder: 33,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "marketplace-sales",
+    name: "Marketplace Sales",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "ShoppingBag",
+        color: "#ec4899",
+        backgroundColor: "#fdf2f8",
+        darkMode: {
+          color: "#f472b6",
+          backgroundColor: "rgba(236, 72, 153, 0.1)",
+        },
+      },
+      fees: { percentageFee: 10, method: "percentage" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Sales on Etsy, eBay, and other marketplaces",
+        category: "E-commerce",
+        sortOrder: 34,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  // SaaS/Tech sources
+  {
+    id: "license-fees",
+    name: "License Fees",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Key",
+        color: "#6366f1",
+        backgroundColor: "#eef2ff",
+        darkMode: {
+          color: "#818cf8",
+          backgroundColor: "rgba(99, 102, 241, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Software license and usage fees",
+        category: "SaaS/Tech",
+        sortOrder: 40,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "api-usage",
+    name: "API Usage Fees",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Terminal",
+        color: "#06b6d4",
+        backgroundColor: "#ecfeff",
+        darkMode: {
+          color: "#22d3ee",
+          backgroundColor: "rgba(6, 182, 212, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Pay-per-use API charges",
+        category: "SaaS/Tech",
+        sortOrder: 41,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "enterprise-contracts",
+    name: "Enterprise Contracts",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Building2",
+        color: "#3b82f6",
+        backgroundColor: "#eff6ff",
+        darkMode: {
+          color: "#60a5fa",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Large enterprise agreements",
+        category: "SaaS/Tech",
+        sortOrder: 42,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "app-purchases",
+    name: "App Purchases",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Smartphone",
+        color: "#8b5cf6",
+        backgroundColor: "#f5f3ff",
+        darkMode: {
+          color: "#a78bfa",
+          backgroundColor: "rgba(139, 92, 246, 0.1)",
+        },
+      },
+      fees: { percentageFee: 30, method: "percentage" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "In-app purchases and app store sales",
+        category: "SaaS/Tech",
+        sortOrder: 43,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  // Freelancer platforms
+  {
+    id: "upwork",
+    name: "Upwork",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Briefcase",
+        color: "#10b981",
+        backgroundColor: "#ecfdf5",
+        darkMode: {
+          color: "#34d399",
+          backgroundColor: "rgba(16, 185, 129, 0.1)",
+        },
+      },
+      fees: { percentageFee: 10, method: "percentage" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Freelance work through Upwork",
+        category: "Freelancer",
+        sortOrder: 50,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "fiverr",
+    name: "Fiverr",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Zap",
+        color: "#10b981",
+        backgroundColor: "#ecfdf5",
+        darkMode: {
+          color: "#34d399",
+          backgroundColor: "rgba(16, 185, 129, 0.1)",
+        },
+      },
+      fees: { percentageFee: 20, method: "percentage" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Gigs and services on Fiverr",
+        category: "Freelancer",
+        sortOrder: 51,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  // Real Estate sources
+  {
+    id: "rental-income",
+    name: "Rental Income",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Home",
+        color: "#f59e0b",
+        backgroundColor: "#fffbeb",
+        darkMode: {
+          color: "#fbbf24",
+          backgroundColor: "rgba(245, 158, 11, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Monthly rental payments from properties",
+        category: "Real Estate",
+        sortOrder: 60,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "property-sales",
+    name: "Property Sales",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Building",
+        color: "#0ea5e9",
+        backgroundColor: "#f0f9ff",
+        darkMode: {
+          color: "#38bdf8",
+          backgroundColor: "rgba(14, 165, 233, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Income from selling properties",
+        category: "Real Estate",
+        sortOrder: 61,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "commissions",
+    name: "Real Estate Commissions",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Percent",
+        color: "#6366f1",
+        backgroundColor: "#eef2ff",
+        darkMode: {
+          color: "#818cf8",
+          backgroundColor: "rgba(99, 102, 241, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Agent commissions from property transactions",
+        category: "Real Estate",
+        sortOrder: 62,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "lease-payments",
+    name: "Lease Payments",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "FileText",
+        color: "#10b981",
+        backgroundColor: "#ecfdf5",
+        darkMode: {
+          color: "#34d399",
+          backgroundColor: "rgba(16, 185, 129, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Commercial lease payments",
+        category: "Real Estate",
+        sortOrder: 63,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "short-term-rentals",
+    name: "Short-term Rentals",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Bed",
+        color: "#ec4899",
+        backgroundColor: "#fdf2f8",
+        darkMode: {
+          color: "#f472b6",
+          backgroundColor: "rgba(236, 72, 153, 0.1)",
+        },
+      },
+      fees: { percentageFee: 15, method: "percentage" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Airbnb and vacation rental income",
+        category: "Real Estate",
+        sortOrder: 64,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  // Manufacturing sources
+  {
+    id: "product-sales",
+    name: "Product Sales",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Package",
+        color: "#8b5cf6",
+        backgroundColor: "#f5f3ff",
+        darkMode: {
+          color: "#a78bfa",
+          backgroundColor: "rgba(139, 92, 246, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Direct product sales",
+        category: "Manufacturing",
+        sortOrder: 70,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "contract-manufacturing",
+    name: "Contract Manufacturing",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Factory",
+        color: "#0ea5e9",
+        backgroundColor: "#f0f9ff",
+        darkMode: {
+          color: "#38bdf8",
+          backgroundColor: "rgba(14, 165, 233, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Manufacturing services for other companies",
+        category: "Manufacturing",
+        sortOrder: 71,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "bulk-orders",
+    name: "Bulk Orders",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Boxes",
+        color: "#f59e0b",
+        backgroundColor: "#fffbeb",
+        darkMode: {
+          color: "#fbbf24",
+          backgroundColor: "rgba(245, 158, 11, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Large quantity orders",
+        category: "Manufacturing",
+        sortOrder: 72,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+  {
+    id: "b2b-sales",
+    name: "B2B Sales",
+    enabled: false,
+    metadata: {
+      icon: {
+        type: "lucide",
+        value: "Building2",
+        color: "#3b82f6",
+        backgroundColor: "#eff6ff",
+        darkMode: {
+          color: "#60a5fa",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+        },
+      },
+      fees: { fixedFeeUSD: 0, method: "fixed" },
+      settings: {
+        defaultTaxRate: 0,
+        commissionRate: 0,
+        tax: { enabled: false, type: "percentage", value: 0 },
+        defaultCurrency: "USD",
+      },
+      display: {
+        description: "Business-to-business sales",
+        category: "Manufacturing",
+        sortOrder: 73,
+      },
+    },
+    createdAt: new Date("2024-01-01").toISOString(),
+    updatedAt: new Date("2024-01-01").toISOString(),
+  },
+];
+
+/**
+ * Core platform income sources - content creator and business platforms
+ */
+const corePlatformSources: IncomeSource[] = [
   {
     id: "youtube",
     name: "YouTube",
@@ -461,6 +1373,14 @@ export const businessIncomeSources: IncomeSource[] = [
     createdAt: new Date("2024-01-01").toISOString(),
     updatedAt: new Date("2024-01-01").toISOString(),
   },
+];
+
+/**
+ * Business income sources - combines all platform and business sources
+ */
+export const businessIncomeSources: IncomeSource[] = [
+  ...corePlatformSources,
+  ...additionalIncomeSources,
 ];
 
 /**

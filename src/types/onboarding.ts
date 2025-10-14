@@ -52,6 +52,7 @@ export interface OnboardingContextValue {
 
 export type OnboardingStepComponent =
   | "business-info"
+  | "business-category"
   | "add-partners"
   | "income-sources"
   | "donation-config"
@@ -64,6 +65,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     description: "Basic information",
     completed: false,
     skippable: false,
+  },
+  {
+    id: "business-category",
+    title: "Business Category",
+    description: "Choose your industry",
+    completed: false,
+    skippable: true,
   },
   {
     id: "income-sources",

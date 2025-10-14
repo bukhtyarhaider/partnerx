@@ -62,6 +62,19 @@ export const useIncomeSources = (): UseIncomeSourcesResult => {
     loadSources();
   }, [loadSources]);
 
+  // Listen for onboarding data migration to reload sources
+  useEffect(() => {
+    const handleMigration = async () => {
+      await incomeSourceService.reload();
+      await loadSources();
+    };
+
+    window.addEventListener("onboarding-data-migrated", handleMigration);
+    return () => {
+      window.removeEventListener("onboarding-data-migrated", handleMigration);
+    };
+  }, [loadSources]);
+
   return {
     sources,
     loading,

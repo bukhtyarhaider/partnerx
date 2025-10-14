@@ -245,7 +245,7 @@ class MockIncomeSourceService implements IncomeSourceService {
    */
   private loadConfig(): void {
     try {
-      // Priority: 1. Existing config, 2. Onboarding config, 3. Default
+      // Priority: 1. Existing config, 2. Default
       const stored = localStorage.getItem("incomeSourceConfig");
       if (stored) {
         const parsedConfig = JSON.parse(stored);
@@ -258,34 +258,6 @@ class MockIncomeSourceService implements IncomeSourceService {
         return;
       }
 
-      // Check for onboarding income sources
-      const onboardingSources = localStorage.getItem(
-        "onboarding_income_sources"
-      );
-      if (onboardingSources) {
-        const selectedSources: string[] = JSON.parse(onboardingSources);
-
-        // Filter default sources to only include selected ones
-        const filteredSources = defaultIncomeSourceConfig.sources.filter(
-          (source) => selectedSources.includes(source.id)
-        );
-
-        if (filteredSources.length > 0) {
-          this.config = {
-            ...defaultIncomeSourceConfig,
-            sources: filteredSources,
-            lastUpdated: new Date().toISOString(),
-          };
-
-          // Save the filtered config as the main config
-          localStorage.setItem(
-            "incomeSourceConfig",
-            JSON.stringify(this.config)
-          );
-          return;
-        }
-      }
-
       // Fall back to default
       this.config = { ...defaultIncomeSourceConfig };
     } catch (error) {
@@ -295,6 +267,15 @@ class MockIncomeSourceService implements IncomeSourceService {
       );
       this.config = { ...defaultIncomeSourceConfig };
     }
+  }
+
+  /**
+   * Reload configuration from storage
+   * Useful when config is updated externally (e.g., during onboarding migration)
+   */
+  async reload(): Promise<void> {
+    await this.simulateDelay(50);
+    this.loadConfig();
   }
 }
 

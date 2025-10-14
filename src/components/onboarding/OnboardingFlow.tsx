@@ -2,6 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOnboarding } from "../../hooks/useOnboarding";
 import { BusinessInfoStep } from "./BusinessInfoStep";
+import { BusinessCategoryStep } from "./BusinessCategoryStep";
 import { AddPartnersStep } from "./AddPartnersStep";
 import { IncomeSourcesStep } from "./IncomeSourcesStep";
 import { DonationConfigStep } from "./DonationConfigStep";
@@ -9,6 +10,7 @@ import { PinSetupStep } from "./PinSetupStep";
 
 const stepComponents = {
   "business-info": BusinessInfoStep,
+  "business-category": BusinessCategoryStep,
   "add-partners": AddPartnersStep,
   "income-sources": IncomeSourcesStep,
   "donation-config": DonationConfigStep,
