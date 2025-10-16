@@ -13,6 +13,8 @@ import { MobileLayout } from "./MobileLayout";
 interface DashboardPageProps {
   appState: AppHandlers;
   financials: ReturnType<typeof useFinancials>;
+  currentCapital: number;
+  currentDonationsFund: number;
   sortedTransactions: ReturnType<typeof useSortedTransactions>;
   sortedExpenses: ReturnType<typeof useSortedExpenses>;
   sortedDonations: ReturnType<typeof useSortedDonations>;
@@ -21,6 +23,8 @@ interface DashboardPageProps {
 export default function DashboardPage({
   appState,
   financials,
+  currentCapital,
+  currentDonationsFund,
   sortedTransactions,
   sortedExpenses,
   sortedDonations,
@@ -30,6 +34,8 @@ export default function DashboardPage({
       <DesktopLayout
         appState={appState}
         financials={financials}
+        currentCapital={currentCapital}
+        currentDonationsFund={currentDonationsFund}
         sortedTransactions={sortedTransactions}
         sortedExpenses={sortedExpenses}
         sortedDonations={sortedDonations}
@@ -38,6 +44,8 @@ export default function DashboardPage({
       <MobileLayout
         appState={appState}
         financials={financials}
+        currentCapital={currentCapital}
+        currentDonationsFund={currentDonationsFund}
         sortedTransactions={sortedTransactions}
         sortedExpenses={sortedExpenses}
         sortedDonations={sortedDonations}

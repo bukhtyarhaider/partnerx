@@ -40,6 +40,8 @@ type MobileTab = "overview" | "history" | "wallet" | "settings";
 export interface MobileLayoutProps {
   appState: AppHandlers;
   financials: Financials;
+  currentCapital: number;
+  currentDonationsFund: number;
   sortedTransactions: Transaction[];
   sortedExpenses: Expense[];
   sortedDonations: DonationPayout[];
@@ -48,6 +50,8 @@ export interface MobileLayoutProps {
 export const MobileLayout = ({
   appState,
   financials,
+  currentCapital,
+  currentDonationsFund,
   sortedTransactions,
   sortedExpenses,
   sortedDonations,
@@ -69,6 +73,8 @@ export const MobileLayout = ({
 
             <Stats
               financials={financials}
+              currentCapital={currentCapital}
+              currentDonationsFund={currentDonationsFund}
               donationEnabled={appState.donationConfig.enabled}
             />
 
