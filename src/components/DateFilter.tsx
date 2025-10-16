@@ -96,6 +96,7 @@ export const DateFilter = ({
 
   const getActiveFilterInfo = () => {
     const activeOption = filterOptions.find((opt) => opt.value === value.type);
+
     if (value.type === "custom") {
       return {
         label: getCustomLabel(),
@@ -103,8 +104,15 @@ export const DateFilter = ({
         description: "Custom range",
       };
     }
+
+    // If value.type is "current-month", return current month as label
+    const isCurrent = value.type === "current-month";
+    const currentMonth = new Date().toLocaleString("default", {
+      month: "long",
+    });
+
     return {
-      label: activeOption?.label || "Current",
+      label: isCurrent ? currentMonth : activeOption?.label || "Current",
       icon: activeOption?.icon || Clock,
       description: getFilterDescription(value.type),
     };
@@ -132,7 +140,10 @@ export const DateFilter = ({
   return (
     <div className={`${className}`}>
       {/* Compact Header with Toggle */}
-      <div className="flex items-center justify-between mb-3">
+      <div
+        className="flex items-center justify-between mb-3 hover:cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md px-3 py-2 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-slate-500 dark:text-slate-400" />
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
