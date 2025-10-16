@@ -26,22 +26,32 @@ type Financials = {
 
 interface StatsProps {
   financials: Financials;
+  currentCapital?: number; // Optional override for current capital
+  currentDonationsFund?: number; // Optional override for current donations fund
   donationEnabled?: boolean;
 }
 
 export const Stats: React.FC<StatsProps> = ({
   financials,
+  currentCapital,
+  currentDonationsFund,
   donationEnabled = true,
 }) => {
   const {
     totalGrossProfit,
     totalNetProfit,
     totalExpenses,
-    companyCapital,
+    companyCapital: calculatedCapital,
     loan,
     deficitPartners,
-    availableDonationsFund,
+    availableDonationsFund: calculatedDonationsFund,
   } = financials;
+
+  // Use overrides if provided, otherwise use calculated from financials
+  // This ensures Current Capital and Donations Fund stay constant across all filters
+  const companyCapital = currentCapital ?? calculatedCapital;
+  const availableDonationsFund =
+    currentDonationsFund ?? calculatedDonationsFund;
 
   const { isPersonalMode } = useBusinessInfo();
 

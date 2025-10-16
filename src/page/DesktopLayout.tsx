@@ -46,6 +46,8 @@ import { useState } from "react";
 export interface DesktopLayoutProps {
   appState: AppHandlers;
   financials: Financials;
+  currentCapital: number;
+  currentDonationsFund: number;
   sortedTransactions: Transaction[];
   sortedExpenses: Expense[];
   sortedDonations: DonationPayout[];
@@ -54,6 +56,8 @@ export interface DesktopLayoutProps {
 export const DesktopLayout = ({
   appState,
   financials,
+  currentCapital,
+  currentDonationsFund,
   sortedTransactions,
   sortedExpenses,
   sortedDonations,
@@ -221,6 +225,8 @@ export const DesktopLayout = ({
 
           <Stats
             financials={financials}
+            currentCapital={currentCapital}
+            currentDonationsFund={currentDonationsFund}
             donationEnabled={appState.donationConfig.enabled}
           />
 
