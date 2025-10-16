@@ -99,6 +99,14 @@ function InnerApp(props: InnerAppProps) {
     filteredDonationPayouts
   );
 
+  // Calculate current values from ALL unfiltered data
+  // These represent the actual current state of the business
+  const currentFinancials = useFinancials(
+    props.sortedTransactions,
+    props.sortedExpenses,
+    props.sortedDonations
+  );
+
   return (
     <AnimatePresence mode="wait">
       {!isCompleted ? (
@@ -109,6 +117,8 @@ function InnerApp(props: InnerAppProps) {
             key="dashboard"
             appState={props.appState}
             financials={financials}
+            currentCapital={currentFinancials.companyCapital}
+            currentDonationsFund={currentFinancials.availableDonationsFund}
             sortedTransactions={filteredTransactions}
             sortedExpenses={filteredExpenses}
             sortedDonations={filteredDonationPayouts}
