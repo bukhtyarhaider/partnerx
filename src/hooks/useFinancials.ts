@@ -110,23 +110,24 @@ export function useFinancials(
       }
     }
 
-    // Company capital calculation:
-    // - Start with net profit (income after donations)
-    // - Subtract ONLY company expenses (personal expenses don't affect company capital)
-    // - Personal expenses are already deducted from individual partner wallets
-    const companyCapital = totalNetProfit - totalCompanyExpenses;
     const totalExpenses = totalPersonalExpenses + totalCompanyExpenses;
 
     // Calculate loan based on actual deficit (when a partner spends more than they earned)
     // Track all partners with deficits (negative balance)
     let loan = { amount: 0, owedBy: null as string | null };
     const deficitPartners: Array<{ partnerId: string; amount: number }> = [];
+    let companyCapital = 0; // Sum of all partner wallets
 
-    // Find all partners with negative balances
+    // Calculate total capital as sum of all partner wallets
+    // Current Capital = Sum of (each partner's earnings - expenses) - donation payouts
+    // This represents the total available funds across all partner accounts
     Object.keys(partnerEarnings).forEach((partnerId) => {
       const earnings = partnerEarnings[partnerId] || 0;
       const expenses = partnerExpenses[partnerId] || 0;
       const balance = earnings - expenses;
+
+      // Add each partner's balance to company capital (sum of all wallets)
+      companyCapital += balance;
 
       if (balance < 0) {
         deficitPartners.push({
@@ -135,6 +136,10 @@ export function useFinancials(
         });
       }
     });
+
+    // Subtract actual donation payouts from total capital
+    // (these are real payments that reduced the collective partner wallets)
+    companyCapital -= totalDonationsPaidOut;
 
     // For backward compatibility, set the largest deficit in the loan object
     if (deficitPartners.length > 0) {
