@@ -90,19 +90,44 @@ export const PinLock = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [showBiometricSetup, setShowBiometricSetup] = useState(false);
   const [showBiometricSettings, setShowBiometricSettings] = useState(false);
+  const [biometricAttempts, setBiometricAttempts] = useState(0);
+  const MAX_BIOMETRIC_ATTEMPTS = 2;
 
   const handleBiometricAuth = useCallback(async () => {
-    if (!isBiometricEnabled || isUnlocking) return;
+    if (
+      !isBiometricEnabled ||
+      isUnlocking ||
+      biometricAttempts >= MAX_BIOMETRIC_ATTEMPTS
+    )
+      return;
 
     const result = await authenticateWithBiometric();
     if (result.success) {
       setError("");
+      setBiometricAttempts(0); // Reset attempts on success
       setIsUnlocking(true);
       setTimeout(() => unlockApp(), 500);
     } else {
-      setError(result.error || "Biometric authentication failed");
+      const newAttempts = biometricAttempts + 1;
+      setBiometricAttempts(newAttempts);
+
+      if (newAttempts >= MAX_BIOMETRIC_ATTEMPTS) {
+        setError("Biometric authentication failed. Please enter your PIN.");
+      } else {
+        setError(
+          result.error ||
+            "Biometric authentication failed. Try again or enter PIN."
+        );
+      }
     }
-  }, [isBiometricEnabled, isUnlocking, authenticateWithBiometric, unlockApp]);
+  }, [
+    isBiometricEnabled,
+    isUnlocking,
+    biometricAttempts,
+    MAX_BIOMETRIC_ATTEMPTS,
+    authenticateWithBiometric,
+    unlockApp,
+  ]);
 
   useEffect(() => {
     const storedPin = localStorage.getItem(PIN_STORAGE_KEY);
@@ -110,21 +135,31 @@ export const PinLock = () => {
       setIsPinSet(true);
       setPrompt("Enter Your 4-Digit PIN");
 
-      // Auto-trigger biometric if available and enabled
-      if (isBiometricEnabled && !isBiometricChecking) {
+      // Auto-trigger biometric if available, enabled, and within attempt limit
+      if (
+        isBiometricEnabled &&
+        !isBiometricChecking &&
+        biometricAttempts < MAX_BIOMETRIC_ATTEMPTS
+      ) {
         handleBiometricAuth();
       }
     } else {
       setIsPinSet(false);
       setPrompt("Create a 4-Digit PIN");
     }
-  }, [isBiometricEnabled, isBiometricChecking, handleBiometricAuth]);
+  }, [
+    isBiometricEnabled,
+    isBiometricChecking,
+    biometricAttempts,
+    MAX_BIOMETRIC_ATTEMPTS,
+    handleBiometricAuth,
+  ]);
 
   const handleKeyClick = useCallback(
     (key: string) => {
       if (isUnlocking || (pin.length >= 4 && key !== "del")) return;
       triggerHaptic(key === "del" ? "light" : "selection");
-      setError("");
+      setError(""); // Clear error when user starts typing PIN
       setPin((prev) => (key === "del" ? prev.slice(0, -1) : prev + key));
     },
     [isUnlocking, pin.length, triggerHaptic]
@@ -155,6 +190,7 @@ export const PinLock = () => {
     if (pin === storedPin) {
       triggerHaptic("success");
       setError("");
+      setBiometricAttempts(0); // Reset biometric attempts on successful PIN unlock
       setIsUnlocking(true);
       setTimeout(() => unlockApp(), 500);
     } else {
@@ -341,12 +377,13 @@ export const PinLock = () => {
               aria-label="PIN keypad"
             >
               {keypadKeys.map((key, index) => {
-                // Replace empty string with biometric button if available
+                // Replace empty string with biometric button if available and within attempt limit
                 if (
                   key === "" &&
                   isPinSet &&
                   isBiometricAvailable &&
-                  isBiometricEnabled
+                  isBiometricEnabled &&
+                  biometricAttempts < MAX_BIOMETRIC_ATTEMPTS
                 ) {
                   return (
                     <motion.button
