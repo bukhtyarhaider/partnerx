@@ -9,6 +9,7 @@ import {
 import {
   DonationForm,
   ExpenseForm,
+  PersonalExpenseForm,
   TransactionForm,
 } from "../components/Forms";
 import { PartnerSummary } from "../components/PartnerSummary";
@@ -83,7 +84,9 @@ export const DesktopLayout = ({
       id: "expense" as const,
       label: "Expense",
       icon: TrendingDown,
-      component: (
+      component: isPersonalMode ? (
+        <PersonalExpenseForm onAddExpense={appState.handleAddExpense} />
+      ) : (
         <ExpenseForm
           onAddExpense={appState.handleAddExpense}
           financials={financials}
