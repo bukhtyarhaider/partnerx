@@ -1,9 +1,15 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { DonationForm, ExpenseForm, TransactionForm } from "../Forms";
+import {
+  DonationForm,
+  ExpenseForm,
+  PersonalExpenseForm,
+  TransactionForm,
+} from "../Forms";
 
 import type { Financials } from "../../hooks/useFinancials";
 import type { AppHandlers } from "../../types";
+import { useBusinessInfo } from "../../hooks/useBusinessInfo";
 
 export interface AddEntryModalProps {
   isOpen: boolean;
@@ -20,6 +26,8 @@ export const AddEntryModal = ({
   financials,
   donationEnabled,
 }: AddEntryModalProps) => {
+  const { isPersonalMode } = useBusinessInfo();
+
   const tabs = [
     { key: "income", label: "Income" },
     { key: "expense", label: "Expense" },
@@ -88,12 +96,17 @@ export const AddEntryModal = ({
                     onAddTransaction={appState.handleAddTransaction}
                   />
                 )}
-                {appState.activeTab === "expense" && (
-                  <ExpenseForm
-                    onAddExpense={appState.handleAddExpense}
-                    financials={financials}
-                  />
-                )}
+                {appState.activeTab === "expense" &&
+                  (isPersonalMode ? (
+                    <PersonalExpenseForm
+                      onAddExpense={appState.handleAddExpense}
+                    />
+                  ) : (
+                    <ExpenseForm
+                      onAddExpense={appState.handleAddExpense}
+                      financials={financials}
+                    />
+                  ))}
                 {donationEnabled && appState.activeTab === "donation" && (
                   <DonationForm
                     onAddDonationPayout={appState.handleAddDonationPayout}

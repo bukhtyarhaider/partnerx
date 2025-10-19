@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import type { Transaction, Expense, DonationPayout } from "../types";
 
 import { X } from "lucide-react";
-import { DonationForm, ExpenseForm, TransactionForm } from "./Forms";
+import {
+  DonationForm,
+  ExpenseForm,
+  PersonalExpenseForm,
+  TransactionForm,
+} from "./Forms";
+import { useBusinessInfo } from "../hooks/useBusinessInfo";
 
 type EditableEntry = Transaction | Expense | DonationPayout;
 
@@ -25,6 +31,7 @@ export const EditModal: React.FC<EditModalProps> = ({
   ...props
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const { isPersonalMode } = useBusinessInfo();
 
   useEffect(() => {
     if (isOpen) {
@@ -50,7 +57,13 @@ export const EditModal: React.FC<EditModalProps> = ({
           />
         );
       case "expense":
-        return (
+        return isPersonalMode ? (
+          <PersonalExpenseForm
+            mode="edit"
+            initialData={entry as Expense}
+            onSave={props.onUpdateExpense}
+          />
+        ) : (
           <ExpenseForm
             mode="edit"
             initialData={entry as Expense}
