@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Save, AlertCircle } from "lucide-react";
-import type {
-  NewExpenseEntry,
-  Expense,
-} from "../../types";
+import type { NewExpenseEntry, Expense } from "../../types";
 import { getTodayString } from "../../utils";
 import { formatCurrency } from "../../utils/format";
 import { SuccessToast } from "../common/SuccessToast";
@@ -136,7 +133,10 @@ export const PersonalExpenseForm: React.FC<FormProps> = ({
         </div>
 
         <div>
-          <label htmlFor="personal-expense-description" className={LABEL_STYLES}>
+          <label
+            htmlFor="personal-expense-description"
+            className={LABEL_STYLES}
+          >
             Description *
           </label>
           <input
@@ -196,7 +196,11 @@ export const PersonalExpenseForm: React.FC<FormProps> = ({
         isVisible={showSuccessToast}
         onClose={() => setShowSuccessToast(false)}
         type="expense"
-        message={isEditMode ? "Expense updated successfully!" : "Expense added successfully!"}
+        message={
+          isEditMode
+            ? "Expense updated successfully!"
+            : "Expense added successfully!"
+        }
         amount={successAmount}
       />
     </div>
