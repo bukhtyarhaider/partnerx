@@ -6,6 +6,7 @@ import { ConfirmationModal } from "./common/ConfirmationModal";
 import { formatCurrency } from "../utils";
 import { usePartners } from "../hooks/usePartners";
 import { useConfirmation } from "../hooks/useConfirmation";
+import { useBusinessInfo } from "../hooks/useBusinessInfo";
 
 interface ExpenseHistoryProps {
   expenses: Expense[];
@@ -19,6 +20,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
   onDelete,
 }) => {
   const { activePartners } = usePartners();
+  const { isPersonalMode } = useBusinessInfo();
   const [isExpanded, setIsExpanded] = useState(false);
   const { confirmation, showConfirmation, hideConfirmation } =
     useConfirmation();
@@ -83,12 +85,16 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
                   >
                     Description
                   </th>
-                  <th scope="col" className={thClasses}>
-                    Type
-                  </th>
-                  <th scope="col" className={thClasses}>
-                    Spent By
-                  </th>
+                  {!isPersonalMode && (
+                    <th scope="col" className={thClasses}>
+                      Type
+                    </th>
+                  )}
+                  {!isPersonalMode && (
+                    <th scope="col" className={thClasses}>
+                      Spent By
+                    </th>
+                  )}
                   <th scope="col" className={`${thClasses} text-right`}>
                     Amount
                   </th>
@@ -112,6 +118,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
                         {ex.description}
                       </div>
                       <div className="text-slate-500 dark:text-slate-400">
+                        {ex.category} •{" "}
                         {new Date(ex.date).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "short",
@@ -119,28 +126,32 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
                         })}
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-500">
-                      <span
-                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                          (ex.type || "personal") === "company"
-                            ? "bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-400/20"
-                            : "bg-slate-50 text-slate-700 ring-slate-600/20 dark:bg-slate-900/50 dark:text-slate-300 dark:ring-slate-400/20"
-                        }`}
-                      >
-                        {(ex.type || "personal") === "company"
-                          ? "Company"
-                          : "Personal"}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-500">
-                      <span
-                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getPartnerColor(
-                          ex.byWhom
-                        )}`}
-                      >
-                        {ex.byWhom}
-                      </span>
-                    </td>
+                    {!isPersonalMode && (
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-500">
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                            (ex.type || "personal") === "company"
+                              ? "bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-400/20"
+                              : "bg-slate-50 text-slate-700 ring-slate-600/20 dark:bg-slate-900/50 dark:text-slate-300 dark:ring-slate-400/20"
+                          }`}
+                        >
+                          {(ex.type || "personal") === "company"
+                            ? "Company"
+                            : "Personal"}
+                        </span>
+                      </td>
+                    )}
+                    {!isPersonalMode && (
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-slate-500">
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getPartnerColor(
+                            ex.byWhom
+                          )}`}
+                        >
+                          {ex.byWhom}
+                        </span>
+                      </td>
+                    )}
                     <td className="whitespace-nowrap px-3 py-4 text-right text-sm font-semibold text-red-600 dark:text-red-400">
                       {formatCurrency(ex.amount)}
                     </td>
