@@ -9,12 +9,14 @@ import {
   Sun,
   LockKeyhole,
   Vibrate,
+  Info,
 } from "lucide-react";
 import { DonationConfigModal } from "../DonationConfigModal";
 import { IncomeSourceSettingsModal } from "../IncomeSourceSettingsModal";
 import { PartnerSettingsModal } from "../PartnerSettingsModal";
 import { PinSettingsModal } from "../PinSettingsModal";
 import { ImportExport } from "../ImportExport";
+import { AboutModal } from "../AboutModal";
 import { useTheme } from "../../hooks/useTheme";
 import { useBusinessInfo } from "../../hooks/useBusinessInfo";
 import { useHaptics } from "../../hooks/useHaptics";
@@ -40,6 +42,7 @@ export const MobileSettingsScreen = ({
   const [isPartnerSettingsOpen, setIsPartnerSettingsOpen] = useState(false);
   const [isPinSettingsOpen, setIsPinSettingsOpen] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   const settingsItems = [
     {
@@ -90,6 +93,15 @@ export const MobileSettingsScreen = ({
       iconBg: "bg-orange-100 dark:bg-orange-900/30",
       iconColor: "text-orange-600 dark:text-orange-400",
       onClick: () => setShowDataManagement(!showDataManagement),
+    },
+    {
+      id: "about",
+      title: "About App",
+      description: "View app information and developer details",
+      icon: Info,
+      iconBg: "bg-slate-100 dark:bg-slate-900/30",
+      iconColor: "text-slate-600 dark:text-slate-400",
+      onClick: () => setIsAboutOpen(true),
     },
   ];
 
@@ -239,6 +251,9 @@ export const MobileSettingsScreen = ({
           onClose={() => setIsPartnerSettingsOpen(false)}
         />
       )}
+
+      {/* About Modal */}
+      <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
     </div>
   );
 };

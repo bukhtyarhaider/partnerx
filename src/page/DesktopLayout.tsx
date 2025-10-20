@@ -39,7 +39,6 @@ import type {
   Transaction,
 } from "../types";
 import { AIFinancialAssistant } from "../components/AIFinancialAssistant";
-import { AppInfoModal } from "../components/AppInfoModal";
 import { useAuth } from "../hooks/useAuth";
 import { useBusinessInfo } from "../hooks/useBusinessInfo";
 import { useState } from "react";
@@ -188,7 +187,11 @@ export const DesktopLayout = ({
             summaries={appState.summaries}
             donationConfig={appState.donationConfig}
           />
-          <AppInfoModal />
+          {/* Version Info */}
+          <div className="text-center text-xs text-slate-500 dark:text-slate-400 py-2 border-t border-slate-200 dark:border-slate-700">
+            <p>PartnerWise v1.0.0</p>
+            <p>Released Sep 30, 2025</p>
+          </div>
         </div>
       </aside>
 
