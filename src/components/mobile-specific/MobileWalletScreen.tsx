@@ -6,6 +6,8 @@ import { MobileCompanyWallet } from "./MobileCompanyWallet";
 
 interface MobileWalletScreenProps {
   financials: Financials;
+  currentCapital: number;
+  currentDonationsFund: number;
   transactions: Transaction[];
   expenses: Expense[];
   donationEnabled: boolean;
@@ -13,6 +15,8 @@ interface MobileWalletScreenProps {
 
 export const MobileWalletScreen = ({
   financials,
+  currentCapital,
+  currentDonationsFund,
   transactions,
   expenses,
   donationEnabled,
@@ -24,6 +28,8 @@ export const MobileWalletScreen = ({
     return (
       <MobilePersonalWallet
         financials={financials}
+        currentCapital={currentCapital}
+        currentDonationsFund={currentDonationsFund}
         transactions={transactions}
         expenses={expenses}
         donationEnabled={donationEnabled}
@@ -34,6 +40,8 @@ export const MobileWalletScreen = ({
   return (
     <MobileCompanyWallet
       financials={financials}
+      currentCapital={currentCapital}
+      currentDonationsFund={currentDonationsFund}
       transactions={transactions}
       expenses={expenses}
       donationEnabled={donationEnabled}

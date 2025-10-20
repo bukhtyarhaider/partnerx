@@ -14,12 +14,15 @@ import { DateFilter } from "../DateFilter";
 import { useDateFilter } from "../../hooks/useDateFilter";
 import { usePartners } from "../../hooks/usePartners";
 import { formatCurrency } from "../../utils";
+import { getWalletStats } from "../../utils/walletCalculations";
 import type { Financials } from "../../hooks/useFinancials";
 import type { Transaction, Expense, Partner } from "../../types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/CustomTabs";
 
 interface MobileCompanyWalletProps {
   financials: Financials;
+  currentCapital: number;
+  currentDonationsFund: number;
   transactions: Transaction[];
   expenses: Expense[];
   donationEnabled: boolean;
@@ -27,12 +30,22 @@ interface MobileCompanyWalletProps {
 
 export const MobileCompanyWallet = ({
   financials,
+  currentCapital,
+  currentDonationsFund,
   transactions,
   expenses,
   donationEnabled,
 }: MobileCompanyWalletProps) => {
   const { dateFilter, setDateFilter } = useDateFilter();
   const { activePartners } = usePartners();
+
+  // Use centralized wallet stats calculation to ensure consistency with dashboard
+  // Pass currentCapital and currentDonationsFund to ensure unfiltered current state
+  const walletStats = getWalletStats(
+    financials,
+    currentCapital,
+    currentDonationsFund
+  );
 
   return (
     <div className="space-y-4">
@@ -59,7 +72,7 @@ export const MobileCompanyWallet = ({
             <Briefcase className="size-4 text-emerald-50" />
           </div>
           <div className="text-3xl font-bold mb-1">
-            {formatCurrency(financials.companyCapital)}
+            {formatCurrency(walletStats.availableBalance)}
           </div>
           <div className="flex items-center gap-2 text-emerald-50 text-sm">
             <UsersIcon className="size-4" />
@@ -83,7 +96,7 @@ export const MobileCompanyWallet = ({
             </span>
           </div>
           <div className="text-xl font-bold text-slate-800 dark:text-slate-100">
-            {formatCurrency(financials.totalGrossProfit)}
+            {formatCurrency(walletStats.totalIncome)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {transactions.length} transactions
@@ -100,7 +113,7 @@ export const MobileCompanyWallet = ({
             </span>
           </div>
           <div className="text-xl font-bold text-slate-800 dark:text-slate-100">
-            {formatCurrency(financials.totalExpenses)}
+            {formatCurrency(walletStats.totalExpenses)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {expenses.length} expenses
@@ -117,7 +130,7 @@ export const MobileCompanyWallet = ({
             </span>
           </div>
           <div className="text-xl font-bold text-slate-800 dark:text-slate-100">
-            {formatCurrency(financials.totalNetProfit)}
+            {formatCurrency(walletStats.netAmount)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Before distribution
@@ -136,7 +149,7 @@ export const MobileCompanyWallet = ({
               </span>
             </div>
             <div className="text-xl font-bold text-slate-800 dark:text-slate-100">
-              {formatCurrency(financials.availableDonationsFund)}
+              {formatCurrency(walletStats.donationsFund)}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Available fund
@@ -212,7 +225,7 @@ export const MobileCompanyWallet = ({
               <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {formatCurrency(
                   transactions.length > 0
-                    ? financials.totalGrossProfit / transactions.length
+                    ? walletStats.totalIncome / transactions.length
                     : 0
                 )}
               </span>
@@ -252,7 +265,7 @@ export const MobileCompanyWallet = ({
                 </div>
               </div>
               <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                {formatCurrency(financials.companyCapital)}
+                {formatCurrency(walletStats.availableBalance)}
               </span>
             </div>
           </TabsContent>
@@ -341,7 +354,7 @@ const PartnerWalletCard = ({
               {partner.displayName}
             </h4>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {partner.equity}% equity
+              {partner.equity * 100}% equity
             </p>
           </div>
         </div>

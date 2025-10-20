@@ -152,6 +152,8 @@ export const MobileLayout = ({
         return (
           <MobileWalletScreen
             financials={financials}
+            currentCapital={currentCapital}
+            currentDonationsFund={currentDonationsFund}
             transactions={sortedTransactions}
             expenses={sortedExpenses}
             donationEnabled={appState.donationConfig.enabled}
