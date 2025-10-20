@@ -2,6 +2,7 @@ import { X, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { BusinessInfo } from "../types/onboarding";
+import { APP_METADATA } from "../utils/appMetadata";
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -61,13 +62,13 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
           </h3>
           <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
             <li>
-              <strong>Name:</strong> {!businessInfo?.name || "PartnerWise"}
+              <strong>Name:</strong> {businessInfo?.name || APP_METADATA.name}
             </li>
             <li>
-              <strong>Version:</strong> 1.0.0 (pre-release)
+              <strong>Version:</strong> {APP_METADATA.version}
             </li>
             <li>
-              <strong>Release Date:</strong> Sep 30, 2025
+              <strong>Release Date:</strong> {APP_METADATA.buildDate}
             </li>
           </ul>
         </div>

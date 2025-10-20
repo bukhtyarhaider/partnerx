@@ -42,6 +42,7 @@ import { AIFinancialAssistant } from "../components/AIFinancialAssistant";
 import { useAuth } from "../hooks/useAuth";
 import { useBusinessInfo } from "../hooks/useBusinessInfo";
 import { useState } from "react";
+import { APP_METADATA } from "../utils/appMetadata";
 
 export interface DesktopLayoutProps {
   appState: AppHandlers;
@@ -189,8 +190,10 @@ export const DesktopLayout = ({
           />
           {/* Version Info */}
           <div className="text-center text-xs text-slate-500 dark:text-slate-400 py-2 border-t border-slate-200 dark:border-slate-700">
-            <p>PartnerWise v1.0.0</p>
-            <p>Released Sep 30, 2025</p>
+            <p>
+              {APP_METADATA.name} v{APP_METADATA.version}
+            </p>
+            <p>Released {APP_METADATA.buildDate}</p>
           </div>
         </div>
       </aside>
