@@ -12,12 +12,15 @@ import { LiveRate } from "../LiveRate";
 import { DateFilter } from "../DateFilter";
 import { useDateFilter } from "../../hooks/useDateFilter";
 import { formatCurrency } from "../../utils";
+import { getWalletStats } from "../../utils/walletCalculations";
 import type { Financials } from "../../hooks/useFinancials";
 import type { Transaction, Expense } from "../../types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/CustomTabs";
 
 interface MobilePersonalWalletProps {
   financials: Financials;
+  currentCapital: number;
+  currentDonationsFund: number;
   transactions: Transaction[];
   expenses: Expense[];
   donationEnabled: boolean;
@@ -25,12 +28,22 @@ interface MobilePersonalWalletProps {
 
 export const MobilePersonalWallet = ({
   financials,
+  currentCapital,
+  currentDonationsFund,
   transactions,
   expenses,
   donationEnabled,
 }: MobilePersonalWalletProps) => {
   const { dateFilter, setDateFilter } = useDateFilter();
   const recentTransactions = transactions.slice(0, 5);
+
+  // Use centralized wallet stats calculation to ensure consistency with dashboard
+  // Pass currentCapital and currentDonationsFund to ensure unfiltered current state
+  const walletStats = getWalletStats(
+    financials,
+    currentCapital,
+    currentDonationsFund
+  );
 
   return (
     <div className="space-y-4">
@@ -55,9 +68,7 @@ export const MobilePersonalWallet = ({
             <CreditCard className="size-4 text-blue-50" />
           </div>
           <div className="text-3xl font-bold mb-1">
-            {formatCurrency(
-              financials.totalNetProfit - financials.totalExpenses
-            )}
+            {formatCurrency(walletStats.availableBalance)}
           </div>
           <div className="flex items-center gap-2 text-blue-50 text-sm">
             <TrendingUp className="size-4" />
@@ -88,7 +99,7 @@ export const MobilePersonalWallet = ({
               </div>
             </div>
             <div className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-              {formatCurrency(financials.totalGrossProfit)}
+              {formatCurrency(walletStats.totalIncome)}
             </div>
           </div>
         </div>
@@ -104,7 +115,7 @@ export const MobilePersonalWallet = ({
             </span>
           </div>
           <div className="text-xl font-bold text-slate-800 dark:text-slate-100">
-            {formatCurrency(financials.totalExpenses)}
+            {formatCurrency(walletStats.totalExpenses)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {expenses.length} items
@@ -123,7 +134,7 @@ export const MobilePersonalWallet = ({
               </span>
             </div>
             <div className="text-xl font-bold text-slate-800 dark:text-slate-100">
-              {formatCurrency(financials.availableDonationsFund)}
+              {formatCurrency(walletStats.donationsFund)}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Available fund
@@ -204,7 +215,7 @@ export const MobilePersonalWallet = ({
               <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
                 {formatCurrency(
                   transactions.length > 0
-                    ? financials.totalGrossProfit / transactions.length
+                    ? walletStats.totalIncome / transactions.length
                     : 0
                 )}
               </span>
