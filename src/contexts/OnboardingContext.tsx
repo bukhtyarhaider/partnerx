@@ -249,20 +249,34 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       // Validate income source config if it exists
       const incomeSourceConfigStr = localStorage.getItem("incomeSourceConfig");
       if (incomeSourceConfigStr) {
-        const incomeSourceConfig = JSON.parse(incomeSourceConfigStr);
+        try {
+          const config = JSON.parse(incomeSourceConfigStr);
 
-        if (
-          !incomeSourceConfig.sources ||
-          !Array.isArray(incomeSourceConfig.sources)
-        ) {
-          console.error("❌ Invalid incomeSourceConfig: sources array missing");
+          // Income sources are stored as a direct array
+          if (!Array.isArray(config)) {
+            if (import.meta.env.DEV) {
+              console.error("❌ Invalid incomeSourceConfig: not an array");
+              console.log("Actual structure:", config);
+            }
+            isValid = false;
+          }
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error("❌ Failed to parse incomeSourceConfig:", error);
+          }
           isValid = false;
         }
       }
 
+      if (isValid && import.meta.env.DEV) {
+        console.log("✓ All migrated data validated successfully");
+      }
+
       return isValid;
     } catch (error) {
-      console.error("Error validating migrated data:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error validating migrated data:", error);
+      }
       return false;
     }
   }, []);
@@ -271,9 +285,16 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   const cleanupOnboardingData = useCallback(() => {
     try {
       // Remove temporary onboarding keys after migration
-      localStorage.removeItem("onboarding_partners");
-      localStorage.removeItem("onboarding_donation_config");
-      localStorage.removeItem("onboarding_income_sources");
+      const keysToRemove = [
+        "onboarding_progress",
+        "onboarding_partners",
+        "onboarding_donation_config",
+        "onboarding_income_sources",
+      ];
+
+      keysToRemove.forEach((key) => {
+        localStorage.removeItem(key);
+      });
 
       if (import.meta.env.DEV) {
         console.log("✓ Cleaned up temporary onboarding data");
