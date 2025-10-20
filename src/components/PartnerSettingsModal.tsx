@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Plus, AlertCircle, Trash2, Edit2, X, Save } from "lucide-react";
-import type { Partner } from "../types/partner";
+import type { Partner, PartnerConfig } from "../types/partner";
 
 interface PartnerSettingsModalProps {
   isOpen: boolean;
@@ -13,7 +13,7 @@ interface PartnerFormData {
   equity: string;
 }
 
-const PARTNERS_STORAGE_KEY = "onboarding_partners";
+const PARTNER_CONFIG_KEY = "partnerConfig";
 
 export const PartnerSettingsModal: React.FC<PartnerSettingsModalProps> = ({
   isOpen,
@@ -31,8 +31,20 @@ export const PartnerSettingsModal: React.FC<PartnerSettingsModalProps> = ({
   // Load partners from storage
   useEffect(() => {
     if (isOpen) {
-      const stored = localStorage.getItem(PARTNERS_STORAGE_KEY);
-      setPartners(stored ? JSON.parse(stored) : []);
+      try {
+        const configStr = localStorage.getItem(PARTNER_CONFIG_KEY);
+        if (configStr) {
+          const config: PartnerConfig = JSON.parse(configStr);
+          setPartners(config.partners || []);
+        } else {
+          setPartners([]);
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.warn("Failed to load partners:", error);
+        }
+        setPartners([]);
+      }
       setHasChanges(false);
       setShowAddForm(false);
       setEditingPartner(null);
@@ -154,14 +166,40 @@ export const PartnerSettingsModal: React.FC<PartnerSettingsModalProps> = ({
       return;
     }
 
-    localStorage.setItem(PARTNERS_STORAGE_KEY, JSON.stringify(partners));
+    try {
+      // Get business info for company name
+      const businessInfoStr = localStorage.getItem("business_info");
+      const businessInfo = businessInfoStr ? JSON.parse(businessInfoStr) : null;
 
-    // Trigger storage event for other components to pick up changes
-    window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new Event("onboarding-data-migrated"));
+      // Create the partner config object
+      const partnerConfig: PartnerConfig = {
+        partners,
+        companyName: businessInfo?.name || "Your Business",
+        totalEquity: 1,
+        lastUpdated: new Date().toISOString(),
+      };
 
-    setHasChanges(false);
-    onClose();
+      // Save to partnerConfig
+      localStorage.setItem(PARTNER_CONFIG_KEY, JSON.stringify(partnerConfig));
+
+      if (import.meta.env.DEV) {
+        console.log("✓ Saved partner config:", partners.length, "partners");
+      }
+
+      // Trigger events for components to pick up changes
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(
+        new CustomEvent("partner-config-updated", {
+          detail: { partnerConfig },
+        })
+      );
+
+      setHasChanges(false);
+      onClose();
+    } catch (error) {
+      console.error("Failed to save partner config:", error);
+      alert("Failed to save partner settings. Please try again.");
+    }
   };
 
   const handleClose = () => {
@@ -172,8 +210,17 @@ export const PartnerSettingsModal: React.FC<PartnerSettingsModalProps> = ({
         )
       ) {
         // Reload from storage to discard changes
-        const stored = localStorage.getItem(PARTNERS_STORAGE_KEY);
-        setPartners(stored ? JSON.parse(stored) : []);
+        const configStr = localStorage.getItem(PARTNER_CONFIG_KEY);
+        if (configStr) {
+          try {
+            const config: PartnerConfig = JSON.parse(configStr);
+            setPartners(config.partners || []);
+          } catch {
+            setPartners([]);
+          }
+        } else {
+          setPartners([]);
+        }
         setHasChanges(false);
         setShowAddForm(false);
         setEditingPartner(null);

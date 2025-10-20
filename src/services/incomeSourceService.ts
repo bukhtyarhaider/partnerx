@@ -255,10 +255,15 @@ class MockIncomeSourceService implements IncomeSourceService {
           ...parsedConfig,
           sources: parsedConfig.sources || defaultIncomeSourceConfig.sources,
         };
+        console.log(
+          "✓ Loaded income source config:",
+          this.config.sources.length,
+          "sources"
+        );
         return;
       }
 
-      // Check for onboarding income sources
+      // Check for onboarding income sources (migration path)
       const onboardingSources = localStorage.getItem(
         "onboarding_income_sources"
       );
@@ -282,12 +287,23 @@ class MockIncomeSourceService implements IncomeSourceService {
             "incomeSourceConfig",
             JSON.stringify(this.config)
           );
+
+          console.log(
+            "✓ Migrated income sources from onboarding:",
+            filteredSources.length,
+            "sources"
+          );
+
+          // Note: Cleanup of onboarding_income_sources is handled by OnboardingContext
+          // after all services have loaded, so we don't remove it here
+
           return;
         }
       }
 
       // Fall back to default
       this.config = { ...defaultIncomeSourceConfig };
+      console.log("✓ Using default income source config");
     } catch (error) {
       console.warn(
         "Failed to load income source config from localStorage:",

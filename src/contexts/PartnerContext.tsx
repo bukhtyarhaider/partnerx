@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import type { PartnerConfig, Partner } from "../types/partner";
+import type { PartnerConfig } from "../types/partner";
 import {
   defaultPartnerConfig,
   exampleAlternativeConfig,
@@ -18,42 +18,27 @@ interface PartnerProviderProps {
   useAlternativeConfig?: boolean; // For testing/demo purposes
 }
 
-// Helper function to create PartnerConfig from onboarding partners
-function createPartnerConfigFromOnboarding(
-  partners: Partner[],
-  businessName?: string
-): PartnerConfig {
-  return {
-    partners,
-    companyName: businessName || "Your Business",
-    totalEquity: 1,
-    lastUpdated: new Date().toISOString(),
-  };
-}
-
 export function PartnerProvider({
   children,
   config,
   useAlternativeConfig = false,
 }: PartnerProviderProps) {
   const [partnerConfig, setPartnerConfig] = useState<PartnerConfig>(() => {
-    // Priority: 1. Passed config, 2. Onboarding data, 3. Default config
+    // Priority: 1. Passed config, 2. partnerConfig from localStorage, 3. Default config
     if (config) return config;
 
-    // Check for onboarding partners data
-    const onboardingPartners = localStorage.getItem("onboarding_partners");
-    const businessInfo = localStorage.getItem("business_info");
-
-    if (onboardingPartners) {
+    // Check for partnerConfig in localStorage
+    const storedConfig = localStorage.getItem("partnerConfig");
+    if (storedConfig) {
       try {
-        const partners: Partner[] = JSON.parse(onboardingPartners);
-        const business = businessInfo ? JSON.parse(businessInfo) : null;
-
-        if (partners.length > 0) {
-          return createPartnerConfigFromOnboarding(partners, business?.name);
+        const parsed: PartnerConfig = JSON.parse(storedConfig);
+        if (parsed.partners && parsed.partners.length > 0) {
+          return parsed;
         }
       } catch (error) {
-        console.warn("Failed to parse onboarding partners data:", error);
+        if (import.meta.env.DEV) {
+          console.warn("Failed to parse partnerConfig:", error);
+        }
       }
     }
 
@@ -62,25 +47,38 @@ export function PartnerProvider({
       : defaultPartnerConfig;
   });
 
-  // Listen for changes to onboarding data
+  // Listen for changes to partner config
   useEffect(() => {
     const handleStorageChange = () => {
-      const onboardingPartners = localStorage.getItem("onboarding_partners");
-      const businessInfo = localStorage.getItem("business_info");
+      const storedConfig = localStorage.getItem("partnerConfig");
 
-      if (onboardingPartners) {
+      if (storedConfig) {
         try {
-          const partners: Partner[] = JSON.parse(onboardingPartners);
-          const business = businessInfo ? JSON.parse(businessInfo) : null;
-
-          if (partners.length > 0) {
-            setPartnerConfig(
-              createPartnerConfigFromOnboarding(partners, business?.name)
-            );
+          const parsed: PartnerConfig = JSON.parse(storedConfig);
+          if (parsed.partners && parsed.partners.length > 0) {
+            setPartnerConfig(parsed);
+            if (import.meta.env.DEV) {
+              console.log("✓ PartnerContext updated from partnerConfig");
+            }
           }
         } catch (error) {
-          console.warn("Failed to parse onboarding partners data:", error);
+          if (import.meta.env.DEV) {
+            console.warn("Failed to parse partnerConfig:", error);
+          }
         }
+      }
+    };
+
+    const handlePartnerConfigUpdate = (event: Event) => {
+      // Handle custom partner-config-updated event
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.partnerConfig) {
+        setPartnerConfig(customEvent.detail.partnerConfig);
+        if (import.meta.env.DEV) {
+          console.log("✓ PartnerContext updated from custom event");
+        }
+      } else {
+        handleStorageChange();
       }
     };
 
@@ -91,6 +89,11 @@ export function PartnerProvider({
 
     // Listen for storage events (changes in other tabs)
     window.addEventListener("storage", handleStorageChange);
+    // Listen for partner config update events (same tab)
+    window.addEventListener(
+      "partner-config-updated",
+      handlePartnerConfigUpdate
+    );
     // Listen for onboarding data migration events
     window.addEventListener(
       "onboarding-data-migrated",
@@ -99,6 +102,10 @@ export function PartnerProvider({
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(
+        "partner-config-updated",
+        handlePartnerConfigUpdate
+      );
       window.removeEventListener(
         "onboarding-data-migrated",
         handleOnboardingMigration

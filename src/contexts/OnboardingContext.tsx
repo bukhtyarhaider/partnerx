@@ -181,9 +181,113 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       : false;
   }, [progress.steps, progress.currentStepIndex]);
 
-  // Function to migrate onboarding data to main app storage
+  // Validate migrated data to ensure integrity
+  const validateMigratedData = useCallback((): boolean => {
+    try {
+      let isValid = true;
+
+      // Validate partner config if it exists
+      const partnerConfigStr = localStorage.getItem("partnerConfig");
+      if (partnerConfigStr) {
+        const partnerConfig = JSON.parse(partnerConfigStr);
+
+        if (!partnerConfig.partners || !Array.isArray(partnerConfig.partners)) {
+          console.error("❌ Invalid partnerConfig: partners array missing");
+          isValid = false;
+        } else if (partnerConfig.partners.length > 0) {
+          // Validate equity totals
+          const totalEquity = partnerConfig.partners.reduce(
+            (sum: number, p: { equity?: number }) => sum + (p.equity || 0),
+            0
+          );
+
+          if (totalEquity > 1.01) {
+            // Allow small floating point errors
+            console.error(
+              "❌ Invalid partnerConfig: total equity exceeds 100%",
+              totalEquity
+            );
+            isValid = false;
+          }
+
+          // Validate each partner has required fields
+          for (const partner of partnerConfig.partners) {
+            if (
+              !partner.id ||
+              !partner.name ||
+              typeof partner.equity !== "number"
+            ) {
+              console.error("❌ Invalid partner data:", partner);
+              isValid = false;
+            }
+          }
+        }
+      }
+
+      // Validate donation config if it exists
+      const donationConfigStr = localStorage.getItem("donationConfig");
+      if (donationConfigStr) {
+        const donationConfig = JSON.parse(donationConfigStr);
+
+        if (typeof donationConfig.enabled !== "boolean") {
+          console.error("❌ Invalid donationConfig: enabled field invalid");
+          isValid = false;
+        }
+
+        if (donationConfig.enabled) {
+          if (
+            typeof donationConfig.percentage !== "number" ||
+            donationConfig.percentage < 0 ||
+            donationConfig.percentage > 100
+          ) {
+            console.error("❌ Invalid donationConfig: percentage out of range");
+            isValid = false;
+          }
+        }
+      }
+
+      // Validate income source config if it exists
+      const incomeSourceConfigStr = localStorage.getItem("incomeSourceConfig");
+      if (incomeSourceConfigStr) {
+        const incomeSourceConfig = JSON.parse(incomeSourceConfigStr);
+
+        if (
+          !incomeSourceConfig.sources ||
+          !Array.isArray(incomeSourceConfig.sources)
+        ) {
+          console.error("❌ Invalid incomeSourceConfig: sources array missing");
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    } catch (error) {
+      console.error("Error validating migrated data:", error);
+      return false;
+    }
+  }, []);
+
+  // Function to clean up temporary onboarding data
+  const cleanupOnboardingData = useCallback(() => {
+    try {
+      // Remove temporary onboarding keys after migration
+      localStorage.removeItem("onboarding_partners");
+      localStorage.removeItem("onboarding_donation_config");
+      localStorage.removeItem("onboarding_income_sources");
+
+      if (import.meta.env.DEV) {
+        console.log("✓ Cleaned up temporary onboarding data");
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn("Failed to cleanup onboarding data:", error);
+      }
+    }
+  }, []); // Function to migrate onboarding data to main app storage
   const migrateOnboardingDataToMain = useCallback(() => {
     try {
+      let migrationSuccessful = true;
+
       // Migrate partners data (only if partners were added)
       const onboardingPartners = localStorage.getItem("onboarding_partners");
       if (onboardingPartners) {
@@ -203,9 +307,19 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
               "partnerConfig",
               JSON.stringify(partnerConfig)
             );
+            if (import.meta.env.DEV) {
+              console.log(
+                "✓ Migrated partner config:",
+                partners.length,
+                "partners"
+              );
+            }
           }
         } catch (error) {
-          console.warn("Failed to parse partner data:", error);
+          if (import.meta.env.DEV) {
+            console.warn("Failed to parse partner data:", error);
+          }
+          migrationSuccessful = false;
         }
       }
 
@@ -219,9 +333,15 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
           // Only migrate if donations were explicitly enabled
           if (donationConfig && donationConfig.enabled) {
             localStorage.setItem("donationConfig", onboardingDonationConfig);
+            if (import.meta.env.DEV) {
+              console.log("✓ Migrated donation config");
+            }
           }
         } catch (error) {
-          console.warn("Failed to parse donation config:", error);
+          if (import.meta.env.DEV) {
+            console.warn("Failed to parse donation config:", error);
+          }
+          migrationSuccessful = false;
         }
       }
 
@@ -235,17 +355,50 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
           // Only migrate if sources were actually selected
           if (Array.isArray(sources) && sources.length > 0) {
             localStorage.setItem("incomeSourceConfig", onboardingIncomeSources);
-            // Trigger reload event for income source service
-            window.dispatchEvent(new CustomEvent("onboarding-data-migrated"));
+            if (import.meta.env.DEV) {
+              console.log(
+                "✓ Migrated income sources:",
+                sources.length,
+                "sources"
+              );
+            }
           }
         } catch (error) {
-          console.warn("Failed to parse income sources:", error);
+          if (import.meta.env.DEV) {
+            console.warn("Failed to parse income sources:", error);
+          }
+          migrationSuccessful = false;
         }
       }
+
+      // If migration was successful, validate and clean up
+      if (migrationSuccessful) {
+        // Trigger reload event for all services
+        window.dispatchEvent(new CustomEvent("onboarding-data-migrated"));
+
+        // Cleanup after a short delay to ensure all listeners have processed
+        setTimeout(() => {
+          // Validate before cleanup
+          if (validateMigratedData()) {
+            if (import.meta.env.DEV) {
+              console.log("✓ Data migration validation passed");
+            }
+            cleanupOnboardingData();
+          } else {
+            if (import.meta.env.DEV) {
+              console.warn(
+                "⚠️ Data migration validation failed, keeping onboarding data"
+              );
+            }
+          }
+        }, 100);
+      }
     } catch (error) {
-      console.warn("Failed to migrate onboarding data:", error);
+      if (import.meta.env.DEV) {
+        console.warn("Failed to migrate onboarding data:", error);
+      }
     }
-  }, [businessInfo]);
+  }, [businessInfo, cleanupOnboardingData, validateMigratedData]);
 
   // Completion management
   const completeOnboarding = useCallback(() => {
