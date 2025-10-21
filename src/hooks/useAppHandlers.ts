@@ -11,7 +11,6 @@ import type {
   AppHandlers,
   DonationConfig,
 } from "../types";
-import { incomeSourceService } from "../services/incomeSourceService";
 import {
   loadTransactionsWithMigration,
   loadExpensesWithMigration,
@@ -95,12 +94,13 @@ export function useAppHandlers(): AppHandlers {
     const {
       amountUSD,
       conversionRate,
-      sourceId,
+      source,
       taxRate,
       currency,
       amount,
       taxConfig,
     } = entry;
+    const sourceId = source.id;
     const activeConfig = configOverride || donationConfig;
 
     // Determine the actual amounts based on currency
@@ -121,7 +121,6 @@ export function useAppHandlers(): AppHandlers {
       // Get the income source to determine fees
       let feeUSD = 0;
       try {
-        const source = await incomeSourceService.getSource(sourceId);
         if (source?.metadata?.fees) {
           const fees = source.metadata.fees;
           if (fees.method === "fixed") {
