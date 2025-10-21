@@ -12,12 +12,14 @@ interface ExpenseHistoryProps {
   expenses: Expense[];
   onEdit: (ex: Expense) => void;
   onDelete: (id: number) => void;
+  disableExpansion?: boolean;
 }
 
 export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
   expenses,
   onEdit,
   onDelete,
+  disableExpansion = false,
 }) => {
   const { activePartners } = usePartners();
   const { isPersonalMode } = useBusinessInfo();
@@ -61,11 +63,11 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({
     <ExpandableCard
       title="Expense History"
       isExpanded={isExpanded}
-      onToggleExpand={handleToggleExpand}
+      onToggleExpand={disableExpansion ? undefined : handleToggleExpand}
     >
       <div
         className={`hide-scrollbar dark:bg-slate-900/50 rounded-xl ${
-          isExpanded
+          isExpanded && !disableExpansion
             ? "h-full overflow-y-auto"
             : " h-full lg:h-[50vh] overflow-y-auto"
         }`}

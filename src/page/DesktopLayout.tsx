@@ -20,11 +20,8 @@ import { useDateFilter } from "../hooks/useDateFilter";
 import { Stats } from "../components/Stats";
 import { DesktopSettingsModal } from "../components/DesktopSettingsModal";
 import { DesktopFinancialAnalytics } from "../components/DesktopFinancialAnalytics";
-import { TransactionHistory } from "../components/TransactionHistory";
-import { ExpenseHistory } from "../components/ExpenseHistory";
-import { DonationHistory } from "../components/DonationHistory";
+import { HistoryTabs } from "../components/HistoryTabs";
 import { DonationConfigModal } from "../components/DonationConfigModal";
-import { DonationSettingsButton } from "../components/DonationSettingsButton";
 import { IncomeSourceSettingsButton } from "../components/IncomeSourceSettingsButton";
 import { IncomeSourceSettingsModal } from "../components/IncomeSourceSettingsModal";
 import { PartnerSettingsModal } from "../components/PartnerSettingsModal";
@@ -255,44 +252,30 @@ export const DesktopLayout = ({
             onDeleteSummary={appState.handleDeleteSummary}
           />
 
-          {/* Transaction and Expense History */}
-          <div className="mt-4 mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-            <TransactionHistory
-              actionBtn={
+          {/* History Tabs - Combined Transaction, Expense, and Donation History */}
+          <div className="mt-4 mb-4">
+            <HistoryTabs
+              transactions={sortedTransactions}
+              expenses={sortedExpenses}
+              donationPayouts={sortedDonations}
+              donationEnabled={appState.donationConfig.enabled}
+              onEditTransaction={(tx) =>
+                appState.openEditModal(tx, "transaction")
+              }
+              onDeleteTransaction={appState.handleDeleteTransaction}
+              onEditExpense={(ex) => appState.openEditModal(ex, "expense")}
+              onDeleteExpense={appState.handleDeleteExpense}
+              onEditDonationPayout={(dp) =>
+                appState.openEditModal(dp, "donation")
+              }
+              onDeleteDonationPayout={appState.handleDeleteDonationPayout}
+              transactionActionBtn={
                 <IncomeSourceSettingsButton
                   onClick={() => setIsIncomeSettingsOpen(true)}
                 />
               }
-              transactions={sortedTransactions}
-              onEdit={(tx) => appState.openEditModal(tx, "transaction")}
-              onDelete={appState.handleDeleteTransaction}
-            />
-
-            <ExpenseHistory
-              expenses={sortedExpenses}
-              onEdit={(ex) => appState.openEditModal(ex, "expense")}
-              onDelete={appState.handleDeleteExpense}
             />
           </div>
-
-          {/* Donation History - Only show if donations are enabled */}
-          {appState.donationConfig.enabled && (
-            <div className="rounded-xl bg-white/20 p-4 backdrop-blur-sm dark:bg-slate-800/20">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  Donation Payout History
-                </h3>
-                <DonationSettingsButton
-                  onClick={() => setIsDonationConfigOpen(true)}
-                />
-              </div>
-              <DonationHistory
-                donations={sortedDonations}
-                onEdit={(dp) => appState.openEditModal(dp, "donation")}
-                onDelete={appState.handleDeleteDonationPayout}
-              />
-            </div>
-          )}
         </div>
       </main>
 

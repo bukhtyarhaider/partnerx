@@ -13,6 +13,7 @@ interface TransactionHistoryProps {
   onEdit: (tx: Transaction) => void;
   onDelete: (id: number) => void;
   actionBtn: React.ReactNode;
+  disableExpansion?: boolean;
 }
 
 export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
@@ -20,6 +21,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   transactions,
   onEdit,
   onDelete,
+  disableExpansion = false,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { confirmation, showConfirmation, hideConfirmation } =
@@ -93,7 +95,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     <ExpandableCard
       title="Transaction History"
       isExpanded={isExpanded}
-      onToggleExpand={handleToggleExpand}
+      onToggleExpand={disableExpansion ? undefined : handleToggleExpand}
       actionBar={{
         position: "right",
         content: actionBtn,
@@ -101,7 +103,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     >
       <div
         className={`dark:bg-slate-900/50 ${
-          isExpanded ? "h-full" : "h-full lg:h-[50vh]"
+          isExpanded && !disableExpansion ? "h-full" : "h-full lg:h-[50vh]"
         }  overflow-y-auto rounded-xl hide-scrollbar`}
       >
         <div className="relative">
