@@ -304,6 +304,53 @@ export const ImportExport: React.FC<ImportExportProps> = ({
           }
         }
 
+        // Check if user has PIN set and has transactions - if so, mark onboarding as complete
+        const hasPinSet = localStorage.getItem("app_pin_code");
+        const hasTransactions = parsedData.transactions.length > 0;
+        const hasExpenses = parsedData.expenses.length > 0;
+        const hasDonationPayouts = parsedData.donationPayouts.length > 0;
+        const hasSummaries = parsedData.summaries.length > 0;
+
+        if (
+          hasPinSet ||
+          hasTransactions ||
+          hasExpenses ||
+          hasDonationPayouts ||
+          hasSummaries
+        ) {
+          // User has already been using the app, ensure onboarding is marked complete
+          const onboardingProgress = localStorage.getItem(
+            "onboarding_progress"
+          );
+          if (onboardingProgress) {
+            try {
+              const progress = JSON.parse(onboardingProgress);
+              if (!progress.completedAt) {
+                // Mark onboarding as complete
+                progress.completedAt = new Date().toISOString();
+                // Mark all non-skippable steps as completed
+                progress.steps = progress.steps.map(
+                  (step: { skippable?: boolean }) => ({
+                    ...step,
+                    completed: true,
+                  })
+                );
+                localStorage.setItem(
+                  "onboarding_progress",
+                  JSON.stringify(progress)
+                );
+                if (import.meta.env.DEV) {
+                  console.log("✓ Marked onboarding as complete after import");
+                }
+              }
+            } catch (error) {
+              if (import.meta.env.DEV) {
+                console.warn("Failed to update onboarding progress:", error);
+              }
+            }
+          }
+        }
+
         onImport(parsedData);
         showNotification("success", "Data imported successfully!");
       } catch (error) {

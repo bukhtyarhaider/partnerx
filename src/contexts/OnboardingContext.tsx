@@ -14,9 +14,43 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   // Initialize progress from localStorage or defaults
   const [progress, setProgress] = useState<OnboardingProgress>(() => {
     const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+
+    // Check if user has PIN and transactions (indicating they've used the app before)
+    const hasPinSet = localStorage.getItem("app_pin_code");
+    const transactionsStr = localStorage.getItem("transactions");
+    const hasTransactions =
+      transactionsStr && JSON.parse(transactionsStr).length > 0;
+    const expensesStr = localStorage.getItem("expenses");
+    const hasExpenses = expensesStr && JSON.parse(expensesStr).length > 0;
+    const donationPayoutsStr = localStorage.getItem("donationPayouts");
+    const hasDonationPayouts =
+      donationPayoutsStr && JSON.parse(donationPayoutsStr).length > 0;
+    const summariesStr = localStorage.getItem("summaries");
+    const hasSummaries = summariesStr && JSON.parse(summariesStr).length > 0;
+
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
+
+        // If user has PIN and transactions but onboarding isn't marked complete, auto-complete it
+        if (
+          hasPinSet ||
+          hasTransactions ||
+          hasExpenses ||
+          hasDonationPayouts ||
+          hasSummaries
+        ) {
+          parsed.completedAt = new Date().toISOString();
+          parsed.steps = ONBOARDING_STEPS.map((step) => ({
+            ...step,
+            completed: true,
+          }));
+          localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(parsed));
+          if (import.meta.env.DEV) {
+            console.log("✓ Auto-completed onboarding for existing user");
+          }
+        }
+
         return {
           ...parsed,
           steps: ONBOARDING_STEPS.map((step) => ({
@@ -30,6 +64,28 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       } catch {
         // Fall back to defaults if parsing fails
       }
+    }
+
+    // If no onboarding progress but user has PIN and transactions, mark as complete
+    if (hasPinSet && hasTransactions) {
+      const completedProgress = {
+        currentStepIndex: ONBOARDING_STEPS.length - 1,
+        steps: ONBOARDING_STEPS.map((step) => ({
+          ...step,
+          completed: true,
+        })),
+        completedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(
+        ONBOARDING_STORAGE_KEY,
+        JSON.stringify(completedProgress)
+      );
+      if (import.meta.env.DEV) {
+        console.log(
+          "✓ Created completed onboarding progress for existing user"
+        );
+      }
+      return completedProgress;
     }
 
     return {
