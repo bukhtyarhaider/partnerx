@@ -14,9 +14,43 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   // Initialize progress from localStorage or defaults
   const [progress, setProgress] = useState<OnboardingProgress>(() => {
     const stored = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+
+    // Check if user has PIN and transactions (indicating they've used the app before)
+    const hasPinSet = localStorage.getItem("app_pin_code");
+    const transactionsStr = localStorage.getItem("transactions");
+    const hasTransactions =
+      transactionsStr && JSON.parse(transactionsStr).length > 0;
+    const expensesStr = localStorage.getItem("expenses");
+    const hasExpenses = expensesStr && JSON.parse(expensesStr).length > 0;
+    const donationPayoutsStr = localStorage.getItem("donationPayouts");
+    const hasDonationPayouts =
+      donationPayoutsStr && JSON.parse(donationPayoutsStr).length > 0;
+    const summariesStr = localStorage.getItem("summaries");
+    const hasSummaries = summariesStr && JSON.parse(summariesStr).length > 0;
+
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
+
+        // If user has PIN and transactions but onboarding isn't marked complete, auto-complete it
+        if (
+          hasPinSet ||
+          hasTransactions ||
+          hasExpenses ||
+          hasDonationPayouts ||
+          hasSummaries
+        ) {
+          parsed.completedAt = new Date().toISOString();
+          parsed.steps = ONBOARDING_STEPS.map((step) => ({
+            ...step,
+            completed: true,
+          }));
+          localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(parsed));
+          if (import.meta.env.DEV) {
+            console.log("✓ Auto-completed onboarding for existing user");
+          }
+        }
+
         return {
           ...parsed,
           steps: ONBOARDING_STEPS.map((step) => ({
@@ -30,6 +64,28 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       } catch {
         // Fall back to defaults if parsing fails
       }
+    }
+
+    // If no onboarding progress but user has PIN and transactions, mark as complete
+    if (hasPinSet && hasTransactions) {
+      const completedProgress = {
+        currentStepIndex: ONBOARDING_STEPS.length - 1,
+        steps: ONBOARDING_STEPS.map((step) => ({
+          ...step,
+          completed: true,
+        })),
+        completedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(
+        ONBOARDING_STORAGE_KEY,
+        JSON.stringify(completedProgress)
+      );
+      if (import.meta.env.DEV) {
+        console.log(
+          "✓ Created completed onboarding progress for existing user"
+        );
+      }
+      return completedProgress;
     }
 
     return {
@@ -181,9 +237,148 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       : false;
   }, [progress.steps, progress.currentStepIndex]);
 
-  // Function to migrate onboarding data to main app storage
+  // Validate migrated data to ensure integrity
+  const validateMigratedData = useCallback((): boolean => {
+    try {
+      let isValid = true;
+
+      // Validate partner config if it exists
+      const partnerConfigStr = localStorage.getItem("partnerConfig");
+      if (partnerConfigStr) {
+        const partnerConfig = JSON.parse(partnerConfigStr);
+
+        if (!partnerConfig.partners || !Array.isArray(partnerConfig.partners)) {
+          console.error("❌ Invalid partnerConfig: partners array missing");
+          isValid = false;
+        } else if (partnerConfig.partners.length > 0) {
+          // Validate equity totals
+          const totalEquity = partnerConfig.partners.reduce(
+            (sum: number, p: { equity?: number }) => sum + (p.equity || 0),
+            0
+          );
+
+          if (totalEquity > 1.01) {
+            // Allow small floating point errors
+            console.error(
+              "❌ Invalid partnerConfig: total equity exceeds 100%",
+              totalEquity
+            );
+            isValid = false;
+          }
+
+          // Validate each partner has required fields
+          for (const partner of partnerConfig.partners) {
+            if (
+              !partner.id ||
+              !partner.name ||
+              typeof partner.equity !== "number"
+            ) {
+              console.error("❌ Invalid partner data:", partner);
+              isValid = false;
+            }
+          }
+        }
+      }
+
+      // Validate donation config if it exists
+      const donationConfigStr = localStorage.getItem("donationConfig");
+      if (donationConfigStr) {
+        const donationConfig = JSON.parse(donationConfigStr);
+
+        if (typeof donationConfig.enabled !== "boolean") {
+          console.error("❌ Invalid donationConfig: enabled field invalid");
+          isValid = false;
+        }
+
+        if (donationConfig.enabled) {
+          if (
+            typeof donationConfig.percentage !== "number" ||
+            donationConfig.percentage < 0 ||
+            donationConfig.percentage > 100
+          ) {
+            console.error("❌ Invalid donationConfig: percentage out of range");
+            isValid = false;
+          }
+        }
+      }
+
+      // Validate income source config if it exists
+      const incomeSourceConfigStr = localStorage.getItem("incomeSourceConfig");
+      if (incomeSourceConfigStr) {
+        try {
+          const config = JSON.parse(incomeSourceConfigStr);
+
+          // Income sources should be an array of full IncomeSource objects
+          if (!Array.isArray(config)) {
+            if (import.meta.env.DEV) {
+              console.error("❌ Invalid incomeSourceConfig: not an array");
+              console.log("Actual structure:", config);
+            }
+            isValid = false;
+          } else if (config.length > 0) {
+            // Validate each source has required fields
+            for (const source of config) {
+              if (
+                !source.id ||
+                !source.name ||
+                typeof source.enabled !== "boolean"
+              ) {
+                if (import.meta.env.DEV) {
+                  console.error("❌ Invalid income source data:", source);
+                }
+                isValid = false;
+              }
+            }
+          }
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error("❌ Failed to parse incomeSourceConfig:", error);
+          }
+          isValid = false;
+        }
+      }
+
+      if (isValid && import.meta.env.DEV) {
+        console.log("✓ All migrated data validated successfully");
+      }
+
+      return isValid;
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Error validating migrated data:", error);
+      }
+      return false;
+    }
+  }, []);
+
+  // Function to clean up temporary onboarding data
+  const cleanupOnboardingData = useCallback(() => {
+    try {
+      // Remove temporary onboarding keys after migration
+      const keysToRemove = [
+        "onboarding_progress",
+        "onboarding_partners",
+        "onboarding_donation_config",
+        "onboarding_income_sources",
+      ];
+
+      keysToRemove.forEach((key) => {
+        localStorage.removeItem(key);
+      });
+
+      if (import.meta.env.DEV) {
+        console.log("✓ Cleaned up temporary onboarding data");
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn("Failed to cleanup onboarding data:", error);
+      }
+    }
+  }, []); // Function to migrate onboarding data to main app storage
   const migrateOnboardingDataToMain = useCallback(() => {
     try {
+      let migrationSuccessful = true;
+
       // Migrate partners data (only if partners were added)
       const onboardingPartners = localStorage.getItem("onboarding_partners");
       if (onboardingPartners) {
@@ -203,9 +398,19 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
               "partnerConfig",
               JSON.stringify(partnerConfig)
             );
+            if (import.meta.env.DEV) {
+              console.log(
+                "✓ Migrated partner config:",
+                partners.length,
+                "partners"
+              );
+            }
           }
         } catch (error) {
-          console.warn("Failed to parse partner data:", error);
+          if (import.meta.env.DEV) {
+            console.warn("Failed to parse partner data:", error);
+          }
+          migrationSuccessful = false;
         }
       }
 
@@ -219,9 +424,15 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
           // Only migrate if donations were explicitly enabled
           if (donationConfig && donationConfig.enabled) {
             localStorage.setItem("donationConfig", onboardingDonationConfig);
+            if (import.meta.env.DEV) {
+              console.log("✓ Migrated donation config");
+            }
           }
         } catch (error) {
-          console.warn("Failed to parse donation config:", error);
+          if (import.meta.env.DEV) {
+            console.warn("Failed to parse donation config:", error);
+          }
+          migrationSuccessful = false;
         }
       }
 
@@ -234,18 +445,74 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
           const sources = JSON.parse(onboardingIncomeSources);
           // Only migrate if sources were actually selected
           if (Array.isArray(sources) && sources.length > 0) {
-            localStorage.setItem("incomeSourceConfig", onboardingIncomeSources);
-            // Trigger reload event for income source service
-            window.dispatchEvent(new CustomEvent("onboarding-data-migrated"));
+            // Check if it's the new format (array of objects) or old format (array of IDs)
+            const isNewFormat =
+              sources.length > 0 && typeof sources[0] === "object";
+
+            if (isNewFormat) {
+              // New format: array of full IncomeSource objects
+              localStorage.setItem(
+                "incomeSourceConfig",
+                onboardingIncomeSources
+              );
+              if (import.meta.env.DEV) {
+                console.log(
+                  "✓ Migrated income sources (full objects):",
+                  sources.length,
+                  "sources"
+                );
+              }
+            } else {
+              // Old format: array of IDs - this shouldn't happen with new code
+              // but we handle it for backward compatibility
+              if (import.meta.env.DEV) {
+                console.warn(
+                  "⚠️ Legacy income source format detected (IDs only). Please update the onboarding flow."
+                );
+              }
+              // The incomeSourceService will handle the migration from IDs
+              localStorage.setItem(
+                "incomeSourceConfig",
+                onboardingIncomeSources
+              );
+            }
           }
         } catch (error) {
-          console.warn("Failed to parse income sources:", error);
+          if (import.meta.env.DEV) {
+            console.warn("Failed to parse income sources:", error);
+          }
+          migrationSuccessful = false;
         }
       }
+
+      // If migration was successful, validate and clean up
+      if (migrationSuccessful) {
+        // Trigger reload event for all services
+        window.dispatchEvent(new CustomEvent("onboarding-data-migrated"));
+
+        // Cleanup after a short delay to ensure all listeners have processed
+        setTimeout(() => {
+          // Validate before cleanup
+          if (validateMigratedData()) {
+            if (import.meta.env.DEV) {
+              console.log("✓ Data migration validation passed");
+            }
+            cleanupOnboardingData();
+          } else {
+            if (import.meta.env.DEV) {
+              console.warn(
+                "⚠️ Data migration validation failed, keeping onboarding data"
+              );
+            }
+          }
+        }, 100);
+      }
     } catch (error) {
-      console.warn("Failed to migrate onboarding data:", error);
+      if (import.meta.env.DEV) {
+        console.warn("Failed to migrate onboarding data:", error);
+      }
     }
-  }, [businessInfo]);
+  }, [businessInfo, cleanupOnboardingData, validateMigratedData]);
 
   // Completion management
   const completeOnboarding = useCallback(() => {

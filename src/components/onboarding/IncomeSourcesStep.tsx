@@ -21,6 +21,7 @@ import {
 import { useOnboarding } from "../../hooks/useOnboarding";
 import { getIncomeSourcesForAccountType } from "../../config/incomeSources";
 import { incomeSourceService } from "../../services/incomeSourceService";
+import type { IncomeSource } from "../../types/incomeSource";
 
 const INCOME_SOURCES_STORAGE_KEY = "onboarding_income_sources";
 
@@ -61,22 +62,51 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
   const { markStepCompleted, businessInfo } = useOnboarding();
   const isPersonal = businessInfo?.type === "personal";
 
-  // State for managing selected income sources during onboarding
-  const [selectedSources, setSelectedSources] = useState<Set<string>>(() => {
-    const stored = localStorage.getItem(INCOME_SOURCES_STORAGE_KEY);
-    return stored ? new Set(JSON.parse(stored)) : new Set();
-  });
+  // State for managing selected income source IDs during onboarding
+  const [selectedSourceIds, setSelectedSourceIds] = useState<Set<string>>(
+    () => {
+      const stored = localStorage.getItem(INCOME_SOURCES_STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          // Handle both old format (array of IDs) and new format (array of objects)
+          if (Array.isArray(parsed)) {
+            if (parsed.length > 0 && typeof parsed[0] === "string") {
+              // Old format: array of IDs
+              return new Set(parsed);
+            } else if (parsed.length > 0 && typeof parsed[0] === "object") {
+              // New format: array of objects, extract IDs
+              return new Set(parsed.map((s: IncomeSource) => s.id));
+            }
+          }
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.warn("Failed to parse stored income sources:", error);
+          }
+        }
+      }
+      return new Set();
+    }
+  );
 
-  // Save to localStorage whenever selection changes
+  // Get income sources based on account type
+  const allSources = getIncomeSourcesForAccountType(isPersonal);
+
+  // Save to localStorage whenever selection changes - store full objects
   useEffect(() => {
+    // Find full objects for selected IDs
+    const selectedObjects = allSources.filter((source) =>
+      selectedSourceIds.has(source.id)
+    );
+
     localStorage.setItem(
       INCOME_SOURCES_STORAGE_KEY,
-      JSON.stringify(Array.from(selectedSources))
+      JSON.stringify(selectedObjects)
     );
-  }, [selectedSources]);
+  }, [selectedSourceIds, allSources]);
 
   const handleToggleSource = (sourceId: string) => {
-    setSelectedSources((prev) => {
+    setSelectedSourceIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(sourceId)) {
         newSet.delete(sourceId);
@@ -142,7 +172,7 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
       });
 
       // Add to selected sources
-      setSelectedSources((prev) => new Set([...prev, newSource.id]));
+      setSelectedSourceIds((prev) => new Set([...prev, newSource.id]));
 
       // Reset form and close modal
       setCustomSourceName("");
@@ -166,7 +196,7 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
   const handleContinue = async () => {
     try {
       // Enable selected sources
-      for (const sourceId of Array.from(selectedSources)) {
+      for (const sourceId of Array.from(selectedSourceIds)) {
         await incomeSourceService.updateSource(sourceId, { enabled: true });
       }
 
@@ -184,9 +214,6 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
     markStepCompleted("income-sources");
     onSkip();
   };
-
-  // Get income sources based on account type
-  const allSources = getIncomeSourcesForAccountType(isPersonal);
 
   // Show all sources as suggestions (all start as disabled)
   const suggestedSources = allSources;
@@ -258,11 +285,11 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
       <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 mb-6">
         <div className="flex justify-between items-center">
           <span className="text-slate-600 dark:text-slate-400">
-            Selected Sources: {selectedSources.size}
+            Selected Sources: {selectedSourceIds.size}
           </span>
-          {selectedSources.size > 0 && (
+          {selectedSourceIds.size > 0 && (
             <button
-              onClick={() => setSelectedSources(new Set())}
+              onClick={() => setSelectedSourceIds(new Set())}
               className="text-sm px-3 py-1 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200"
             >
               Clear All
@@ -279,7 +306,7 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {suggestedSources.map((source) => {
-              const isSelected = selectedSources.has(source.id);
+              const isSelected = selectedSourceIds.has(source.id);
               const IconComponent = getIconComponent(
                 source.metadata?.icon?.value || "Globe"
               );
@@ -349,27 +376,30 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
 
                         {/* Tags/Badges */}
                         <div className="flex flex-wrap gap-2 mt-3">
-                          {source.metadata?.fees && (
+                          {!!source.metadata?.fees && (
                             <>
-                              {source.metadata.fees.fixedFeeUSD && (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                  ${source.metadata.fees.fixedFeeUSD} fee
-                                </span>
-                              )}
-                              {source.metadata.fees.percentageFee && (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                                  {source.metadata.fees.percentageFee}% fee
-                                </span>
-                              )}
+                              {/* Only display if values are valid */}
+                              {!!source.metadata.fees.fixedFeeUSD &&
+                                source.metadata.fees.fixedFeeUSD > 0 && (
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                    ${source.metadata.fees.fixedFeeUSD} fee
+                                  </span>
+                                )}
+                              {!!source.metadata.fees.percentageFee &&
+                                source.metadata.fees.percentageFee > 0 && (
+                                  <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                    {source.metadata.fees.percentageFee}% fee
+                                  </span>
+                                )}
                             </>
                           )}
 
-                          {source.metadata?.settings?.defaultTaxRate && (
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                              {source.metadata.settings.defaultTaxRate * 100}%
-                              tax
-                            </span>
-                          )}
+                          {!!source.metadata?.settings?.defaultTaxRate &&
+                            source.metadata.settings.defaultTaxRate > 0 && (
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                                {source.metadata.settings.defaultTaxRate}% tax
+                              </span>
+                            )}
                         </div>
                       </div>
                     </div>

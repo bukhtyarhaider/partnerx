@@ -197,9 +197,10 @@ export const DonationConfigStep: React.FC<DonationConfigStepProps> = ({
       {/* Configuration Options - Only shown when enabled */}
       {config.enabled && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
           className="space-y-6 overflow-hidden"
         >
           {/* Donation Percentage */}

@@ -6,67 +6,19 @@ import type {
 } from "../types";
 
 /**
- * Migration utilities for handling legacy data formats
+ * Migration utilities for data format handling
+ * Note: No legacy migrations needed - project is in development phase
  */
 
-// Default donation config for migration
-const DEFAULT_LEGACY_DONATION_CONFIG: DonationConfig = {
+// Default donation config for transactions that don't have one
+const DEFAULT_DONATION_CONFIG: DonationConfig = {
   percentage: 10,
   taxPreference: "before-tax",
   enabled: true,
 };
 
-// Legacy transaction interface for backward compatibility
-interface LegacyTransaction {
-  id: number;
-  source: "youtube" | "tiktok";
-  amountUSD: number;
-  conversionRate: number;
-  date: string;
-  taxRate: number;
-  bank: string;
-  calculations: {
-    feePKR: number;
-    grossPKR: number;
-    charityAmount: number;
-    taxAmount: number;
-    netProfit: number;
-    partnerShare: number;
-  };
-}
-
 /**
- * Check if transaction data needs migration
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const needsMigration = (transaction: any): boolean => {
-  return transaction.source !== undefined && transaction.sourceId === undefined;
-};
-
-/**
- * Migrate legacy transaction format to new format
- */
-export const migrateLegacyTransaction = (
-  legacyTx: LegacyTransaction
-): Transaction => {
-  // Map legacy source to new sourceId
-  const sourceMapping: Record<string, string> = {
-    youtube: "youtube",
-    tiktok: "tiktok",
-  };
-
-  // Create new transaction without the source property
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { source, ...txWithoutSource } = legacyTx as any;
-
-  return {
-    ...txWithoutSource,
-    sourceId: sourceMapping[source] || source,
-  } as Transaction;
-};
-
-/**
- * Check if transaction needs donation config migration
+ * Check if transaction needs donation config snapshot
  */
 export const needsDonationConfigMigration = (
   transaction: Transaction
@@ -83,7 +35,7 @@ export const migrateDonationConfig = (
   if (needsDonationConfigMigration(transaction)) {
     return {
       ...transaction,
-      donationConfigSnapshot: DEFAULT_LEGACY_DONATION_CONFIG,
+      donationConfigSnapshot: DEFAULT_DONATION_CONFIG,
     };
   }
   return transaction;
@@ -92,23 +44,21 @@ export const migrateDonationConfig = (
 /**
  * Migrate an array of transactions
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const migrateTransactions = (transactions: any[]): Transaction[] => {
+export const migrateTransactions = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transactions: any[]
+): Transaction[] => {
   return transactions.map((tx) => {
     let migrated = tx as Transaction;
 
-    // First, migrate legacy source format
-    if (needsMigration(tx)) {
-      migrated = migrateLegacyTransaction(tx as LegacyTransaction);
-      console.log(`Migrated transaction ${tx.id} from legacy format`);
-    }
-
-    // Then, add donation config snapshot if missing
+    // Add donation config snapshot if missing
     if (needsDonationConfigMigration(migrated)) {
       migrated = migrateDonationConfig(migrated);
-      console.log(
-        `Added donation config snapshot to transaction ${migrated.id}`
-      );
+      if (import.meta.env.DEV) {
+        console.log(
+          `Added donation config snapshot to transaction ${migrated.id}`
+        );
+      }
     }
 
     return migrated;
@@ -126,17 +76,17 @@ export const loadTransactionsWithMigration = (): Transaction[] => {
     const parsed = JSON.parse(stored);
     const migrated = migrateTransactions(parsed);
 
-    // Save back the migrated data if any migration was needed
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const hasLegacyMigration = parsed.some((tx: any) => needsMigration(tx));
+    // Save back if donation config migration was needed
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const hasDonationMigration = parsed.some((tx: any) =>
       needsDonationConfigMigration(tx)
     );
 
-    if (hasLegacyMigration || hasDonationMigration) {
+    if (hasDonationMigration) {
       localStorage.setItem("transactions", JSON.stringify(migrated));
-      console.log("Migrated transaction data saved to localStorage");
+      if (import.meta.env.DEV) {
+        console.log("Added donation config snapshots to transactions");
+      }
     }
 
     return migrated;
@@ -147,12 +97,14 @@ export const loadTransactionsWithMigration = (): Transaction[] => {
 };
 
 /**
- * Clear all data migration flags (for development/testing)
+ * Clear all data (for development/testing)
  */
 export const clearMigrationData = (): void => {
   localStorage.removeItem("transactions");
   localStorage.removeItem("incomeSourceConfig");
-  console.log("Migration data cleared");
+  if (import.meta.env.DEV) {
+    console.log("Data cleared");
+  }
 };
 
 // Legacy expense interface for backward compatibility

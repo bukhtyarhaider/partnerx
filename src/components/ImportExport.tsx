@@ -13,6 +13,7 @@ import type {
   DonationPayout,
   FinancialSummaryRecord,
   DonationConfig,
+  IncomeSource,
 } from "../types";
 
 interface ImportExportProps {
@@ -158,7 +159,25 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   const handleExport = useCallback(async () => {
     setIsExporting(true);
     try {
+      // Load income source config from localStorage
+      const incomeSourceConfigStr = localStorage.getItem("incomeSourceConfig");
+      let incomeSourceConfig: IncomeSource[] = [];
+
+      if (incomeSourceConfigStr) {
+        const parsedConfig = JSON.parse(incomeSourceConfigStr);
+        // Handle both array format and object format
+        if (Array.isArray(parsedConfig)) {
+          incomeSourceConfig = parsedConfig;
+        } else if (
+          parsedConfig.sources &&
+          Array.isArray(parsedConfig.sources)
+        ) {
+          incomeSourceConfig = parsedConfig.sources;
+        }
+      }
+
       const exportData = {
+        incomeSourceConfig, // Export income source configuration
         transactions,
         expenses,
         donationPayouts,
@@ -233,6 +252,103 @@ export const ImportExport: React.FC<ImportExportProps> = ({
           !Array.isArray(parsedData.summaries)
         ) {
           throw new Error("Invalid data structure in the imported file.");
+        }
+
+        // Handle income source config import (if present)
+        if (
+          parsedData.incomeSourceConfig &&
+          Array.isArray(parsedData.incomeSourceConfig)
+        ) {
+          const currentConfigStr = localStorage.getItem("incomeSourceConfig");
+          let currentSources: IncomeSource[] = [];
+
+          if (currentConfigStr) {
+            const parsed = JSON.parse(currentConfigStr);
+            if (Array.isArray(parsed)) {
+              currentSources = parsed;
+            } else if (parsed.sources && Array.isArray(parsed.sources)) {
+              currentSources = parsed.sources;
+            }
+          }
+
+          // Merge income sources: prioritize imported ones, keep custom ones not in import
+          const importedSources =
+            parsedData.incomeSourceConfig as IncomeSource[];
+          const importedIds = new Set(
+            importedSources.map((s: IncomeSource) => s.id)
+          );
+
+          // Keep custom sources that aren't in the import
+          const customSources = currentSources.filter(
+            (s) => !importedIds.has(s.id)
+          );
+
+          // Combine imported + custom sources
+          const mergedSources = [...importedSources, ...customSources];
+
+          // Save merged config
+          localStorage.setItem(
+            "incomeSourceConfig",
+            JSON.stringify(mergedSources)
+          );
+
+          if (import.meta.env.DEV) {
+            console.log(
+              "✓ Imported income source config:",
+              importedSources.length,
+              "sources"
+            );
+            if (customSources.length > 0) {
+              console.log("✓ Preserved custom sources:", customSources.length);
+            }
+          }
+        }
+
+        // Check if user has PIN set and has transactions - if so, mark onboarding as complete
+        const hasPinSet = localStorage.getItem("app_pin_code");
+        const hasTransactions = parsedData.transactions.length > 0;
+        const hasExpenses = parsedData.expenses.length > 0;
+        const hasDonationPayouts = parsedData.donationPayouts.length > 0;
+        const hasSummaries = parsedData.summaries.length > 0;
+
+        if (
+          hasPinSet ||
+          hasTransactions ||
+          hasExpenses ||
+          hasDonationPayouts ||
+          hasSummaries
+        ) {
+          // User has already been using the app, ensure onboarding is marked complete
+          const onboardingProgress = localStorage.getItem(
+            "onboarding_progress"
+          );
+          if (onboardingProgress) {
+            try {
+              const progress = JSON.parse(onboardingProgress);
+              if (!progress.completedAt) {
+                // Mark onboarding as complete
+                progress.completedAt = new Date().toISOString();
+                // Mark all non-skippable steps as completed
+                progress.steps = progress.steps.map(
+                  (step: { skippable?: boolean }) => ({
+                    ...step,
+                    completed: true,
+                  })
+                );
+                localStorage.setItem(
+                  "onboarding_progress",
+                  JSON.stringify(progress)
+                );
+                if (import.meta.env.DEV) {
+                  console.log("✓ Marked onboarding as complete after import");
+                }
+              }
+            } catch (error) {
+              if (import.meta.env.DEV) {
+                console.warn("Failed to update onboarding progress:", error);
+              }
+            }
+          }
         }
 
         onImport(parsedData);
