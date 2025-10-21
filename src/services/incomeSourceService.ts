@@ -231,7 +231,20 @@ class MockIncomeSourceService implements IncomeSourceService {
     // 3. Emit events for other parts of the app to react to changes
 
     try {
-      localStorage.setItem("incomeSourceConfig", JSON.stringify(this.config));
+      // Store as array of IncomeSource objects for simplicity and consistency
+      // This makes it easier to work with throughout the app
+      localStorage.setItem(
+        "incomeSourceConfig",
+        JSON.stringify(this.config.sources)
+      );
+
+      if (import.meta.env.DEV) {
+        console.log(
+          "✓ Persisted income source config:",
+          this.config.sources.length,
+          "sources"
+        );
+      }
     } catch (error) {
       console.warn(
         "Failed to persist income source config to localStorage:",
@@ -245,22 +258,48 @@ class MockIncomeSourceService implements IncomeSourceService {
    */
   private loadConfig(): void {
     try {
-      // Priority: 1. Existing config, 2. Onboarding config, 3. Default
+      // Load from incomeSourceConfig first
       const stored = localStorage.getItem("incomeSourceConfig");
       if (stored) {
         const parsedConfig = JSON.parse(stored);
-        // Merge with default config to ensure all required fields are present
-        this.config = {
-          ...defaultIncomeSourceConfig,
-          ...parsedConfig,
-          sources: parsedConfig.sources || defaultIncomeSourceConfig.sources,
-        };
-        console.log(
-          "✓ Loaded income source config:",
-          this.config.sources.length,
-          "sources"
-        );
-        return;
+
+        // Handle different storage formats
+        if (Array.isArray(parsedConfig)) {
+          // Direct array of IncomeSource objects (expected format)
+          if (parsedConfig.length > 0 && typeof parsedConfig[0] === "object") {
+            this.config = {
+              sources: parsedConfig,
+              version: "1.0.0",
+              lastUpdated: new Date().toISOString(),
+            };
+            if (import.meta.env.DEV) {
+              console.log(
+                "✓ Loaded income source config:",
+                this.config.sources.length,
+                "sources"
+              );
+            }
+            return;
+          }
+        } else if (
+          parsedConfig.sources &&
+          Array.isArray(parsedConfig.sources)
+        ) {
+          // Standard IncomeSourceConfig object format
+          this.config = {
+            ...defaultIncomeSourceConfig,
+            ...parsedConfig,
+            sources: parsedConfig.sources || defaultIncomeSourceConfig.sources,
+          };
+          if (import.meta.env.DEV) {
+            console.log(
+              "✓ Loaded income source config:",
+              this.config.sources.length,
+              "sources"
+            );
+          }
+          return;
+        }
       }
 
       // Check for onboarding income sources (migration path)
@@ -268,42 +307,37 @@ class MockIncomeSourceService implements IncomeSourceService {
         "onboarding_income_sources"
       );
       if (onboardingSources) {
-        const selectedSources: string[] = JSON.parse(onboardingSources);
+        const parsed = JSON.parse(onboardingSources);
 
-        // Filter default sources to only include selected ones
-        const filteredSources = defaultIncomeSourceConfig.sources.filter(
-          (source) => selectedSources.includes(source.id)
-        );
+        // Should be array of full IncomeSource objects
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (typeof parsed[0] === "object") {
+            this.config = {
+              sources: parsed,
+              version: "1.0.0",
+              lastUpdated: new Date().toISOString(),
+            };
 
-        if (filteredSources.length > 0) {
-          this.config = {
-            ...defaultIncomeSourceConfig,
-            sources: filteredSources,
-            lastUpdated: new Date().toISOString(),
-          };
+            // Save as main config
+            localStorage.setItem("incomeSourceConfig", JSON.stringify(parsed));
 
-          // Save the filtered config as the main config
-          localStorage.setItem(
-            "incomeSourceConfig",
-            JSON.stringify(this.config)
-          );
-
-          console.log(
-            "✓ Migrated income sources from onboarding:",
-            filteredSources.length,
-            "sources"
-          );
-
-          // Note: Cleanup of onboarding_income_sources is handled by OnboardingContext
-          // after all services have loaded, so we don't remove it here
-
-          return;
+            if (import.meta.env.DEV) {
+              console.log(
+                "✓ Migrated income sources from onboarding:",
+                parsed.length,
+                "sources"
+              );
+            }
+            return;
+          }
         }
       }
 
       // Fall back to default
       this.config = { ...defaultIncomeSourceConfig };
-      console.log("✓ Using default income source config");
+      if (import.meta.env.DEV) {
+        console.log("✓ Using default income source config");
+      }
     } catch (error) {
       console.warn(
         "Failed to load income source config from localStorage:",

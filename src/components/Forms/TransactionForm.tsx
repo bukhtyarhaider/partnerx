@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { PlusCircle, Save, AlertCircle, RefreshCw, Zap } from "lucide-react";
-import type { NewTransactionEntry, Transaction } from "../../types";
+import type {
+  NewTransactionEntry,
+  Transaction,
+  IncomeSource,
+} from "../../types";
 import { getTodayString, formatCurrency } from "../../utils";
 import { useEnabledIncomeSources } from "../../hooks/useIncomeSources";
 import { useConversionRateAutoFill } from "../../hooks/useConversionRateAutoFill";
@@ -36,7 +40,9 @@ export const TransactionForm: React.FC<FormProps> = ({
     isCacheStale,
   } = useConversionRateAutoFill();
 
-  const [sourceId, setSourceId] = useState<string>("");
+  const [selectedSource, setSelectedSource] = useState<IncomeSource | null>(
+    null
+  );
   const [amountUSD, setAmountUSD] = useState("");
   const [conversionRate, setConversionRate] = useState("");
   const [bank, setBank] = useState("");
@@ -83,21 +89,20 @@ export const TransactionForm: React.FC<FormProps> = ({
 
   // Set default source when sources are loaded
   useEffect(() => {
-    if (enabledSources.length > 0 && !sourceId && mode === "add") {
-      setSourceId(enabledSources[0].id);
+    if (enabledSources.length > 0 && !selectedSource && mode === "add") {
+      setSelectedSource(enabledSources[0]);
     }
-  }, [enabledSources, sourceId, mode]);
+  }, [enabledSources, selectedSource, mode]);
 
   // Auto-populate form fields based on selected source defaults
   useEffect(() => {
-    if (sourceId && mode === "add") {
+    if (selectedSource && mode === "add") {
       // Only auto-populate if the source has actually changed
-      if (lastAutoPopulatedSourceRef.current === sourceId) {
+      if (lastAutoPopulatedSourceRef.current === selectedSource.id) {
         return;
       }
 
-      const selectedSource = enabledSources.find((s) => s.id === sourceId);
-      if (selectedSource?.metadata?.settings) {
+      if (selectedSource.metadata?.settings) {
         const settings = selectedSource.metadata.settings;
 
         // Set default currency
@@ -118,10 +123,10 @@ export const TransactionForm: React.FC<FormProps> = ({
         }
 
         // Mark this source as auto-populated
-        lastAutoPopulatedSourceRef.current = sourceId;
+        lastAutoPopulatedSourceRef.current = selectedSource.id;
       }
     }
-  }, [sourceId, enabledSources, mode]);
+  }, [selectedSource, mode]);
 
   // Auto-fill conversion rate on mount for new transactions
   useEffect(() => {
@@ -132,13 +137,15 @@ export const TransactionForm: React.FC<FormProps> = ({
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
-      setSourceId(initialData.sourceId);
+      // Set the source from the transaction
+      setSelectedSource(initialData.source);
+
       setAmountUSD(String(initialData.amountUSD));
       setConversionRate(String(initialData.conversionRate));
       setBank(initialData.bank);
       setDate(initialData.date);
 
-      // Load new fields if available
+      // Load currency and amount fields
       if (initialData.currency) {
         setCurrency(initialData.currency);
       }
@@ -150,7 +157,7 @@ export const TransactionForm: React.FC<FormProps> = ({
         setTaxType(initialData.taxConfig.type);
         setTaxValue(String(initialData.taxConfig.value));
       } else if (initialData.taxRate && initialData.taxRate > 0) {
-        // Backward compatibility: convert old taxRate to new taxConfig
+        // Fallback to taxRate if taxConfig not present
         setTaxEnabled(true);
         setTaxType("percentage");
         setTaxValue(String(initialData.taxRate));
@@ -164,7 +171,7 @@ export const TransactionForm: React.FC<FormProps> = ({
     setBank("");
     setDate(getTodayString());
     if (enabledSources.length > 0) {
-      setSourceId(enabledSources[0].id);
+      setSelectedSource(enabledSources[0]);
     }
 
     // Reset new fields
@@ -184,14 +191,19 @@ export const TransactionForm: React.FC<FormProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Validate source selection
+      if (!selectedSource) {
+        throw new Error("Please select an income source.");
+      }
+
       // Validate required fields based on currency
       if (currency === "USD") {
-        if (!amountUSD || !conversionRate || !bank || !date || !sourceId) {
+        if (!amountUSD || !conversionRate || !bank || !date) {
           throw new Error("Please fill out all required fields.");
         }
       } else {
         // PKR currency
-        if (!amount || !bank || !date || !sourceId) {
+        if (!amount || !bank || !date) {
           throw new Error("Please fill out all required fields.");
         }
       }
@@ -219,12 +231,12 @@ export const TransactionForm: React.FC<FormProps> = ({
       }
 
       const commonData = {
-        sourceId,
+        source: selectedSource, // Full income source object with all metadata
         date,
         bank,
         amountUSD: finalAmountUSD,
         conversionRate: finalConversionRate,
-        taxRate: taxEnabled ? parseFloat(taxValue) || 0 : 0, // For backward compatibility
+        taxRate: taxEnabled ? parseFloat(taxValue) || 0 : 0,
         currency,
         amount: finalAmount,
         taxConfig: taxEnabled
@@ -291,8 +303,13 @@ export const TransactionForm: React.FC<FormProps> = ({
           </label>
           <select
             id="transaction-source"
-            value={sourceId}
-            onChange={(e) => setSourceId(e.target.value)}
+            value={selectedSource?.id || ""}
+            onChange={(e) => {
+              const source = enabledSources.find(
+                (s) => s.id === e.target.value
+              );
+              setSelectedSource(source || null);
+            }}
             className={INPUT_STYLES}
             disabled={enabledSources.length === 0}
             required

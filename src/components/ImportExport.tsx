@@ -13,6 +13,7 @@ import type {
   DonationPayout,
   FinancialSummaryRecord,
   DonationConfig,
+  IncomeSource,
 } from "../types";
 
 interface ImportExportProps {
@@ -158,7 +159,25 @@ export const ImportExport: React.FC<ImportExportProps> = ({
   const handleExport = useCallback(async () => {
     setIsExporting(true);
     try {
+      // Load income source config from localStorage
+      const incomeSourceConfigStr = localStorage.getItem("incomeSourceConfig");
+      let incomeSourceConfig: IncomeSource[] = [];
+
+      if (incomeSourceConfigStr) {
+        const parsedConfig = JSON.parse(incomeSourceConfigStr);
+        // Handle both array format and object format
+        if (Array.isArray(parsedConfig)) {
+          incomeSourceConfig = parsedConfig;
+        } else if (
+          parsedConfig.sources &&
+          Array.isArray(parsedConfig.sources)
+        ) {
+          incomeSourceConfig = parsedConfig.sources;
+        }
+      }
+
       const exportData = {
+        incomeSourceConfig, // Export income source configuration
         transactions,
         expenses,
         donationPayouts,
@@ -233,6 +252,56 @@ export const ImportExport: React.FC<ImportExportProps> = ({
           !Array.isArray(parsedData.summaries)
         ) {
           throw new Error("Invalid data structure in the imported file.");
+        }
+
+        // Handle income source config import (if present)
+        if (
+          parsedData.incomeSourceConfig &&
+          Array.isArray(parsedData.incomeSourceConfig)
+        ) {
+          const currentConfigStr = localStorage.getItem("incomeSourceConfig");
+          let currentSources: IncomeSource[] = [];
+
+          if (currentConfigStr) {
+            const parsed = JSON.parse(currentConfigStr);
+            if (Array.isArray(parsed)) {
+              currentSources = parsed;
+            } else if (parsed.sources && Array.isArray(parsed.sources)) {
+              currentSources = parsed.sources;
+            }
+          }
+
+          // Merge income sources: prioritize imported ones, keep custom ones not in import
+          const importedSources =
+            parsedData.incomeSourceConfig as IncomeSource[];
+          const importedIds = new Set(
+            importedSources.map((s: IncomeSource) => s.id)
+          );
+
+          // Keep custom sources that aren't in the import
+          const customSources = currentSources.filter(
+            (s) => !importedIds.has(s.id)
+          );
+
+          // Combine imported + custom sources
+          const mergedSources = [...importedSources, ...customSources];
+
+          // Save merged config
+          localStorage.setItem(
+            "incomeSourceConfig",
+            JSON.stringify(mergedSources)
+          );
+
+          if (import.meta.env.DEV) {
+            console.log(
+              "✓ Imported income source config:",
+              importedSources.length,
+              "sources"
+            );
+            if (customSources.length > 0) {
+              console.log("✓ Preserved custom sources:", customSources.length);
+            }
+          }
         }
 
         onImport(parsedData);

@@ -252,13 +252,27 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
         try {
           const config = JSON.parse(incomeSourceConfigStr);
 
-          // Income sources are stored as a direct array
+          // Income sources should be an array of full IncomeSource objects
           if (!Array.isArray(config)) {
             if (import.meta.env.DEV) {
               console.error("❌ Invalid incomeSourceConfig: not an array");
               console.log("Actual structure:", config);
             }
             isValid = false;
+          } else if (config.length > 0) {
+            // Validate each source has required fields
+            for (const source of config) {
+              if (
+                !source.id ||
+                !source.name ||
+                typeof source.enabled !== "boolean"
+              ) {
+                if (import.meta.env.DEV) {
+                  console.error("❌ Invalid income source data:", source);
+                }
+                isValid = false;
+              }
+            }
           }
         } catch (error) {
           if (import.meta.env.DEV) {
@@ -375,12 +389,35 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
           const sources = JSON.parse(onboardingIncomeSources);
           // Only migrate if sources were actually selected
           if (Array.isArray(sources) && sources.length > 0) {
-            localStorage.setItem("incomeSourceConfig", onboardingIncomeSources);
-            if (import.meta.env.DEV) {
-              console.log(
-                "✓ Migrated income sources:",
-                sources.length,
-                "sources"
+            // Check if it's the new format (array of objects) or old format (array of IDs)
+            const isNewFormat =
+              sources.length > 0 && typeof sources[0] === "object";
+
+            if (isNewFormat) {
+              // New format: array of full IncomeSource objects
+              localStorage.setItem(
+                "incomeSourceConfig",
+                onboardingIncomeSources
+              );
+              if (import.meta.env.DEV) {
+                console.log(
+                  "✓ Migrated income sources (full objects):",
+                  sources.length,
+                  "sources"
+                );
+              }
+            } else {
+              // Old format: array of IDs - this shouldn't happen with new code
+              // but we handle it for backward compatibility
+              if (import.meta.env.DEV) {
+                console.warn(
+                  "⚠️ Legacy income source format detected (IDs only). Please update the onboarding flow."
+                );
+              }
+              // The incomeSourceService will handle the migration from IDs
+              localStorage.setItem(
+                "incomeSourceConfig",
+                onboardingIncomeSources
               );
             }
           }

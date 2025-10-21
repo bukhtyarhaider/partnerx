@@ -2,6 +2,15 @@ import type { Expense, Transaction } from "../types";
 import type { Financials } from "../hooks/useFinancials";
 import type { DateFilterValue } from "../components/DateFilter";
 
+// Helper to safely get source name from transaction
+const getSourceName = (t: Transaction): string => {
+  if (t.source?.name) {
+    return t.source.name;
+  }
+  const sourceId = (t as Transaction & { sourceId?: string }).sourceId;
+  return sourceId || "Unknown";
+};
+
 export async function generateFinancialSummary({
   transactions,
   expenses,
@@ -83,7 +92,7 @@ export async function generateFinancialSummary({
     - **Total Transactions**: ${transactions.length}
     - **Recent Income Activity**: ${transactions
       .slice(-5)
-      .map((t) => `${t.sourceId}: ${formatUSD(t.amountUSD)}`)
+      .map((t) => `${getSourceName(t)}: ${formatUSD(t.amountUSD)}`)
       .join(", ")}
 
     ## Expense Breakdown (PKR Spending)

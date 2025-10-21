@@ -325,20 +325,19 @@ export const businessIncomeSources: IncomeSource[] = [
     createdAt: new Date("2024-01-01").toISOString(),
     updatedAt: new Date("2024-01-01").toISOString(),
   },
-  // Additional dummy sources for demonstration
   {
-    id: "instagram",
-    name: "Instagram",
-    enabled: false,
+    id: "facebook",
+    name: "Facebook",
+    enabled: false, // Changed to false - users select during onboarding
     metadata: {
       icon: {
         type: "lucide",
-        value: "Instagram",
-        color: "#e11d48", // rose-600
-        backgroundColor: "#fff1f2", // rose-50
+        value: "Facebook",
+        color: "#3b5998", // blue-600
+        backgroundColor: "#e9f0fb", // light blue
         darkMode: {
-          color: "#fb7185", // rose-400
-          backgroundColor: "rgba(225, 29, 72, 0.1)",
+          color: "#8b9dc3", // blue-400
+          backgroundColor: "rgba(59, 89, 152, 0.1)", // facebook blue with opacity
         },
       },
       fees: {
@@ -346,7 +345,7 @@ export const businessIncomeSources: IncomeSource[] = [
         method: "fixed",
       },
       settings: {
-        defaultTaxRate: 15,
+        defaultTaxRate: 0,
         commissionRate: 0,
         tax: {
           enabled: false,
@@ -354,108 +353,17 @@ export const businessIncomeSources: IncomeSource[] = [
           value: 0,
         },
         defaultCurrency: "USD",
-        analyticsUrl: "https://business.instagram.com/insights",
+        analyticsUrl: "https://business.facebook.com/insights",
         apiConfig: {
-          baseUrl: "https://graph.instagram.com",
+          baseUrl: "https://graph.facebook.com",
           authType: "oauth",
-          requiredScopes: ["instagram_basic", "instagram_content_publish"],
+          requiredScopes: ["ads_management", "business_management"],
         },
       },
       display: {
-        description:
-          "Revenue from Instagram Reels, IGTV, and sponsored content",
+        description: "Revenue from Facebook ads, marketplace, and partnerships",
         category: "Social Media",
         sortOrder: 3,
-      },
-    },
-    createdAt: new Date("2024-01-01").toISOString(),
-    updatedAt: new Date("2024-01-01").toISOString(),
-  },
-  {
-    id: "twitch",
-    name: "Twitch",
-    enabled: false,
-    metadata: {
-      icon: {
-        type: "lucide",
-        value: "Twitch",
-        color: "#7c3aed", // violet-600
-        backgroundColor: "#f5f3ff", // violet-50
-        darkMode: {
-          color: "#a78bfa", // violet-400
-          backgroundColor: "rgba(124, 58, 237, 0.1)",
-        },
-      },
-      fees: {
-        fixedFeeUSD: 0,
-        percentageFee: 2.5, // Example: Twitch takes 2.5% for some transactions
-        method: "percentage",
-      },
-      settings: {
-        defaultTaxRate: 15,
-        commissionRate: 50, // Revenue split with Twitch
-        tax: {
-          enabled: false,
-          type: "percentage",
-          value: 0,
-        },
-        defaultCurrency: "USD",
-        analyticsUrl: "https://dashboard.twitch.tv/analytics/revenue",
-        apiConfig: {
-          baseUrl: "https://api.twitch.tv/helix",
-          authType: "oauth",
-          requiredScopes: ["analytics:read:extensions", "user:read:email"],
-        },
-      },
-      display: {
-        description:
-          "Revenue from Twitch streaming, subscriptions, and donations",
-        category: "Live Streaming",
-        sortOrder: 4,
-      },
-    },
-    createdAt: new Date("2024-01-01").toISOString(),
-    updatedAt: new Date("2024-01-01").toISOString(),
-  },
-  {
-    id: "patreon",
-    name: "Patreon",
-    enabled: false,
-    metadata: {
-      icon: {
-        type: "lucide",
-        value: "Heart",
-        color: "#f97316", // orange-500
-        backgroundColor: "#fff7ed", // orange-50
-        darkMode: {
-          color: "#fb923c", // orange-400
-          backgroundColor: "rgba(249, 115, 22, 0.1)",
-        },
-      },
-      fees: {
-        percentageFee: 8, // Patreon's fee structure
-        method: "percentage",
-      },
-      settings: {
-        defaultTaxRate: 15,
-        commissionRate: 0,
-        tax: {
-          enabled: false,
-          type: "percentage",
-          value: 0,
-        },
-        defaultCurrency: "USD",
-        analyticsUrl: "https://www.patreon.com/portal/analytics",
-        apiConfig: {
-          baseUrl: "https://www.patreon.com/api/oauth2/v2",
-          authType: "oauth",
-          requiredScopes: ["identity", "campaigns"],
-        },
-      },
-      display: {
-        description: "Monthly recurring revenue from Patreon subscribers",
-        category: "Subscription",
-        sortOrder: 5,
       },
     },
     createdAt: new Date("2024-01-01").toISOString(),

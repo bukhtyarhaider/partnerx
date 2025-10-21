@@ -26,6 +26,7 @@ import { useState, useEffect } from "react";
 import type { Transaction } from "../types";
 import { ExpandableCard } from "./common/ExpandableCard";
 import { formatCurrency, formatCurrencyForAxis } from "../utils/format";
+import { useIncomeSources } from "../hooks/useIncomeSources";
 
 const CustomTooltip: React.FC<
   TooltipProps<number, string> & {
@@ -126,6 +127,7 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("monthly");
   const [chartType, setChartType] = useState<ChartType>("area");
+  const { getSourceById } = useIncomeSources();
 
   // Detect mobile screen size
   useEffect(() => {
@@ -144,11 +146,20 @@ export const IncomeChart: React.FC<{ transactions: Transaction[] }> = ({
     if (chartType === "source-breakdown") {
       // Group by income source
       const sourceData = transactions.reduce((acc, tx) => {
-        if (!acc[tx.sourceId]) {
-          acc[tx.sourceId] = { source: tx.sourceId, value: 0, netProfit: 0 };
+        // Get source - handle both source object and sourceId
+        const source =
+          tx.source ||
+          getSourceById(
+            (tx as Transaction & { sourceId?: string }).sourceId || ""
+          );
+        const sourceName = source?.name || "Unknown";
+        const sourceKey = source?.id || "unknown";
+
+        if (!acc[sourceKey]) {
+          acc[sourceKey] = { source: sourceName, value: 0, netProfit: 0 };
         }
-        acc[tx.sourceId].value += tx.calculations.grossPKR;
-        acc[tx.sourceId].netProfit += tx.calculations.netProfit;
+        acc[sourceKey].value += tx.calculations.grossPKR;
+        acc[sourceKey].netProfit += tx.calculations.netProfit;
         return acc;
       }, {} as Record<string, { source: string; value: number; netProfit: number }>);
 

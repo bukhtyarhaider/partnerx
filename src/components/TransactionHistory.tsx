@@ -4,9 +4,9 @@ import type { Transaction } from "../types";
 import { ExpandableCard } from "./common/ExpandableCard";
 import { ConfirmationModal } from "./common/ConfirmationModal";
 import { pkrFormatter, usdFormatter } from "../utils";
-import { useIncomeSources } from "../hooks/useIncomeSources";
 import { IncomeSourceDisplay } from "./common/IncomeSourceDisplay";
 import { useConfirmation } from "../hooks/useConfirmation";
+import { useIncomeSources } from "../hooks/useIncomeSources";
 
 interface TransactionHistoryProps {
   transactions: Transaction[];
@@ -22,11 +22,57 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   onDelete,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { getSourceById } = useIncomeSources();
   const { confirmation, showConfirmation, hideConfirmation } =
     useConfirmation();
+  const { getSourceById } = useIncomeSources();
 
   const handleToggleExpand = () => setIsExpanded(!isExpanded);
+
+  // Helper function to get source - handles both source object and sourceId
+  const getTransactionSource = (tx: Transaction) => {
+    // If source exists, return it
+    if (tx.source) {
+      return tx.source;
+    }
+
+    // If sourceId exists (legacy or imported data), look it up
+    const sourceId = (tx as Transaction & { sourceId?: string }).sourceId;
+    if (sourceId) {
+      const foundSource = getSourceById(sourceId);
+      if (foundSource) {
+        return foundSource;
+      }
+    }
+
+    // Fallback: return a default source to prevent crashes
+    return {
+      id: "unknown",
+      name: "Unknown Source",
+      enabled: false,
+      metadata: {
+        icon: {
+          type: "lucide" as const,
+          value: "HelpCircle",
+          color: "#64748b",
+          backgroundColor: "#f1f5f9",
+        },
+        fees: { fixedFeeUSD: 0, method: "fixed" as const },
+        settings: {
+          defaultTaxRate: 0,
+          commissionRate: 0,
+          tax: { enabled: false, type: "percentage" as const, value: 0 },
+          defaultCurrency: "USD" as const,
+        },
+        display: {
+          description: "Source not found",
+          category: "Unknown",
+          sortOrder: 999,
+        },
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  };
 
   const handleDeleteClick = (transaction: Transaction) => {
     showConfirmation({
@@ -103,49 +149,21 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   >
                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6 lg:pl-8">
                       <div className="flex items-center gap-2">
-                        {(() => {
-                          const source = getSourceById(tx.sourceId);
-                          return (
-                            <>
-                              {source ? (
-                                <IncomeSourceDisplay
-                                  source={source}
-                                  className=""
-                                  date={new Date(tx.date).toLocaleDateString(
-                                    "en-GB",
-                                    {
-                                      day: "2-digit",
-                                      month: "short",
-                                      year: "numeric",
-                                    }
-                                  )}
-                                />
-                              ) : (
-                                <div className="flex items-center">
-                                  <div className="mr-1 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
-                                    <span className="text-slate-500 dark:text-slate-400 text-xs">
-                                      ?
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <div className="font-medium text-slate-900 dark:text-slate-50">
-                                      Unknown Source
-                                    </div>
-                                    <div className="text-sm text-red-500 dark:text-red-400">
-                                      Source ID: {tx.sourceId}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                              {/* Currency Badge */}
-                              {tx.currency === "PKR" && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                  PKR
-                                </span>
-                              )}
-                            </>
-                          );
-                        })()}
+                        <IncomeSourceDisplay
+                          source={getTransactionSource(tx)}
+                          className=""
+                          date={new Date(tx.date).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        />
+                        {/* Currency Badge */}
+                        {tx.currency === "PKR" && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                            PKR
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="hidden whitespace-nowrap px-3 py-4 text-sm text-slate-500 sm:table-cell">

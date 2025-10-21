@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import type { IncomeSource } from "./incomeSource";
 
 // Legacy type - to be phased out
 export type PartnerName = "Bukhtyar" | "Asjad";
@@ -33,7 +34,7 @@ export interface TransactionCalculations {
 
 export interface Transaction {
   id: number;
-  sourceId: string; // Changed from hardcoded union to dynamic string
+  source: IncomeSource; // Full income source object with all metadata and settings
   amountUSD: number;
   conversionRate: number;
   date: string;
@@ -41,7 +42,7 @@ export interface Transaction {
   bank: string;
   calculations: TransactionCalculations;
   donationConfigSnapshot?: DonationConfig; // Store the donation config used for this transaction
-  currency?: "PKR" | "USD"; // Currency of the transaction (default: USD for backward compatibility)
+  currency?: "PKR" | "USD"; // Currency of the transaction (default: USD)
   amount?: number; // Amount in the specified currency (for PKR transactions)
   taxConfig?: {
     enabled: boolean;
