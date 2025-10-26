@@ -13,7 +13,6 @@ import {
   TransactionForm,
 } from "../components/Forms";
 import { PartnerSummary } from "../components/PartnerSummary";
-import { ImportExport } from "../components/ImportExport";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import { DateFilter } from "../components/DateFilter";
 import { useDateFilter } from "../hooks/useDateFilter";
@@ -177,14 +176,6 @@ export const DesktopLayout = ({
               </div>
             </>
           )}
-          <ImportExport
-            transactions={appState.transactions}
-            expenses={appState.expenses}
-            donationPayouts={appState.donationPayouts}
-            onImport={appState.handleImport}
-            summaries={appState.summaries}
-            donationConfig={appState.donationConfig}
-          />
           {/* Version Info */}
           <div className="text-center text-xs text-slate-500 dark:text-slate-400 py-2 border-t border-slate-200 dark:border-slate-700">
             <p>
