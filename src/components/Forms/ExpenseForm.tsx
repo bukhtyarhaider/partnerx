@@ -7,10 +7,8 @@ import type {
   ExpenseType,
 } from "../../types";
 import type { Financials } from "../../hooks/useFinancials";
-import { getTodayString } from "../../utils";
+import { getTodayString, formatCurrency } from "../../utils";
 import { usePartners } from "../../hooks/usePartners";
-import { formatCurrency } from "../../utils/format";
-import { SuccessToast } from "../common/SuccessToast";
 import { useConfirmation } from "../../hooks/useConfirmation";
 import { ConfirmationModal } from "../common/ConfirmationModal";
 
@@ -51,8 +49,6 @@ export const ExpenseForm: React.FC<FormProps> = ({
   );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [successAmount, setSuccessAmount] = useState("");
   const [pendingExpenseData, setPendingExpenseData] =
     useState<NewExpenseEntry | null>(null);
 
@@ -82,11 +78,6 @@ export const ExpenseForm: React.FC<FormProps> = ({
     (data: NewExpenseEntry) => {
       if (onAddExpense) {
         onAddExpense(data);
-
-        // Show success toast
-        setSuccessAmount(formatCurrency(data.amount));
-        setShowSuccessToast(true);
-
         resetForm();
         setPendingExpenseData(null);
       }
@@ -436,14 +427,6 @@ export const ExpenseForm: React.FC<FormProps> = ({
         </button>
       </form>
 
-      {/* Success Toast */}
-      <SuccessToast
-        isVisible={showSuccessToast}
-        onClose={() => setShowSuccessToast(false)}
-        type="expense"
-        message="Expense added successfully!"
-        amount={successAmount}
-      />
 
       {/* Confirmation Modal for Insufficient Funds */}
       <ConfirmationModal

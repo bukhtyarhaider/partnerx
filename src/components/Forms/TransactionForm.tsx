@@ -5,10 +5,9 @@ import type {
   Transaction,
   IncomeSource,
 } from "../../types";
-import { getTodayString, formatCurrency } from "../../utils";
+import { getTodayString } from "../../utils";
 import { useEnabledIncomeSources } from "../../hooks/useIncomeSources";
 import { useConversionRateAutoFill } from "../../hooks/useConversionRateAutoFill";
-import { SuccessToast } from "../common/SuccessToast";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -49,8 +48,6 @@ export const TransactionForm: React.FC<FormProps> = ({
   const [date, setDate] = useState(getTodayString());
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [successAmount, setSuccessAmount] = useState("");
 
   // New fields for currency and tax configuration
   const [currency, setCurrency] = useState<"PKR" | "USD">("USD");
@@ -252,17 +249,6 @@ export const TransactionForm: React.FC<FormProps> = ({
         await onSave({ ...initialData, ...commonData });
       } else if (mode === "add" && onAddTransaction) {
         await onAddTransaction(commonData);
-
-        // Show success toast
-        let totalAmount: number;
-        if (currency === "USD") {
-          totalAmount = parseFloat(amountUSD) * parseFloat(conversionRate);
-        } else {
-          totalAmount = parseFloat(amount);
-        }
-        setSuccessAmount(formatCurrency(totalAmount));
-        setShowSuccessToast(true);
-
         resetForm();
       }
     } catch (err) {
@@ -614,14 +600,6 @@ export const TransactionForm: React.FC<FormProps> = ({
         </button>
       </form>
 
-      {/* Success Toast */}
-      <SuccessToast
-        isVisible={showSuccessToast}
-        onClose={() => setShowSuccessToast(false)}
-        type="income"
-        message="Income added successfully!"
-        amount={successAmount}
-      />
     </div>
   );
 };

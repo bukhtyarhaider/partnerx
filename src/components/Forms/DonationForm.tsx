@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Save, AlertCircle, TrendingUp } from "lucide-react";
 import type { DonationPayout, NewDonationPayoutEntry } from "../../types";
 import { formatCurrency, getTodayString } from "../../utils";
-import { SuccessToast } from "../common/SuccessToast";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -31,8 +30,6 @@ export const DonationForm: React.FC<FormProps> = ({
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [successAmount, setSuccessAmount] = useState("");
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -76,11 +73,6 @@ export const DonationForm: React.FC<FormProps> = ({
         onSave({ ...initialData, ...commonData });
       } else if (mode === "add" && onAddDonationPayout) {
         onAddDonationPayout(commonData);
-
-        // Show success toast
-        setSuccessAmount(formatCurrency(payoutAmount));
-        setShowSuccessToast(true);
-
         resetForm();
       }
     } catch (err) {
@@ -204,14 +196,6 @@ export const DonationForm: React.FC<FormProps> = ({
         </button>
       </form>
 
-      {/* Success Toast */}
-      <SuccessToast
-        isVisible={showSuccessToast}
-        onClose={() => setShowSuccessToast(false)}
-        type="donation"
-        message="Donation recorded successfully!"
-        amount={successAmount}
-      />
     </div>
   );
 };

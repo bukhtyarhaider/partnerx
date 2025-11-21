@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { PlusCircle, Save, AlertCircle } from "lucide-react";
 import type { NewExpenseEntry, Expense } from "../../types";
 import { getTodayString } from "../../utils";
-import { formatCurrency } from "../../utils/format";
-import { SuccessToast } from "../common/SuccessToast";
 
 interface FormProps {
   mode?: "add" | "edit";
@@ -30,8 +28,6 @@ export const PersonalExpenseForm: React.FC<FormProps> = ({
   const [category, setCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [successAmount, setSuccessAmount] = useState("");
 
   useEffect(() => {
     if (mode === "edit" && initialData) {
@@ -74,14 +70,8 @@ export const PersonalExpenseForm: React.FC<FormProps> = ({
 
       if (mode === "edit" && onSave && initialData) {
         onSave({ ...initialData, ...commonData });
-        // Show success toast for edit
-        setSuccessAmount(formatCurrency(expenseAmount));
-        setShowSuccessToast(true);
       } else if (mode === "add" && onAddExpense) {
         onAddExpense(commonData);
-        // Show success toast
-        setSuccessAmount(formatCurrency(expenseAmount));
-        setShowSuccessToast(true);
         resetForm();
       }
     } catch (err) {
@@ -191,18 +181,6 @@ export const PersonalExpenseForm: React.FC<FormProps> = ({
         </button>
       </form>
 
-      {/* Success Toast */}
-      <SuccessToast
-        isVisible={showSuccessToast}
-        onClose={() => setShowSuccessToast(false)}
-        type="expense"
-        message={
-          isEditMode
-            ? "Expense updated successfully!"
-            : "Expense added successfully!"
-        }
-        amount={successAmount}
-      />
     </div>
   );
 };
