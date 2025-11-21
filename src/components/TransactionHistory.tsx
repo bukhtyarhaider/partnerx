@@ -3,6 +3,7 @@ import { Landmark, Pencil, Trash2, ReceiptText } from "lucide-react";
 import type { Transaction } from "../types";
 import { ExpandableCard } from "./common/ExpandableCard";
 import { ConfirmationModal } from "./common/ConfirmationModal";
+import { EmptyState } from "./common/EmptyState";
 import { pkrFormatter, usdFormatter } from "../utils";
 import { IncomeSourceDisplay } from "./common/IncomeSourceDisplay";
 import { useConfirmation } from "../hooks/useConfirmation";
@@ -108,9 +109,12 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       >
         <div className="relative">
           {transactions.length === 0 ? (
-            <p className="py-8 text-center text-slate-500 dark:text-slate-400">
-              No income transactions found.
-            </p>
+            <EmptyState
+              icon={ReceiptText}
+              title="No transactions yet"
+              description="Add your first income transaction to start tracking your earnings."
+              className="py-12"
+            />
           ) : (
             <table className="min-w-full border-separate border-spacing-0">
               <thead>

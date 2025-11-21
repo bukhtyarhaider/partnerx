@@ -18,6 +18,7 @@ import { ExchangeRateProvider } from "./contexts/ExchangeRateContext";
 import { PinLock } from "./components/PinLock";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
+import { ToastProvider } from "./contexts/ToastContext";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useAuth } from "./hooks/useAuth";
 import { useOnboarding } from "./hooks/useOnboarding";
@@ -31,7 +32,7 @@ import type {
   Transaction,
 } from "./types";
 
-export default function App() {
+function AppContent() {
   const appState = useStoreAdapter();
   const sortedTransactions = useSortedTransactions(appState.transactions);
   const sortedExpenses = useSortedExpenses(appState.expenses);
@@ -39,8 +40,6 @@ export default function App() {
 
   // Enable accessibility enhancements
   useA11yEnhancements();
-
-  // useLocalStorageSync is no longer needed as Zustand handles persistence
 
   return (
     <AuthProvider>
@@ -64,6 +63,14 @@ export default function App() {
         </ThemeProvider>
       </OnboardingProvider>
     </AuthProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }
 

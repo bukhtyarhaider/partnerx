@@ -1,10 +1,12 @@
 import { useStore } from "../store";
 import { migrateLegacyData } from "../store/migration";
 import { useEffect, useState } from "react";
+import { useToast } from "./useToast";
 import type { AppHandlers, Transaction, Expense, DonationPayout } from "../types";
 
 export function useStoreAdapter(): AppHandlers {
   const store = useStore();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<"income" | "expense" | "donation">("income");
   const [editingEntry, setEditingEntry] = useState<Transaction | Expense | DonationPayout | null>(null);
   const [modalType, setModalType] = useState<"transaction" | "expense" | "donation" | null>(null);
@@ -42,6 +44,7 @@ export function useStoreAdapter(): AppHandlers {
         } else {
             store.setDonationConfig(action);
         }
+        showToast("Donation settings updated", "donation");
     },
     
     activeTab,
@@ -51,31 +54,64 @@ export function useStoreAdapter(): AppHandlers {
     modalType,
     setModalType,
     
-    handleImport: store.importData as any,
-    handleAddTransaction: store.addTransaction as any,
-    handleAddExpense: store.addExpense as any,
-    handleAddDonationPayout: store.addDonationPayout as any,
-    handleAddSummary: store.addSummary,
+    handleImport: (data) => {
+        store.importData(data as any);
+        showToast("Data imported successfully", "income");
+    },
+    handleAddTransaction: async (entry) => {
+        await store.addTransaction(entry as any);
+        showToast("Transaction added", "income");
+    },
+    handleAddExpense: (entry) => {
+        store.addExpense(entry as any);
+        showToast("Expense added", "expense");
+    },
+    handleAddDonationPayout: (entry) => {
+        store.addDonationPayout(entry as any);
+        showToast("Donation payout recorded", "donation");
+    },
+    handleAddSummary: (text) => {
+        store.addSummary(text);
+        showToast("Summary note added", "income");
+    },
     
     handleUpdateTransaction: async (tx) => {
         await store.updateTransaction(tx as any);
         setEditingEntry(null);
+        showToast("Transaction updated", "income");
     },
     handleUpdateExpense: (ex) => {
         store.updateExpense(ex as any);
         setEditingEntry(null);
+        showToast("Expense updated", "expense");
     },
     handleUpdateDonationPayout: (dp) => {
         store.updateDonationPayout(dp as any);
         setEditingEntry(null);
+        showToast("Donation payout updated", "donation");
     },
     
-    handleDeleteTransaction: store.deleteTransaction,
-    handleDeleteExpense: store.deleteExpense,
-    handleDeleteDonationPayout: store.deleteDonationPayout,
-    handleDeleteSummary: store.deleteSummary,
+    handleDeleteTransaction: (id) => {
+        store.deleteTransaction(id);
+        showToast("Transaction deleted", "income");
+    },
+    handleDeleteExpense: (id) => {
+        store.deleteExpense(id);
+        showToast("Expense deleted", "expense");
+    },
+    handleDeleteDonationPayout: (id) => {
+        store.deleteDonationPayout(id);
+        showToast("Donation payout deleted", "donation");
+    },
+    handleDeleteSummary: (id) => {
+        store.deleteSummary(id);
+        showToast("Summary note deleted", "income");
+    },
     
-    handleUpdateDonationConfig: store.updateDonationConfig,
+    handleUpdateDonationConfig: (config) => {
+        store.updateDonationConfig(config);
+        showToast("Donation settings updated", "donation");
+    },
     
     openEditModal,
   };
