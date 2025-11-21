@@ -1,8 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 
-import { useAppHandlers } from "./hooks/useAppHandlers";
+import { useStoreAdapter } from "./hooks/useStoreAdapter";
 import { useFinancials } from "./hooks/useFinancials";
-import { useLocalStorageSync } from "./hooks/useLocalStorageSync";
 import { useA11yEnhancements } from "./hooks/useA11yEnhancements";
 import { useFilteredData } from "./hooks/useFilteredData";
 import {
@@ -33,7 +32,7 @@ import type {
 } from "./types";
 
 export default function App() {
-  const appState = useAppHandlers();
+  const appState = useStoreAdapter();
   const sortedTransactions = useSortedTransactions(appState.transactions);
   const sortedExpenses = useSortedExpenses(appState.expenses);
   const sortedDonations = useSortedDonations(appState.donationPayouts);
@@ -41,12 +40,7 @@ export default function App() {
   // Enable accessibility enhancements
   useA11yEnhancements();
 
-  useLocalStorageSync(
-    appState.transactions,
-    appState.expenses,
-    appState.donationPayouts,
-    appState.summaries
-  );
+  // useLocalStorageSync is no longer needed as Zustand handles persistence
 
   return (
     <AuthProvider>
