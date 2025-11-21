@@ -17,16 +17,34 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
 
     // Check if user has PIN and transactions (indicating they've used the app before)
     const hasPinSet = localStorage.getItem("app_pin_code");
+    
+    // Legacy checks
     const transactionsStr = localStorage.getItem("transactions");
-    const hasTransactions =
-      transactionsStr && JSON.parse(transactionsStr).length > 0;
+    const hasLegacyTransactions = transactionsStr && JSON.parse(transactionsStr).length > 0;
     const expensesStr = localStorage.getItem("expenses");
-    const hasExpenses = expensesStr && JSON.parse(expensesStr).length > 0;
+    const hasLegacyExpenses = expensesStr && JSON.parse(expensesStr).length > 0;
     const donationPayoutsStr = localStorage.getItem("donationPayouts");
-    const hasDonationPayouts =
-      donationPayoutsStr && JSON.parse(donationPayoutsStr).length > 0;
+    const hasLegacyDonationPayouts = donationPayoutsStr && JSON.parse(donationPayoutsStr).length > 0;
     const summariesStr = localStorage.getItem("summaries");
-    const hasSummaries = summariesStr && JSON.parse(summariesStr).length > 0;
+    const hasLegacySummaries = summariesStr && JSON.parse(summariesStr).length > 0;
+
+    // New Store check (Zustand)
+    let hasStoreData = false;
+    const storedStore = localStorage.getItem("partnerx-storage");
+    if (storedStore) {
+        try {
+            const parsedStore = JSON.parse(storedStore);
+            if (parsedStore.state && (
+                (parsedStore.state.transactions && parsedStore.state.transactions.length > 0) ||
+                (parsedStore.state.expenses && parsedStore.state.expenses.length > 0) ||
+                (parsedStore.state.donationPayouts && parsedStore.state.donationPayouts.length > 0)
+            )) {
+                hasStoreData = true;
+            }
+        } catch (e) {
+            console.warn("Failed to parse partnerx-storage", e);
+        }
+    }
 
     if (stored) {
       try {
@@ -35,10 +53,11 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
         // If user has PIN and transactions but onboarding isn't marked complete, auto-complete it
         if (
           hasPinSet ||
-          hasTransactions ||
-          hasExpenses ||
-          hasDonationPayouts ||
-          hasSummaries
+          hasLegacyTransactions ||
+          hasLegacyExpenses ||
+          hasLegacyDonationPayouts ||
+          hasLegacySummaries ||
+          hasStoreData
         ) {
           parsed.completedAt = new Date().toISOString();
           parsed.steps = ONBOARDING_STEPS.map((step) => ({
@@ -67,7 +86,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // If no onboarding progress but user has PIN and transactions, mark as complete
-    if (hasPinSet && hasTransactions) {
+    if (hasPinSet && (hasLegacyTransactions || hasStoreData)) {
       const completedProgress = {
         currentStepIndex: ONBOARDING_STEPS.length - 1,
         steps: ONBOARDING_STEPS.map((step) => ({
@@ -542,6 +561,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("donationConfig");
     localStorage.removeItem("partnerConfig");
     localStorage.removeItem("incomeSourceConfig");
+    localStorage.removeItem("partnerx-storage"); // Clear new store data
 
     // Reset state
     setProgress({
